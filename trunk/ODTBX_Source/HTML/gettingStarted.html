@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+           "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<meta name="GENERATOR" content="TtH 3.70">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+ <style type="text/css"> div.p { margin-top: 7pt;}</style>
+ <style type="text/css"><!--
+ td div.comp { margin-top: -0.6ex; margin-bottom: -1ex;}
+ td div.comb { margin-top: -0.6ex; margin-bottom: -.6ex;}
+ td div.hrcomp { line-height: 0.9; margin-top: -0.8ex; margin-bottom: -1ex;}
+ td div.norm {line-height:normal;}
+ span.roman {font-family: serif; font-style: normal; font-weight: normal;} 
+ span.overacc2 {position: relative;  left: .8em; top: -1.2ex;}
+ span.overacc1 {position: relative;  left: .6em; top: -1.2ex;} --></style>
+
+   
+<title> System Description</title>
+
+<h1>System Description</h1>
+
+<div class="p"><!----></div>
+ What is the OD Toolbox? <br />
+ The Orbit Determination (OD) Toolbox is an orbit determination
+ analysis tool based on Matlab and Java that provides a flexible 
+ way to do early mission analysis.  Its primary design features are 
+ the following. <br />
+
+<div class="p"><!----></div>
+ * The Toolbox is primarily intended for advanced mission analysis such
+ as might be performed in concept exploration, proposal, early design
+ phase, or rapid design center environments; the emphasis is on
+ flexibility but it has enough fidelity to produce credible results.
+ <br />
+
+<div class="p"><!----></div>
+ * Insight into all flight dynamics source code is always provided.
+ <br />
+
+<div class="p"><!----></div>
+ * Matlab is the primary user interface, and is used for piecing together
+ measurement and dynamic models.  The Java Astrodynamics Toolbox is used
+ as an engine for things that might be slow or inefficient in Matlab, like
+ high-fidelity trajectory propagation, lunar and planetary ephemeris
+ lookups, precession, nutation, polar motion calculations, ephemeris file
+ parsing, etc. <br />
+
+<div class="p"><!----></div>
+ * The primary analysis functions are sequential filter/smoother and batch
+ least-squares commands that incorporate monte-carlo data simulation,
+ linear covariance analysis, measurement processing, and plotting
+ capabilities at the generic level.  These functions have a user
+ interface that is based on that of the Matlab ODE suite. <br />
+
+<div class="p"><!----></div>
+ * To perform a specific analysis, users write Matlab functions that
+ implement truth and design system models.  The Toolbox provides a set
+ of object-oriented measurement and dynamics class libraries that give the
+ user the ability to build up arbitrarily complex models through
+ inheritance from simpler ones.  Using this library of basic classes
+ can help to avoid having to make a major software change to the base
+ system every time something new comes up.  However, users are always free
+ to use these or not. The user provides his or her models as inputs to the
+ filter commands. <br />
+
+<div class="p"><!----></div>
+ * With the object-oriented libraries, there is an an option for
+ network-based modeling to simplify the creation of arbitrarily complex
+ aggregations of objects, e.g. a multi-spacecraft formation interacting
+ with multiple gravitational bodies with a variety of different
+ interspacecraft and ground-to-space measurement types. <br />
+
+<div class="p"><!----></div>
+ * The Toolbox provides limited automation capabilities such as:
+ frequently used functions and constants in the Matlab version 7 taskbar,
+ and popping up the parameters of a monte carlo case by clicking on its
+ data on a plot. <br />
+
+<div class="p"><!----></div>
+ OD Toolbox is not supposed to be: <br />
+
+<div class="p"><!----></div>
+ * A tightly-integrated, highly configuration-controlled, monolithic
+ system. <br />
+
+<div class="p"><!----></div>
+ * A replacement for high-fidelity operational ground or flight
+ software. <br />
+
+<div class="p"><!----></div>
+ * A GUI-based ground support system for operational support. <br />
+
+</html>

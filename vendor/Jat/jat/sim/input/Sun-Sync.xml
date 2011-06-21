@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Input xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="C:\Code\Jat\jat\xml\input\sim_input.xsd">
+	<InitialState>
+		<Cartesian>
+			<x>-2290.301063</x>
+			<y>-6379.471940</y>
+			<z>0</z>
+			<xdot>-0.883923</xdot>
+			<ydot>0.317338</ydot>
+			<zdot>7.610832</zdot>
+		</Cartesian>
+	</InitialState>
+	<Time>
+		<MJD>53157.5</MJD>
+		<t0>0</t0>
+		<tf>86400</tf>
+		<dt>5</dt>
+		<thinning>12</thinning>
+	</Time>
+	<Spacecraft>
+		<Name>Sun-Sync</Name>
+		<CR>1.2</CR>
+		<cd>2.2</cd>
+		<area>20</area>
+		<mass>1000</mass>
+	</Spacecraft>
+</Input>

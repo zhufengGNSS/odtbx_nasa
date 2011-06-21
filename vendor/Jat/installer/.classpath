@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/gr/parser.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/gr/gl4java.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/gr/gl4java-glffonts.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/gr/gl4java-glutfonts.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/gr/gr.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/gr/jaxp.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/j3d/vecmath.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/j3d/j3daudio.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/j3d/j3dcore.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/j3d/j3dutils.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/ptolemy/plot.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/starfire/StarfireExt.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jaxb/jaxb-impl.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jaxb/jaxb-xjc.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jaxb/jaxb-api.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jaxb/jaxb-libs.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jaxb/jaxp-api.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jaxb/relaxngDatatype.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/matlab/jmi.jar"/>
+	<classpathentry kind="lib" path="$INSTALL_PATH/external_jar/jmf/jmf.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>

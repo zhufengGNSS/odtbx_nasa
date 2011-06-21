@@ -1,0 +1,22 @@
+% GPSIIR_ALL_L1MEAN_30deg.TXT
+%
+%  MEAN L1 antenna gain averaged from GPS Block IIR SVN41,43,54
+%  See L1all.xls
+%  ONLY OUT TO 30 DEG
+% angle [deg] gain [db]
+0	11.82
+2	12.09
+4	12.84
+6	13.86
+8	14.75
+10	15.15
+12	14.83
+14	13.59
+16	11.20
+18	7.22
+20	0.19
+22	-10.11
+24	-5.71
+26	-1.82
+28	-0.76
+30	-0.94

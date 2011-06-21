@@ -1,0 +1,84 @@
+
+
+
+
+
+
+
+A memo describing the creation of the DE405 generic planet ephemeris is available from NAIF or from the author: Dr. Myles Standish of JPL's Solar System Dynamics Group. Because this memo was produced using the TeX processor and includes numerous equations, tables and plots, only a small extract of it can be included here as plain ASCII text.
+
+
+
+       >>> Beginning of extract from Standish's DE405 memo <<<
+
+
+JET PROPULSION LABORATORY                         INTEROFFICE MEMORANDUM
+IOM 312.F - 98 - 048
+August 26, 1998
+
+TO:           Distribution
+FROM:         E M Standish
+SUBJECT:      JPL Planetary and Lunar Ephemerides, DE405/LE405
+
+
+
+INTRODUCTION
+
+The latest JPL Planetary and Lunar Ephemerides, "DE405/LE405" or just 
+"DE405," have been released and are now available.
+
+DE405 represents an improvement over its predecessor, DE403, described in 
+detail by Standish et al (1995), and hereafter referred to as the "DE403 
+Memo." Many of the data sets, reduction techniques, etc. are the same as 
+those used for DE403; they will not be described at length in this memo.  
+Instead, this memo concentrates on the differences: additional data, 
+refinements to the reduction techniques, etc.
+
+The memo discusses the improvement in the orientation of the ephemerides 
+onto the (J2000) International Celestial Reference Frame (ICRF). It shows 
+the increased observational data set used for DE405 and the associated 
+residuals. There is a description of the improved method for modeling the 
+perturbations of asteroids upon the planetary orbits. The individual 
+ephemerides in DE405 are compared with those of DE403. Tables are included 
+of the initial conditions and dynamical constants, resulting from the 
+least squares fitting process and used for the integration.
+
+
+II. ORIENTATION OF DE405
+
+As has been discussed often, the ephemerides of the four innermost planets 
+along with the moon and the sun are all well-known with respect to each 
+other because of the accurate ranging observations to which the 
+ephemerides are adjusted. In turn, the orientation of this inner system 
+onto the ICRF is also accurately determined, mainly by the VLBI 
+observations of the Magellan Spacecraft orbiting Venus, but also somewhat 
+by VLBI observations of the Phobos Spacecraft approaching Mars, a frame-
+tie linkage using ground surveys and lunar laser ranging (LLR)data, and 
+the range observations of the Viking Spacecraft on the surface of Mars.  
+Some of the Magellan VLBI observations are new since DE403. These data are 
+discussed in the next section. It is believed that the orientation of the 
+whole inner planet ephemeris system of DE405 is now accurate to about 
+0.001 arcseconds.  A verification of this estimate was provided by the 
+arrival of the Pathfinder Spacecraft at Mars in July 1997, where the 
+ephemeris error was about 0.001 arcseconds, corresponding to 1 km at that 
+distance; it was mostly in the down-track direction.
+
+Ephemerides of the outer planets rely almost entirely upon optical 
+observations these were initially referenced to various stellar 
+catalogues, then transformed onto the FK4 using the formulae of Schwan 
+(1983), then onto the FK5 system by applying the equinox offset and motion 
+parameters of Fricke (1982), and finally onto the ICRF using tentative 
+transformation tables supplied by Morrison (1996).
+
+
+{Substantial intervening text that included equations has been left out.}
+
+
+CONCLUSION
+
+DE405 represents the most accurate planetary positions available.  
+Certainly, they are not perfect; extrapolation forward or backward in time 
+will always show some amount of deterioration. Subsequent improvements 
+will continue with further acquisition of observational measurements.
+
+        >>> End of extract from Standish's DE405 memo <<<

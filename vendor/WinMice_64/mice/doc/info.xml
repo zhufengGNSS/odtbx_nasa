@@ -1,0 +1,32 @@
+<productinfo
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="optional">
+<?xml-stylesheet type="text/xsl" href="optional"?>
+
+<matlabrelease>14</matlabrelease>
+<name>Mice</name>
+<type>toolbox</type>
+<icon>specsimicon.gif</icon>
+<help_location>/html</help_location>
+
+<!--
+<help_location>./index.html</help_location>
+
+<list>
+
+<listitem>
+<label>Examples</label>
+<callback>sademos_examples</callback>
+<icon>$toolbox/matlab/icons/demoicon.gif</icon>
+</listitem>
+
+<listitem>
+<label>ODTBX Web Site</label>
+<callback>web https://gs-fftb-collab.gsfc.nasa.gov/odtbx -browser;</callback>
+<icon>$toolbox/matlab/icons/webicon.gif</icon>
+</listitem>
+
+</list>
+-->
+
+</productinfo>

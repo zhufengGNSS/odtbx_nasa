@@ -1,0 +1,165 @@
+
+# Simulator Input List
+# Moon to Earth 3 Day from NG
+
+# Mode: 0 = Trajectory Generation Only, 1 = Trajectory and Filter
+init.mode    1
+
+# Flag indicating whether to read observations from a file or generate them
+init.fromfile false
+
+#Initial MJD and Seconds past MJD0 for simulation start
+init.MJD0 57044   
+init.T0 0.0		 
+
+#Final MJD and Seconds past MJDF for simulation end
+init.MJDF    57044
+init.TF      259200		 
+
+#The step size in the propagation step.
+#NOTE:  This number should be smaller than the desired measurement period
+init.dt      60     
+				
+
+
+# Space Craft Properties/Initial Conditions (start numbering from 0)
+# Each satellite needs a true state and a reference state
+prop.NumSpacecraft  1
+
+#ECI position and velocity (m and m/s)        
+#GEONS TRUE
+TRUE_STATE.0.X   2.82505882900000e+008 
+TRUE_STATE.0.Y   2.82505882900000e+008
+TRUE_STATE.0.Z   -0.64261622210000e+008 
+TRUE_STATE.0.VX  -0.00000795264000e+008
+TRUE_STATE.0.VY  0.00000721616000e+008
+TRUE_STATE.0.VZ   0.00000922000000e+008
+
+#GEONS REFERENCE
+REF_STATE.0.X   2.79680824071000E+08
+REF_STATE.0.Y   -2.10596670900000E+08
+REF_STATE.0.Z   -0.63619005987900E+08
+REF_STATE.0.VX  -0.00000787311360E+08
+REF_STATE.0.VY  0.00000714399840E+08
+REF_STATE.0.VZ   0.00000912780000E+08
+
+#Initial Clock Bias Term 
+jat.0.clockBias  0.0
+jat.0.clockDrift 0.0
+
+#Solar Radiation Pressure Coefficient and Drag Doefficient
+#Area (m^2) and mass (kg)
+jat.0.Cr    0.0        
+jat.0.Cd    0.0
+jat.0.area  10.0  
+jat.0.mass  1000    
+
+#Orbital Force Parameters (for each spacecraft)
+
+#Use Gravitational Gradient (not currently implimented)
+jat.0.GravGrad false 
+
+#Use only 2-body force models
+jat.0.2body false     
+
+#Include Solar Gravity Acceleration
+jat.0.solar true
+
+#Include Lunar Gravity Acceleration
+jat.0.lunar true
+
+#Include Drag Acceleration      
+jat.0.drag false      
+
+#Include Solar Radiation Pressure Acceleration
+jat.0.srp false       
+
+#Include only jgm2 gravity model (False = JGM3)
+jat.0.jgm2 false    
+
+#Estimator Properties
+
+#Set the number of states the filter will have
+#X Y Z Vx Vy Vz B Bdot Srp
+FILTER.dt    60	
+FILTER.states 6
+FILTER.clock 6
+FILTER.bias 7
+
+#Set the process model used
+FILTER.pm Simple
+
+#PROCESS NOISE
+#Set the process noise for each of the states
+Q.0.X   1e-13 
+Q.0.Y   1e-13
+Q.0.Z   1e-13
+Q.0.VX   1e-13   
+Q.0.VY   1e-13
+Q.0.VZ   1e-13
+Q.0.clockBias  .12
+Q.0.clockDrift 1e-4  
+
+#Set the Initial Position and Velocity Covariance (m and m/s)
+P0.0.X    1e12		 
+P0.0.Y    1e12				
+P0.0.Z    1e12			
+P0.0.VX   10		
+P0.0.VY   10			
+P0.0.VZ   10
+
+#Set thhe Initial Clock Offset and Drift Covariance (m and m/s)		
+#P0.0.clockBias 10000	
+#P0.0.clockDrift 10
+#P0.0.clockBias 10000	
+#P0.0.clockDrift 10
+
+
+#Set the Initial Solar Radiation Pressure and Drag Coefficient Covariances	
+#P0.0.Cr   .12	
+#P0.0.Cd  1e-30	
+
+
+
+#MEASUREMENTS
+
+#Set the number of types of measurements
+MEAS.types 3
+
+#Measurement type position.  Assumed an ECI absolute position can 
+#be measured or provided by a ground station.  The associated
+#measurement noise is also provided 
+
+MEAS.0.desc OPT
+MEAS.0.satellite 0
+MEAS.0.frequency 60
+MEAS.0.t0 0
+MEAS.0.tf 259200
+MEAS.0.type y_angle_star
+MEAS.0.ustar.1 1.0
+MEAS.0.ustar.2 0.0
+MEAS.0.ustar.3 0.0
+MEAS.0.cbody earth
+MEAS.0.R 2.741556778080377e-007
+
+MEAS.0.desc OPT
+MEAS.0.satellite 0
+MEAS.0.frequency 60
+MEAS.0.t0 0
+MEAS.0.tf 259200
+MEAS.0.type y_angle_los
+MEAS.0.cbody earth
+MEAS.0.q.1 0
+MEAS.0.q.2 0
+MEAS.0.q.3 0
+MEAS.0.q.4 1
+MEAS.0.R 2.741556778080377e-007
+
+MEAS.1.desc OPT
+MEAS.1.satellite 0
+MEAS.1.frequency 60
+MEAS.1.t0 0
+MEAS.1.tf 259200
+MEAS.1.type range
+MEAS.1.cbody earth
+MEAS.1.R 2.741556778080377e-007

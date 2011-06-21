@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?altova_samplexml C:\Documents and Settings\rcpage\Desktop\Richard\XML\JAT\sim_input.xml?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="1.0">
+	<xs:element name="Input">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="InitialState">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Cartesian">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="x" type="xs:double"/>
+										<xs:element name="y" type="xs:double"/>
+										<xs:element name="z" type="xs:double"/>
+										<xs:element name="xdot" type="xs:double"/>
+										<xs:element name="ydot" type="xs:double"/>
+										<xs:element name="zdot" type="xs:double"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Time">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="MJD" type="xs:double"/>
+							<xs:element name="t0" type="xs:double"/>
+							<xs:element name="tf" type="xs:double"/>
+							<xs:element name="dt" type="xs:double"/>
+							<xs:element name="thinning" type="xs:double"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Spacecraft">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Name" type="xs:string"/>
+							<xs:element name="CR" type="xs:double"/>
+							<xs:element name="cd" type="xs:double"/>
+							<xs:element name="area" type="xs:double"/>
+							<xs:element name="mass" type="xs:double"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

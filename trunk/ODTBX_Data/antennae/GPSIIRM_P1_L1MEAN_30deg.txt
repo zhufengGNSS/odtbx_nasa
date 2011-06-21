@@ -1,0 +1,22 @@
+% GPSIIRM_P1_L1MEAN.TXT
+%  
+%  MEAN L1 antenna gain for GPS Block IIRM Panel 1
+%  See L1all.xls
+%  ONLY OUT TO 30 DEG
+% angle [deg] gain [db]
+0.0	13.66
+2.0	13.48
+4.0	13.21
+6.0	13.42
+8.0	14.16
+10.0	14.84
+12.0	14.94
+14.0	14.22
+16.0	12.57
+18.0	9.89
+20.0	6.07
+22.0	1.29
+24.0	-2.40
+26.0	-3.58
+28.0	-4.82
+30.0	-6.21

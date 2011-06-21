@@ -1,0 +1,35 @@
+#default simulation file
+#Fri Jun 16 10:54:37 EDT 2006
+venus=false
+moon=false
+spacecraft_reflectivity_coefficient=1.2
+earth=true
+sun=false
+neptune=false
+thinning=12.0
+spacecraft_name=spacecraft_name
+target_z=0.0
+target_y=0.0
+target_x=0.0
+mars=false
+tf=86400.0
+uranus=false
+jupiter=false
+mjd_utc=53157.5
+z=-426384.456
+JGM3=false
+y=-5038203.756
+saturn=false
+x=-4453783.586
+t0=0.0
+target_xdot=0.0
+xdot=3831.888
+target_ydot=0.0
+ydot=-2887.221
+spacecraft_drag_coefficient=2.2
+spacecraft_mass=1000.0
+target_zdot=0.0
+spacecraft_cross-section=20.0
+zdot=-6018.232
+mercury=false
+stepsize=60.0

@@ -1,0 +1,311 @@
+
+# Simulator Input List
+# Low Lunar Orbit
+
+# Mode: 0 = Trajectory Generation Only, 1 = Trajectory and Filter
+init.mode    1
+init.runMonteCarlo true
+MONTE.num_runs 3
+MONTE.r_error 1000
+MONTE.v_error 10
+MONTE.lm_error 100
+MONTE.start_case_num 50
+
+# Flag indicating whether to read observations from a file or generate them
+init.fromfile false
+
+#Initial MJD and Seconds past MJD0 for simulation start
+init.MJD0 58232   
+init.T0 0.0		 
+
+#Final MJD and Seconds past MJDF for simulation end
+init.MJDF    58235
+init.TF      0		 
+
+#The step size in the propagation step.
+#NOTE:  This number should be smaller than the desired measurement period
+init.dt      60    
+FILTER.dt    60	
+
+# Space Craft Properties/Initial Conditions (start numbering from 0)
+# Each satellite needs a true state and a reference state
+prop.NumSpacecraft  1
+
+#ECI position and velocity (m and m/s)        
+#GEONS TRUE
+
+#lci [km]
+#1.7232607076253737e+002  1.6379287856614317e+003 -8.1592709137349675e+002  1.3836671664810035e-001  7.1393322649210633e-001  1.4624051437086556e+000
+#seleno [km]
+#-7.0653447440413493e+002  9.2387238910403778e+002 -1.4232051310790273e+003 -7.6578459477044203e-001  1.0064446005845396e+000  1.0334979559135251e+000  
+
+TRUE_STATE.0.X   -7.0653447440413493e+002
+TRUE_STATE.0.Y   9.2387238910403778e+002
+TRUE_STATE.0.Z  -1.4232051310790273e+003
+TRUE_STATE.0.VX  -7.6578459477044203e-001
+TRUE_STATE.0.VY  1.0064446005845396e+000
+TRUE_STATE.0.VZ  1.0334979559135251e+000
+
+# exact
+#REF_STATE.0.X   -7.0653447440413493e+002
+#REF_STATE.0.Y   9.2387238910403778e+002
+#REF_STATE.0.Z  -1.4232051310790273e+003
+#REF_STATE.0.VX  -7.6578459477044203e-001
+#REF_STATE.0.VY  1.0064446005845396e+000
+#REF_STATE.0.VZ  1.0334979559135251e+000
+
+# skew
+#REF_STATE.0.X   -7.0643447440413493e+002
+#REF_STATE.0.Y   9.2397238910403778e+002
+#REF_STATE.0.Z  -1.4231051310790273e+003
+#REF_STATE.0.VX  -7.6678459477044203e-001
+#REF_STATE.0.VY  1.0054446005845396e+000
+#REF_STATE.0.VZ  1.0344979559135251e+000
+
+# skew 99.9% 
+REF_STATE.0.X   -7.0582793993e+002
+REF_STATE.0.Y   9.22948516715e+002
+REF_STATE.0.Z  -1.42178192595e+003
+REF_STATE.0.VX  -7.6501810176e-001
+REF_STATE.0.VY  1.00543815598e000
+REF_STATE.0.VZ  1.03246445796e+000
+
+#-668428.2069244173	874267.8019608951	-1344570.5796060965	
+REF_STATE.0.LX	-668428.2069244173
+REF_STATE.0.LY	874267.8019608951
+REF_STATE.0.LZ	-1344570.5796060965
+#above is actual
+#REF_STATE.0.LX	-668528.2069244173
+#REF_STATE.0.LY	874247.8019608951
+#REF_STATE.0.LZ	-1344670.5796060965
+
+#MEAS.0.0.latitude -50.7
+#MEAS.0.0.longitude 127.4
+#MEAS.0.0.altitude 0
+#MEAS.0.0.bounding_diameter 20 
+
+
+#TRUE_STATE.0.X   1.7232607076253737e+002
+#TRUE_STATE.0.Y   1.6379287856614317e+003
+#TRUE_STATE.0.Z  -8.1592709137349675e+002
+#TRUE_STATE.0.VX  1.3836671664810035e-001
+#TRUE_STATE.0.VY  7.1393322649210633e-001
+#TRUE_STATE.0.VZ  1.4624051437086556e+000
+
+#REF_STATE.0.X   1.7232607076253737e+002
+#REF_STATE.0.Y   1.6379287856614317e+003
+#REF_STATE.0.Z  -8.1592709137349675e+002
+#REF_STATE.0.VX  1.3836671664810035e-001
+#REF_STATE.0.VY  7.1393322649210633e-001
+#REF_STATE.0.VZ  1.4624051437086556e+000
+
+#Initial Clock Bias Term 
+jat.0.clockBias  0.0
+jat.0.clockDrift 0.0
+
+#Solar Radiation Pressure Coefficient and Drag Doefficient
+#Area (m^2) and mass (kg)
+jat.0.Cr    0.0        
+jat.0.Cd    0.0
+jat.0.area  10.0  
+jat.0.mass  1000    
+
+#Orbital Force Parameters (for each spacecraft)
+
+#Use Gravitational Gradient (not currently implimented)
+jat.0.GravGrad false 
+
+#Use only 2-body force models
+jat.0.2body false     
+
+#Include Solar Gravity Acceleration
+jat.0.solar false
+
+#Include Lunar Gravity Acceleration
+jat.0.lunar true
+jat.0.lunarHarmonic true
+jat.0.lunar_n.filter 20	
+jat.0.lunar_n.jat 20
+jat.0.lunar.monte true
+
+#Include Drag Acceleration      
+jat.0.drag false      
+
+#Include Solar Radiation Pressure Acceleration
+jat.0.srp false       
+
+#Include only jgm2 gravity model (False = JGM3)
+jat.0.jgm2 false    
+
+#Estimator Properties
+
+#Set the number of states the filter will have
+#X Y Z Vx Vy Vz B Bdot Srp
+#FILTER.dt    1	#see above
+FILTER.states 6
+
+
+#Set the process model used
+FILTER.pm Lunar
+
+#PROCESS NOISE
+#Set the process noise for each of the states
+#Q.0.X   1e-11
+#Q.0.Y   1e-11
+#Q.0.Z   1e-11
+#Q.0.VX   1e-13   
+#Q.0.VY   1e-13
+#Q.0.VZ   1e-13
+
+Q.0.X   1e-4
+Q.0.Y   1e-4
+Q.0.Z   1e-4
+Q.0.VX   5e-6   
+Q.0.VY   5e-6
+Q.0.VZ   5e-6
+
+#***
+#Q.0.X   1e-9
+#Q.0.Y   1e-9
+#Q.0.Z   1e-9
+#Q.0.VX   1e-11   
+#Q.0.VY   1e-11
+#Q.0.VZ   1e-11
+
+
+#Q.0.X   1e-20 
+#Q.0.Y   1e-20
+#Q.0.Z   1e-20
+#Q.0.VX   1e-26   
+#Q.0.VY   1e-26
+#Q.0.VZ   1e-26
+
+Q.0.LX	1e-15
+Q.0.LY	1e-15
+Q.0.LZ	1e-15
+
+#Set the Initial Position and Velocity Covariance (m and m/s)
+P0.0.X    2e3		 
+P0.0.Y    2e3				
+P0.0.Z    2e3			
+P0.0.VX   2e0		
+P0.0.VY   2e0			
+P0.0.VZ   2e0
+#P0.0.X    2e4		 
+#P0.0.Y    2e4				
+#P0.0.Z    2e4			
+#P0.0.VX   2e1		
+#P0.0.VY   2e1			
+#P0.0.VZ   2e1
+#P0.0.X    1		 
+#P0.0.Y    1				
+#P0.0.Z    1			
+#P0.0.VX   0.1		
+#P0.0.VY   0.1		
+#P0.0.VZ   0.1
+
+#P0.0.LX	1e9
+#P0.0.LY	1e9
+#P0.0.LZ	1e9
+P0.0.LX	1e4
+P0.0.LY	1e4
+P0.0.LZ	1e4
+
+
+#Set thhe Initial Clock Offset and Drift Covariance (m and m/s)		
+#P0.0.clockBias 10000	
+#P0.0.clockDrift 10
+#P0.0.clockBias 10000	
+#P0.0.clockDrift 10
+
+
+#Set the Initial Solar Radiation Pressure and Drag Coefficient Covariances	
+#P0.0.Cr   .12	
+#P0.0.Cd  1e-30	
+
+
+
+#MEASUREMENTS
+
+#Set the number of types of measurements
+MEAS.types 1
+
+#Measurement type position.  Assumed an ECI absolute position can 
+#be measured or provided by a ground station.  The associated
+#measurement noise is also provided 
+
+#units for altitude & diameter = km
+MEAS.0.desc OPT
+MEAS.0.satellite 0
+MEAS.0.frequency 60
+MEAS.0.t0 0
+MEAS.0.tf 604800
+MEAS.0.type landmark
+MEAS.0.cbody moon
+MEAS.0.vbody moon
+#MEAS.0.R 2.741556778080377e-007
+#MEAS.0.R 0.001221730476
+#MEAS.0.Rdeg 0.07
+#MEAS.0.R 1.492625356955e-6
+MEAS.0.Rdeg 0.001
+MEAS.0.R 3.046174197867e-10
+#MEAS.0.Rdeg 0.01
+#MEAS.0.R 3.046174197867e-8
+#MEAS.0.Rdeg 0.1
+#MEAS.0.R 3.046174197867e-6
+MEAS.0.datacount 1
+MEAS.0.0.known true
+MEAS.0.0.latitude 10
+MEAS.0.0.longitude 120
+MEAS.0.0.altitude 0
+MEAS.0.0.bounding_diameter 20 
+MEAS.0.1.known true
+MEAS.0.1.latitude 10
+MEAS.0.1.longitude 90
+MEAS.0.1.altitude 0
+MEAS.0.1.bounding_diameter 20 
+MEAS.0.2.known true
+MEAS.0.2.latitude 10
+MEAS.0.2.longitude 55.4
+MEAS.0.2.altitude 0
+MEAS.0.2.bounding_diameter 20 
+
+
+#MEAS.0.0.known true
+#MEAS.0.0.latitude -50.7
+#MEAS.0.0.longitude 127.4
+#MEAS.0.0.altitude 0
+#MEAS.0.0.bounding_diameter 20 
+#MEAS.0.1.known true
+#MEAS.0.1.latitude 0
+#MEAS.0.1.longitude 127.4
+#MEAS.0.1.altitude 0
+#MEAS.0.1.bounding_diameter 20 
+#MEAS.0.2.known true
+#MEAS.0.2.latitude 50.7
+#MEAS.0.2.longitude 127.4
+#MEAS.0.2.altitude 0
+#MEAS.0.2.bounding_diameter 20 
+#MEAS.0.3.known true
+#MEAS.0.3.latitude 50.7
+#MEAS.0.3.longitude 60.0
+#MEAS.0.3.altitude 0
+#MEAS.0.3.bounding_diameter 20 
+#MEAS.0.4.known true
+#MEAS.0.4.latitude -50.7
+#MEAS.0.4.longitude 60.0
+#MEAS.0.4.altitude 0
+#MEAS.0.4.bounding_diameter 20 
+
+
+MEAS.1.desc OPT
+MEAS.1.satellite 0
+MEAS.1.frequency 30
+MEAS.1.t0 0
+MEAS.1.tf 604800
+MEAS.1.type range
+MEAS.1.cbody moon
+MEAS.1.vbody moon
+MEAS.1.R 2.741556778080377e-007
+
+#MEAS.1.R 4e-4

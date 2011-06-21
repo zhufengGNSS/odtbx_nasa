@@ -1,0 +1,22 @@
+% GPSIIR_ALL_L2MEAN.TXT
+%
+%  MEAN L2 antenna gain averaged from GPS Block IIR SVN41,43,54
+%  See L2all.xls
+%  ONLY OUT TO 30 DEG
+% angle [deg] gain [db]
+0.0	13.59
+2.0	13.47
+4.0	13.17
+6.0	12.79
+8.0	12.48
+10.0	12.29
+12.0	12.14
+14.0	11.89
+16.0	11.41
+18.0	10.55
+20.0	9.21
+22.0	7.24
+24.0	4.48
+26.0	0.55
+28.0	-5.33
+30.0	-11.25

@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Bang-Bang control</title>
+                                                
+  <meta http-equiv="content-type" content="text/html; charset=Shift_JIS">
+</head>
+  <body>
+           
+<div align="center">  <font color="#330000"><img src="BangBangTitle.GIF"
+ alt="Title" width="492" height="64">
+    </font>         
+<div align="left"><b><u>Description</u></b><br>
+ <br>
+    A basic bang-bang control about single axis was implemented in this scenario. 
+  <br>
+    </div>
+    </div>
+     The model of a linearized spacecraft dynamics with a proportional and
+ derivative<br>
+     control was considered, which is shown in the illustration below.<br>
+     <br>
+     <img src="BangBang.GIF" alt="Block Diagram" width="584"
+ height="233">
+     <br>
+     <br>
+     <b><u>Inputs</u></b><br>
+ <br>
+     <b>J</b>                    &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Spacecraft Moment 
+of inertia<br>
+     <b>wn</b>                  &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160; &#160; &#160; Desired natural 
+frequency<br>
+     <b>damping</b>           &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160; &#160; &#160; Desired damping coefficient<br>
+     <b>Torque</b>            &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160; &#160; &#160; &#160; &#160; Torque level of the bang-bang 
+actuator<br>
+     <b>Dead Zone</b>       &#160;&#160;&#160; &#160;&#160;&#160; &#160; &#160; &#160; Range in which no torque should 
+be applied<br>
+     <b>theta_com</b>        &#160;&#160;&#160; &#160;&#160;&#160; &#160; &#160; &#160; &#160;Commanded angular position<br>
+     <br>
+     <b><u>Initial Condition<br>
+ </u></b><br>
+     <b>theta </b>&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;              &#160; &#160;Spacecraft angular position 
+for an actuator  with  no constraint<br>
+     <b>thetaDot</b>          &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160; &#160;Spacecraft angular velocity
+for an actuator with   no constraint<br>
+     <b>thetaBang </b>&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;       Spacecraft angular position for
+the bang-bang actuator<br>
+     <b>thetaDotBang</b>   &#160;&#160;&#160; &#160;&#160;&#160; Spacecraft angular velocity for the bang-bang 
+actuator<br>
+ <br>
+ <br>
+     <br>
+     <br>
+     <br>
+       <br>
+</body>
+</html>

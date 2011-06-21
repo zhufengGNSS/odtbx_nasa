@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+   <title>ODTBX Packaged Mice Toolkit </title>
+</head>
+
+<body style="color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">
+
+<table style="text-align: left; margin-left: auto; margin-right: auto; width: 800px;"
+border="0" cellpadding="5" cellspacing="2">
+
+<tbody>
+
+<tr align="justify">
+
+<td style="background-color: rgb(153, 153, 153); vertical-align: middle; text-align: center;">
+<b>ODTBX Packaged Mice Toolkit</b> </td>
+
+</tr>
+
+<tr>
+
+<td style="vertical-align: top;">
+
+<br>
+
+<!
+<p style="font-family: helvetica,arial,sans-serif;">
+<p>
+Mice is the Matlab version of the NAIF Spice Toolkit.  This installation of the Mice toolkit
+was installed from the Orbit Determination Toolbox installer.  This version is 
+N0064, released June 11, 2010.</p>
+
+<p>The full Mice documentation can be found at the link below.
+</p>
+
+<p> 
+<a href="index.html">Mice Documentation</a> - NAIF Mice Toolkit Hypertext Documentation
+</p>
+
+<p> 
+The majority of the Mice APIs require downloaded kernels which are loaded with the cspice_furnsh 
+function (see the "Most Used Mice APIs" link in the Mice Documentation).  Thousands of kernels 
+can be found for download at the NAIF ftp site.  Mission-specific kernels are located in mission
+folders at the top level.  The generic_kernels folder contains the general purpose kernels.
+</p>
+
+
+
+<p> 
+<a href="ftp://naif.jpl.nasa.gov/pub/naif/" target="_blank">naif.jpl.nasa.gov ftp site</a> - 
+NAIF kernel ftp site containing thousands of kernels
+</p>
+
+<p> 
+Three kernels making up a standard kernel set have been packaged with the ODTBX installer, and are 
+located in the mice/kernels folder.  These may be loaded with the cspice_furnsh function (making sure 
+to provide the full path name to the kernels in quotes).
+</p>
+
+<p> 
+de421.bsp - SPK Planetary ephemeris kernel
+</p>
+<p> 
+naif0009.tls - LSK Leapseconds kernel
+</p>
+<p> 
+pck00009.tpc - PCK Planetary constants kernel
+</p>
+<p> 
+Loading the mykernels.furnsh file with the cspice_furnsh function will load all three of these kernels, but it
+must be executed from the kernels folder.  This file may be modified with full paths in order to run it from
+any folder.
+</p>
+
+<hr style="width: 100%; height: 2px;">
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</body>
+</html>

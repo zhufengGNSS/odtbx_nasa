@@ -1,0 +1,1138 @@
+<HTML>
+<HEAD>
+<TITLE> Mice Required Reading </TITLE>
+</HEAD>
+
+<BODY style="color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">
+
+<A NAME="top"></A>
+
+<TABLE STYLE="text-align: left; margin-left: auto; margin-right: auto; width: 800px;" BORDER="0" CELLPADDING="5" CELLSPACING="2">
+<TBODY>
+<TR>
+  <TD STYLE="background-color: rgb(153, 153, 153); vertical-align: middle; text-align: center;">
+  <DIV ALIGN="right">
+    <SMALL><SMALL><A HREF="index.html">Index Page</A></SMALL></SMALL>
+  </DIV>
+  <B>Mice Required Reading</B> </TD>
+</TR>
+<TR>
+  <TD STYLE="vertical-align: top;">
+
+<H2> Table of Contents
+</H2>
+
+<PRE>
+   <A HREF="#Mice Required Reading">Mice Required Reading</A>
+      <A HREF="#Abstract">Abstract</A>
+         <A HREF="#Contact">Contact</A>
+         <A HREF="#Mailing List">Mailing List</A>
+      <A HREF="#Design Concept">Design Concept</A>
+         <A HREF="#Mice Functionality">Mice Functionality</A>
+         <A HREF="#Platforms">Platforms</A>
+   <A HREF="#Installation">Installation</A>
+      <A HREF="#Builds">Builds</A>
+         <A HREF="#Build Problems">Build Problems</A>
+      <A HREF="#Directory Structure">Directory Structure</A>
+   <A HREF="#Using Mice">Using Mice</A>
+      <A HREF="#Preparing the Environment">Preparing the Environment</A>
+      <A HREF="#First Test of Mice Installation">First Test of Mice Installation</A>
+      <A HREF="#Documentation">Documentation</A>
+         <A HREF="#Documentation Conventions">Documentation Conventions</A>
+      <A HREF="#The Mice API">The Mice API</A>
+         <A HREF="#API Functionality">API Functionality</A>
+         <A HREF="#Wrapper Types: mice_x.m, cspice_x.m">Wrapper Types: mice_x.m, cspice_x.m</A>
+         <A HREF="#Return of Integer Values as Double">Return of Integer Values as Double</A>
+      <A HREF="#Use of Vectorized Arguments">Use of Vectorized Arguments</A>
+         <A HREF="#Vectorizing a Numeric Scalar">Vectorizing a Numeric Scalar</A>
+         <A HREF="#Vectorizing a Numeric Vector">Vectorizing a Numeric Vector</A>
+         <A HREF="#Vectorizing a Structure">Vectorizing a Structure</A>
+         <A HREF="#Vectorizing a Numeric Matrix">Vectorizing a Numeric Matrix</A>
+         <A HREF="#Vectorizing a String">Vectorizing a String</A>
+      <A HREF="#SPICE Windows in Mice">SPICE Windows in Mice</A>
+      <A HREF="#Mice Implementation of the SPICE Error Subsystem">Mice Implementation of the SPICE Error Subsystem</A>
+         <A HREF="#Common Errors and Responses">Common Errors and Responses</A>
+         <A HREF="#Command Format Error">Command Format Error</A>
+         <A HREF="#Error Handling">Error Handling</A>
+   <A HREF="#Correlation Between Mice and MATLAB">Correlation Between Mice and MATLAB</A>
+      <A HREF="#MATLAB vs. CSPICE Functionality">MATLAB vs. CSPICE Functionality</A>
+   <A HREF="#Watch outs (Common problems)">Watch outs (Common problems)</A>
+      <A HREF="#Kernel Access">Kernel Access</A>
+      <A HREF="#Return Functions Without Input Arguments">Return Functions Without Input Arguments</A>
+      <A HREF="#Path Names">Path Names</A>
+
+</PRE>
+
+<HR SIZE=3 NOSHADE>
+
+<BR><BR>
+<A NAME="Mice Required Reading"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H1> Mice Required Reading
+</H1><HR SIZE=3 NOSHADE><P><BR><BR><BR>
+   Last revised on 2010 MAR 15 by E. D. Wright.
+<P>
+ 
+<BR><BR>
+<A NAME="Abstract"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Abstract
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   Mice is the ANSI C based interface between the MATLAB environment, a
+   product of Mathworks, Inc. (http://www.mathworks.com), and the CSPICE
+   library.
+<P>
+ 
+<BR><BR>
+<A NAME="Contact"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Contact
+</H3><P><BR><BR>
+   Developer contact: Ed Wright, Jet Propulsion Laboratory, 1-818-354-0371
+   ed.wright@jpl.nasa.gov.
+<P>
+ 
+<BR><BR>
+<A NAME="Mailing List"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Mailing List
+</H3><P><BR><BR>
+   NAIF provides a mailing list for Mice users. Register with the list at
+   URL:
+<P>
+ 
+<PRE>
+   http://naif.jpl.nasa.gov/mailman/listinfo/mice_discussion
+</PRE>
+<BR><BR>
+<A NAME="Design Concept"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Design Concept
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   Simplistically, Mice serves as a threshold by which a user can access
+   SPICE APIs from the MATLAB environment. MATLAB can then make use of
+   SPICE ancillary data in space science mission activities such as mission
+   evaluation, science observation planning, and science data analysis.
+<P>
+ 
+   Mice uses the MATLAB external interface functionality (MEX) to provide
+   MATLAB users access to selected CSPICE routines from within MATLAB. A
+   user need only install the interface library and the interface wrapper
+   files to gain use of these functions.
+<P>
+ 
+   MATLAB interfaces exist for a subset of the CSPICE wrappers, those
+   routines with name style "routine_c", with "routine" the name of the
+   CSPICE module. The Mice interfaces tend to be the "commonly used"
+   routines involved with kernel data access, time conversion, and geometry
+   calculations. Refer to the CSPICE required reading document (<a href="../req/cspice.html">cspice.req</a>)
+   for information concerning CSPICE.
+<P>
+ 
+   Mice passes data from the MATLAB environment to the CSPICE library, so a
+   Mice interface call performs few operations other than recasting input
+   from MATLAB into CSPICE form and recasting CSPICE output to MATLAB form
+   for return. Conforming to MATLAB norms, Mice uses base 1 array indices.
+<P>
+ 
+   NAIF employs the ANSI C standard when writing MATLAB/CSPICE interface
+   source code.
+<P>
+ 
+   For each platform, Mice uses the same binary and text kernels as the C
+   or FORTRAN SPICE Toolkit for that platform.
+<P>
+ 
+<BR><BR>
+<A NAME="Mice Functionality"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Mice Functionality
+</H3><P><BR><BR>
+<UL>
+<TT>&#32;&#32;</TT> Kernel (file): loaders
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> SPK: readers
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Binary PCK: readers
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> CK: readers, writers
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Text Kernel: readers
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Coordinate systems: translation between rectangular, cylindrical,
+latitudinal, geodetic, spherical, and right ascension declination systems.
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Body name/code translation
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Rotation functions
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Euler angle functions
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Quaternion functions
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Time conversion functions: convert between various time systems and
+representations
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Spacecraft clock functions: convert between spacecraft clock ticks and
+other time systems
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Ellipsoid functions: calculate near points, surface intercepts, normal
+vectors
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> Constant functions: standard epochs, radian/degree ratios, speed of light
+<BR><BR></UL>
+<UL>
+<TT>&#32;&#32;</TT> SPICE Windows functions: intersection, union, element-of, relative
+comparisons
+<BR><BR></UL>
+   Mice lacks interfaces to the various CSPICE vector and matrix math
+   routines since MATLAB natively provides such functions.
+<P>
+ 
+<BR><BR>
+<A NAME="Platforms"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Platforms
+</H3><P><BR><BR>
+   NAIF offers Mice for several computing environments. These environments
+   are listed on the NAIF website
+<P>
+ 
+<PRE>
+   http://naif.jpl.nasa.gov/naif/toolkit.html
+</PRE>
+   and in the intro_to_toolkit tutorial also available from the NAIF
+   website.
+<P>
+ 
+<BR><BR>
+<A NAME="Installation"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H1> Installation
+</H1><HR SIZE=3 NOSHADE><P><BR><BR><BR>
+   The Mice toolkit comprises the full CSPICE distribution plus the Mice
+   source code, associated build files, and Mice documentation. A user
+   without a MATLAB installation cannot use the Mice interface. NAIF
+   expects MATLAB version 7.2 (R2006a) or later for Mice use.
+<P>
+ 
+<BR><BR>
+<A NAME="Builds"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Builds
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   NAIF distributes the Mice package with all libraries and executables. If
+   the need develops to rebuild the Mice interface, recognize the build
+   requires access to MATLAB support files not provided by NAIF. Builds on
+   all platforms must access the mex.h file. Please consult the MATLAB
+   documentation for further information on the MEX mechanism. NAIF coded
+   the build scripts supplied with Mice to use the "standard" MATLAB
+   installation directory structure when accessing support files.
+<P>
+ 
+   The build system on Unix/Linux platforms uses the Mathworks supplied
+   "mex" script and NAIF edited mexopts.sh option file. The mexopts.sh file
+   defines the parameters used by the mex script to compile the library.
+   This file must exist in the mice source directory:
+<P>
+ 
+<PRE>
+   /path_to/mice/src/mice
+</PRE>
+   The build procedure on a Windows platform does not use a mexopts file.
+<P>
+ 
+<BR><BR>
+<A NAME="Build Problems"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Build Problems
+</H3><P><BR><BR>
+   When recompiling the mice.mex shared library, ensure the "mex" script
+   uses the same compiler as used to compile the CSPICE toolkit. Mathworks
+   supplies the 'lcc' compiler with the Microsoft Windows MATLAB package.
+   NAIF does not support CSPICE under this compiler; attempts to link lcc
+   compiled code against Microsoft CSPICE library cspice.lib will fail.
+<P>
+ 
+   Also ensure your path includes the MATLAB "mex" script and not the
+   Octave version of "mex."
+<P>
+ 
+<BR><BR>
+<A NAME="Directory Structure"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Directory Structure
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   A Mice package includes all CSPICE products (source, documentation,
+   libraries, executables) plus Mice specific items.
+<P>
+ 
+   The package has the same directory structure as CSPICE, with name
+   modifications and the additional files particular to Mice:
+<P>
+ 
+<PRE>
+                                  mice/
+                                   |
+                                   |
+   data/   doc/   etc/   exe/   include/  lib/  src/  makeall.csh(.bat)
+            |                               |      |
+            |                               |      |
+         html/  *.req  *. ug  ...           |    mice/  cspice/  ...
+            |                               |      |
+            |                               |      |
+            |                               |  mice.c
+        index.html  cspice/  mice/ ...      |  cspice_*.m
+                                |           |  mice_*.m
+                                |           |  *.h
+                             index.html     |  *.c
+                          cspice_*.html     |  mexopts.sh
+                            mice_*.html     |
+                                            |
+                                            |
+                              cspice.a  csupport.a  mice.mex*
+</PRE>
+   The makeall.csh (makeall.bat) file is a master build script specific to
+   the platform architecture.
+<P>
+ 
+<BR><BR>
+<A NAME="Using Mice"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H1> Using Mice
+</H1><HR SIZE=3 NOSHADE><P><BR><BR><BR>
+<BR><BR>
+<A NAME="Preparing the Environment"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Preparing the Environment
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   Use of Mice requires both the ``lib'' and mice ``src'' directories exist
+   in the MATLAB search path.
+<P>
+ 
+   The inclusion of the Mice directories to the MATLAB search path can be
+   done programatically:
+<P>
+ 
+<PRE>
+   &gt;&gt; addpath('/path_to/mice/src/mice/')
+   &gt;&gt; addpath('/path_to/mice/lib/' )
+</PRE>
+   or
+<P>
+ 
+<PRE>
+   &gt;&gt; addpath('c:\path_to\mice\src\mice\')
+   &gt;&gt; addpath('c:\path_to\mice\lib\' )
+</PRE>
+   A user can also add the Mice directories to the MATLAB search path by
+   setting the MATLABPATH environment variable.
+<P>
+ 
+<PRE>
+   setenv MATLABPATH path_to/mice/src/mice/
+</PRE>
+<BR><BR>
+<A NAME="First Test of Mice Installation"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> First Test of Mice Installation
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   Ensure a proper setup - execute the MATLAB command:
+<P>
+ 
+<PRE>
+   &gt;&gt; which mice
+</PRE>
+   MATLAB should return the path to the mice.mex* file if the file exists
+   within a directory searched by MATLAB.
+<P>
+ 
+<PRE>
+   /path_to/mice/lib/mice.mexmac
+</PRE>
+   If MATLAB outputs
+<P>
+ 
+<PRE>
+   'mice' not found.
+</PRE>
+   then the MATLAB search path does not include the directory containing
+   the mice.mex* file.
+<P>
+ 
+   The MATLAB command:
+<P>
+ 
+<PRE>
+   &gt;&gt; <a href="../mice/cspice_tkvrsn.html">cspice_tkvrsn</a>('toolkit')
+</PRE>
+   causes MATLAB to display the string identifier for the CSPICE library
+   version (N00XX) against which Mice linked.
+<P>
+ 
+<BR><BR>
+<A NAME="Documentation"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Documentation
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   Mice documentation includes an HTML based help facility that links the
+   Mice API documentation set with the corresponding CSPICE API
+   documentation set.
+<P>
+ 
+   The index.html file in
+<P>
+ 
+<PRE>
+   mice/doc/html
+</PRE>
+   or
+<P>
+ 
+<PRE>
+   mice\doc\html
+</PRE>
+   subdirectory is the Mice HTML documentation "homepage."
+<P>
+ 
+<BR><BR>
+<A NAME="Documentation Conventions"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Documentation Conventions
+</H3><P><BR><BR>
+<PRE>
+   Argument type  Format        Example
+   -------------  ----------    ----------------------------------------
+ 
+   string         back ticks    <a href="../mice/cspice_furnsh.html">cspice_furnsh</a>( `file` )
+ 
+   array of       (N)           [out1, out2] = cspice_function(arr(N))
+     size NX1
+ 
+   array of       (N,M)         [out1, out2] = cspice_function(arr(N,M))
+     size NXM
+ 
+   return an      ()            [values()] = <a href="../mice/cspice_bodvrd.html">cspice_bodvrd</a>(`body`, ...
+     Nx1 array                                             `item`, ...
+     of arbitrary                                            maxn)
+     size 'N'
+ 
+   vectorized     underscore    [_et_] = <a href="../mice/cspice_str2et.html">cspice_str2et</a>(_`str`_)
+     argument
+ 
+   optional       brackets      [ids] = <a href="../mice/cspice_spkobj.html">cspice_spkobj</a>( _`spk`_, ...
+     input        deliminating                         size,  ...
+                  input arg                            [ids_i] )
+ 
+</PRE>
+<BR><BR>
+<A NAME="The Mice API"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> The Mice API
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   MATLAB views all calls to MEX libraries as functions, that is a call has
+   the form:
+<P>
+ 
+<PRE>
+   output = name( inputs )
+</PRE>
+   Those routines returning multiple arguments on output do so in the
+   expected MATLAB manner:
+<P>
+ 
+<PRE>
+   [output1, output2, ...] = name( inputs )
+</PRE>
+   A set of MATLAB *.m wrapper files provides user access to the MEX
+   library. The *.m files include MATLAB specific versions of the
+   corresponding CSPICE wrapper's header describing the use and
+   implementation of the call. Theses headers also include example code.
+<P>
+ 
+   The MATLAB "help" command outputs the wrapper headers, e.g.:
+<P>
+ 
+<PRE>
+   &gt;&gt; help <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>
+ 
+       -Abstract
+ 
+          CSPICE_SPKEZR returns the state (position and velocity) of
+          a target body relative to an observing body, optionally
+          corrected for light time (planetary aberration) and stellar
+          aberration.
+ 
+            ...
+</PRE>
+<BR><BR>
+<A NAME="API Functionality"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> API Functionality
+</H3><P><BR><BR>
+   Consistent with the MATLAB norm, Mice calls do not explicitly return
+   array dimensions. The user can obtain the size description of an array
+   using the MATLAB command "size":
+<P>
+ 
+<PRE>
+   &gt;&gt; v = [ 1; 2; 3]
+ 
+   v =
+ 
+        1
+        2
+        3
+ 
+   &gt;&gt; size(v)
+ 
+   ans =
+ 
+        3     1
+</PRE>
+   "size" shows 'v' as a 3x1 array.
+<P>
+ 
+   Mice also checks the dimensionality of input vectors and matrices, i.e.
+   an API expecting a double precision 3x1 array as input signals an error
+   for any other data type or dimensionality.
+<P>
+ 
+<PRE>
+   &gt;&gt; v = [ 1; 2; 3; 4]
+ 
+   v =
+ 
+        1
+        2
+        3
+        4
+ 
+   &gt;&gt; [r, lon, z] = <a href="../mice/cspice_reccyl.html">cspice_reccyl</a>(v)
+ 
+   ??? MICE(BADARG): Input argument (`rectan') must be an 3x1 vector
+   or a vectorized vector (3xN).
+</PRE>
+<BR><BR>
+<A NAME="Wrapper Types: mice_x.m, cspice_x.m"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Wrapper Types: mice_x.m, cspice_x.m
+</H3><P><BR><BR>
+   Several CSPICE routines have two MATLAB interfaces differing only in the
+   output format. An interface prefixed with 'cspice_' retains essentially
+   the same argument list as the CSPICE counterpart. An interface prefixed
+   with 'mice_' returns a structure, with the fields of the structure
+   corresponding to the output arguments of the CSPICE counterpart. For
+   example the CSPICE call spkezr_c has the format:
+<P>
+ 
+<PRE>
+   spkezr_c( targ, et, ref, abcorr, obs, state, &amp;lt );
+</PRE>
+   The corresponding <a href="../mice/cspice_spkezr.html">cspice_spkezr</a> call:
+<P>
+ 
+<PRE>
+   [state, lt] = <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>(targ, et, ref, abcorr, obs)
+</PRE>
+   The corresponding <a href="../mice/mice_spkezr.html">mice_spkezr</a> call:
+<P>
+ 
+<PRE>
+   traj        = <a href="../mice/mice_spkezr.html">mice_spkezr</a>(targ, et, ref, abcorr, obs)
+</PRE>
+   The two calls return the same data with the <a href="../mice/cspice_spkezr.html">cspice_spkezr</a> version
+   returning separate arguments, while the <a href="../mice/mice_spkezr.html">mice_spkezr</a> returns a structure
+   composed of two fields, "state" (traj.state) and "lt" (traj.lt).
+<P>
+ 
+<BR><BR>
+<A NAME="Return of Integer Values as Double"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Return of Integer Values as Double
+</H3><P><BR><BR>
+   The current MATLAB convention for arithmetic involving both integers and
+   doubles as stated in the documentation (as of this writing):
+<P>
+ 
+<PRE>
+   "For all binary operations in which one operand is an array of
+   integer data type and the other is a scalar double, MATLAB computes
+   the operation using elementwise double-precision arithmetic, and
+   then converts the result back to the original integer data type."
+</PRE>
+   Due to this implementation, Mice interfaces return/cast as double those
+   integer arguments a user might later include in a calculation.
+<P>
+ 
+<BR><BR>
+<A NAME="Use of Vectorized Arguments"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Use of Vectorized Arguments
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   The Mice interfaces allow use of vectorized input arguments where
+   appropriate, e.g. routines with scalar time as an input argument accepts
+   a vector of times, resulting in vectorized output arguments.
+<P>
+ 
+   Let COUNT define the measure of vectorization.
+<P>
+ 
+<BR><BR>
+<A NAME="Vectorizing a Numeric Scalar"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Vectorizing a Numeric Scalar
+</H3><P><BR><BR>
+   MATLAB defines a numeric scalar as a 1x1 array. For use in Mice, a
+   vectorized numeric scalar has dimension 1xCOUNT.
+<P>
+ 
+<PRE>
+   &gt;&gt; COUNT = 5;
+   &gt;&gt; et = [1:COUNT] * <a href="../mice/cspice_spd.html">cspice_spd</a> * 5.
+ 
+   et =
+ 
+         432000      864000     1296000     1728000     2160000
+ 
+   &gt;&gt; size( et )
+ 
+   ans =
+ 
+        1     5
+</PRE>
+<BR><BR>
+<A NAME="Vectorizing a Numeric Vector"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Vectorizing a Numeric Vector
+</H3><P><BR><BR>
+   A vectorized numeric Nx1 array has dimension NxCOUNT.
+<P>
+ 
+<PRE>
+   &gt;&gt; [state,lt] = <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>( 'MOON' , ...
+                                  et     , ...
+                                  'J2000', ...
+                                  'NONE' , ...
+                                  'EARTH' );
+   &gt;&gt; size( state )
+ 
+   ans =
+ 
+        6     5
+</PRE>
+<BR><BR>
+<A NAME="Vectorizing a Structure"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Vectorizing a Structure
+</H3><P><BR><BR>
+   A vectorized structure has dimension 1xCOUNT.
+<P>
+ 
+<PRE>
+   &gt;&gt; traj = <a href="../mice/mice_spkezr.html">mice_spkezr</a>( 'MOON' , ...
+                           et    , ...
+                          'J2000', ...
+                          'LT+S' , ...
+                          'EARTH' );
+   &gt;&gt; size(traj)
+ 
+   ans =
+ 
+        1     5
+</PRE>
+<BR><BR>
+<A NAME="Vectorizing a Numeric Matrix"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Vectorizing a Numeric Matrix
+</H3><P><BR><BR>
+   Scalar use of <a href="../mice/cspice_pxform.html">cspice_pxform</a> returns a 3x3 array.
+<P>
+ 
+<PRE>
+   &gt;&gt; xform = <a href="../mice/cspice_pxform.html">cspice_pxform</a>( 'J2000', 'IAU_MOON', et(1) );
+   &gt;&gt; size(xform)
+ 
+   ans =
+ 
+        3     3
+</PRE>
+   A vectorized numeric NxM array has dimension NxMxCOUNT.
+<P>
+ 
+<PRE>
+   &gt;&gt; xform = <a href="../mice/cspice_pxform.html">cspice_pxform</a>( 'J2000', 'IAU_MOON', et );
+   &gt;&gt; size(xform)
+ 
+   ans =
+ 
+        3     3     5
+</PRE>
+   In this case, vectorized use returns 5 3x3 transformation matrices. To
+   access the ith matrix:
+<P>
+ 
+<PRE>
+      xform_i = xform(:,:,i)
+</PRE>
+<BR><BR>
+<A NAME="Vectorizing a String"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Vectorizing a String
+</H3><P><BR><BR>
+   a scalar string has dimension 1xLENGTH
+<P>
+ 
+<PRE>
+   &gt;&gt; utc = <a href="../mice/cspice_et2utc.html">cspice_et2utc</a>( et(1), 'C', 5 )
+ 
+   utc =
+ 
+   2000 JAN 06 11:58:55.81593
+ 
+   &gt;&gt; size( utc )
+ 
+   ans =
+ 
+        1    26
+</PRE>
+   A vector of strings has dimension COUNTxLENGTH.
+<P>
+ 
+<PRE>
+   &gt;&gt; utc = <a href="../mice/cspice_et2utc.html">cspice_et2utc</a>( et, 'C', 5 )
+ 
+   utc =
+ 
+   2000 JAN 06 11:58:55.81593
+   2000 JAN 11 11:58:55.81578
+   2000 JAN 16 11:58:55.81564
+   2000 JAN 21 11:58:55.81550
+   2000 JAN 26 11:58:55.81537
+ 
+   &gt;&gt; size( utc )
+ 
+   ans =
+ 
+        5    26
+ 
+   &gt;&gt; et1 = <a href="../mice/cspice_str2et.html">cspice_str2et</a>( utc )
+ 
+   et1 =
+ 
+      1.0e+06 *
+ 
+       0.4320    0.8640    1.2960    1.7280    2.1600
+</PRE>
+   Mice string input arguments also accept a cell of strings. Note, all
+   string outputs return as NxM character arrays.
+<P>
+ 
+<PRE>
+   &gt;&gt; utc1 = cellstr( utc )
+ 
+   utc1 =
+ 
+       '2000 JAN 06 11:58:55.81593'
+       '2000 JAN 11 11:58:55.81578'
+       '2000 JAN 16 11:58:55.81564'
+       '2000 JAN 21 11:58:55.81550'
+       '2000 JAN 26 11:58:55.81537'
+ 
+   &gt;&gt; size( utc1 )
+ 
+   ans =
+ 
+        5     1
+ 
+   &gt;&gt; et2 = <a href="../mice/cspice_str2et.html">cspice_str2et</a>( utc1 )
+ 
+   et2 =
+ 
+      1.0e+06 *
+ 
+       0.4320    0.8640    1.2960    1.7280    2.1600
+</PRE>
+   When processing vectorized input arguments, Mice confirms all vectorized
+   inputs have the same measure of vectorization. Mice signals an error
+   when inputs do not agree with regard to the measure.
+<P>
+ 
+<PRE>
+   &gt;&gt; range = [ 1., 2., 3.  ]
+ 
+   range =
+ 
+        1     2     3
+ 
+   &gt;&gt; dec   = [ 0., 0.1  ]
+ 
+   dec =
+ 
+            0    0.1000
+ 
+   &gt;&gt; ra    = [ 0., 0.75, 1.5 ]
+ 
+   ra =
+ 
+            0    0.7500    1.5000
+ 
+   &gt;&gt; rectan = <a href="../mice/cspice_radrec.html">cspice_radrec</a>( range, ra, dec)
+ 
+   ??? MICE(BADARG): Input argument 3 (`dec') must have same
+   length as `range'
+</PRE>
+   Please consult the API documentation for details on a particular
+   routine's argument set.
+<P>
+ 
+<BR><BR>
+<A NAME="SPICE Windows in Mice"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> SPICE Windows in Mice
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   The Mice implementation of SPICE windows consists of double precision
+   Nx1 arrays with N an even or zero value. Mice windows lack a constant
+   size as the windows interfaces dynamically adjust window size before
+   return, therefore the SPICE concept of window cardinality degenerates to
+   window size.
+<P>
+ 
+   Refer to the Windows Required Reading document, <a href="../req/windows.html">windows.req</a>, for
+   specific information on the implementation of windows in Mice.
+<P>
+ 
+<BR><BR>
+<A NAME="Mice Implementation of the SPICE Error Subsystem"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Mice Implementation of the SPICE Error Subsystem
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   By design, Mice lacks interfaces to the CSPICE error subsystem. The
+   interface code "catches" any CSPICE error, then passes the error
+   description to the MATLAB interpreter as a MATLAB error message.
+<P>
+ 
+<BR><BR>
+<A NAME="Common Errors and Responses"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Common Errors and Responses
+</H3><P><BR><BR>
+   Mice MEX library not loaded or present in search path
+<P>
+ 
+<PRE>
+   ??? Undefined function or variable 'mice'.
+</PRE>
+   No loaded leapseconds kernel. Call <a href="../mice/cspice_et2utc.html">cspice_et2utc</a> without loading
+   kernels:
+<P>
+ 
+<PRE>
+   &gt;&gt; str = <a href="../mice/cspice_et2utc.html">cspice_et2utc</a>( 0., 'C', 5)
+ 
+   ??? SPICE(MISSINGTIMEINFO): [et2utc_c-&gt;ET2UTC-&gt;UNITIM] The
+   following, needed to convert between the input uniform time
+   scales, were not found in the kernel pool: DELTET/DELTA_T_A,
+   DELTET/K, DELTET/EB, DELTET/M. Your program may have failed
+   to load a leapseconds kernel. Other possible causes of this
+   problem include loading an invalid leapseconds kernel---one
+   that lacks an initial \begindata marker or final newline
+   character, or is otherwise corrupted---or deleting previously
+   loaded kernel pool variables via calls to UNLOAD or CLPOOL.
+   Use the SPICE routine FURNSH (in Fortran Toolkits, FURNSH is
+   an entry point of KEEPER) to load a leapseconds kernel; make
+   sure the kernel is up to date. See the Kernel and Time Required
+   Reading or the "Intro to Kernels" and "LSK and SCLK" SPICE
+   Tutorials for details.
+</PRE>
+   No loaded SPKs. Call <a href="../mice/cspice_spkezr.html">cspice_spkezr</a> without loading SPKs:
+<P>
+ 
+<PRE>
+   &gt;&gt; [state, ltime] = <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>( 'MOON' , ...
+                                       0.    , ...
+                                      'J2000', ...
+                                      'LT+S' , ...
+                                      'EARTH' )
+ 
+   ??? SPICE(NOLOADEDFILES): [spkezr_c-&gt;SPKEZR-&gt;SPKEZ-&gt;SPKSSB-&gt;SPKGEO-&gt;
+   SPKSFS] At least one SPK file needs to be loaded by SPKLEF before
+   beginning a search.
+</PRE>
+   NAIF designed the Mice error system to handle vectorized functions.
+   Consider the "Insufficient ephemeris data" error message from a
+   <a href="../mice/cspice_spkezr.html">cspice_spkezr</a> call with a scalar 'et':
+<P>
+ 
+<PRE>
+   &gt;&gt; et = <a href="../mice/cspice_str2et.html">cspice_str2et</a>( '2050 JAN 30' );
+ 
+   &gt;&gt; [state, ltime] = <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>( 'MOON' , ...
+                                       et    , ...
+                                      'J2000', ...
+                                      'LT+S' , ...
+                                      'EARTH' )
+ 
+   ??? SPICE(SPKINSUFFDATA): [spkezr_c-&gt;SPKEZR-&gt;SPKEZ-&gt;SPKSSB-&gt;SPKGEO]
+   Insufficient ephemeris data has been loaded to compute the state of
+   399 (EARTH) relative to 0 (SOLAR SYSTEM BARYCENTER) at the ephemeris
+   epoch 2050 JAN 30 00:01:04.184.
+</PRE>
+   The same error when using a vectorized 'et':
+<P>
+ 
+<PRE>
+   &gt;&gt; et0 = <a href="../mice/cspice_str2et.html">cspice_str2et</a>( '2049 DEC 30' );
+   &gt;&gt; et  = [0:1000000] + et0;
+   &gt;&gt; [state, ltime] = <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>( 'MOON' , ...
+                                       et    , ...
+                                      'J2000', ...
+                                      'LT+S' , ...
+                                      'EARTH' )
+ 
+   ??? SPICE(SPKINSUFFDATA): [spkezr_c-&gt;SPKEZR-&gt;SPKEZ-&gt;SPKACS-&gt;SPKGEO]
+   Insufficient ephemeris data has been loaded to compute the state of
+   399 (EARTH) relative to 0 (SOLAR SYSTEM BARYCENTER) at the ephemeris
+   epoch 2050 JAN 01 00:01:05.183. Failure occurred at input vector
+   index 172800.
+</PRE>
+   The "Failure occurred at input vector index ..." string appears only
+   when using vectorized arguments. The element value refers to the vector
+   index at which the failure occurred. In this case, the kernel system
+   lacked data to perform the state evaluation at time value et(172800).
+<P>
+ 
+<BR><BR>
+<A NAME="Command Format Error"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Command Format Error
+</H3><P><BR><BR>
+   When the Mice interface detects an error in the command format, it
+   signals an error and outputs a usage string displaying the correct
+   format. An example usage response:
+<P>
+ 
+<PRE>
+   &gt;&gt; <a href="../mice/cspice_et2utc.html">cspice_et2utc</a>
+ 
+   ??? Error using ==&gt; <a href="../mice/cspice_et2utc.html">cspice_et2utc</a>
+   Usage: [_`utcstr`_] = <a href="../mice/cspice_et2utc.html">cspice_et2utc</a>(_et_, `format`, prec)
+</PRE>
+<BR><BR>
+<A NAME="Error Handling"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H3> Error Handling
+</H3><P><BR><BR>
+   MATLAB includes a try...catch...end implementation usable to trap any
+   CSPICE signaled error, e.g.:
+<P>
+ 
+<PRE>
+   %
+   % Make a call to an interface function. Wrap the
+   % call in a try/catch block.
+   %
+   try
+ 
+      [output1, output2, ...] = cspice_function( input1, input2, ...)
+ 
+   catch
+ 
+      %
+      % If an error occurred, retrieve that string
+      % from 'lasterr'. Output the error string.
+      %
+      disp( lasterr )
+ 
+   end
+</PRE>
+   Use of try...catch...end grants the user control over the error response
+   from the CSPICE routines.
+<P>
+ 
+   Example:
+<P>
+ 
+   Attempt to return a state without loading kernels.
+<P>
+ 
+<PRE>
+   %
+   % Wrap <a href="../mice/cspice_spkezr.html">cspice_spkezr</a> in a try...catch block.
+   %
+   try
+ 
+      [state, ltime] = <a href="../mice/cspice_spkezr.html">cspice_spkezr</a>( 'MOON' , ...
+                                       0.    , ...
+                                      'J2000', ...
+                                      'LT+S' , ...
+                                      'EARTH' )
+ 
+   catch
+ 
+      %
+      % Check for an error response. Print the message if found.
+      %
+      disp( lasterr )
+ 
+   end
+ 
+   %
+   % Continue program execution.
+   %
+ 
+         ...
+</PRE>
+   The output displays the expected message:
+<P>
+ 
+<PRE>
+   SPICE(NOLOADEDFILES): [spkezr_c-&gt;SPKEZR-&gt;SPKEZ-&gt;SPKSSB-&gt;SPKGEO-&gt;
+   SPKSFS] At least one SPK file needs to be loaded by SPKLEF
+   before beginning a search.
+</PRE>
+<BR><BR>
+<A NAME="Correlation Between Mice and MATLAB"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H1> Correlation Between Mice and MATLAB
+</H1><HR SIZE=3 NOSHADE><P><BR><BR><BR>
+<BR><BR>
+<A NAME="MATLAB vs. CSPICE Functionality"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> MATLAB vs. CSPICE Functionality
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   CSPICE matrix operations and their equivalent expression in MATLAB code.
+<P>
+ 
+<PRE>
+   CSPICE      Native MATLAB       Description
+   -------     ---------------     -----------
+   mtxm_c      m1' * m2            Matrix transpose times matrix, 3x3
+   mtxmg_c     m1' * m2            Matrix transpose times matrix
+                                   (general dim.)
+   mtxv_c      m1' * v1            Matrix transpose times vector, 3x3
+   mtxvg_c     m1' * v1            Matrix transpose times vector
+                                   (general dim.)
+   mxm_c       m1 * m2             Matrix times matrix, 3x3
+   mxmg_c      m1 * m2             Matrix times matrix (general dim.)
+   mxmt_c      m1 * m2'            Matrix times matrix transpose, 3x3
+   mxmtg_c     m1 * m2'            Matrix times matrix transpose
+                                   (general dim.)
+   mxv_c       m1 * v1             Matrix times vector, 3x3
+   mxvg_c      m1 * v1             Matrix times vector (general dim.)
+   vadd_c      v1 + v2             Vector addition, 3 dimensional
+   vaddg_c     v1 + v2             Vector addition (general dim.)
+   vcrss_c     cross(v1, v2)       Vector cross product, 3 dimensions
+   vdist_c     norm(v1 - v2)       Vector distance
+   vdistg_c    norm(v1 - v2)       Vector distance (general dim.)
+   vdot_c      dot(v1, v2)         Vector dot product, 3 dimensions
+   vdotg_c     dot(v1, v2)         Vector dot product (general dim.)
+   vequ_c      v2 = v1             Vector equality, 3 dimensions
+   vequg_c     v2 = v1             Vector equality (general dim.)
+   vhat_c      v1/norm(v1)         "V-Hat", unit vector along V,
+                                   3 dimensions
+   vhatg_c     v1/norm(v1)         "V-Hat", unit vector along V
+                                   (general dim.)
+   vlcom3_c    a*v1 + b*v2 + c*v3  Vector linear combination,
+                                   3 dimensions
+   vlcom_c     a*v1 + b*v2         Vector linear combination,
+                                   3 dimensions
+   vlcomg_c    a*v1 + b*v2         Vector linear combination
+                                   (general dim.)
+   vminug_c    -v1                 Minus V, "-V" (general dim.)
+   vminus_c    -v1                 Minus V, "-V", 3 dimensions
+   vnorm_c     norm(v1)            Vector norm, 3 dimensions
+   vnormg_c    norm(v1)            Vector norm (general dim.)
+   vpack_c     v1 = [x, y, z]'     Pack three scalar components into a
+                                   vector
+   vscl_c      s * v1              Vector scaling, 3 dimensions
+   vsclg_c     s * v1              Vector scaling (general dim.)
+   vsub_c      v1 - v2             Vector subtraction, 3 dimensions
+   vsubg_c     v1 - v2             Vector subtraction (general dim.)
+   vtmv_c      v1' * m1 * v2       Vector transpose times matrix times
+                                   vector, 3 dim
+   vtmvg_c     v1' * m1 * v2       Vector transpose times matrix times
+                                   vector (general dim.)
+   vupack_c    x = v1(1)           Unpack three scalar components from
+                                   a vector
+               y = v1(2)
+               z = v1(3)
+   vzero_c     all( v1 == 0 )      Is a vector the zero vector?
+   vzerog_c    all( v2 == 0 )      Is a vector the zero vector?
+                                   (general dim.)
+</PRE>
+<BR><BR>
+<A NAME="Watch outs (Common problems)"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H1> Watch outs (Common problems)
+</H1><HR SIZE=3 NOSHADE><P><BR><BR><BR>
+<BR><BR>
+<A NAME="Kernel Access"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Kernel Access
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   The CSPICE design supposes use in a single program run-time environment;
+   the program accomplishes its function, then quits. With respect to Mice,
+   consider the MATLAB environment as a single program run. Since Mice
+   functions as an extension to MATLAB, loaded kernels and opened files
+   remain in memory after a script runs unless explicitly unloaded or
+   closed (a script is not the program, MATLAB is the program). A user
+   should consider unloading unneeded kernels via <a href="../mice/cspice_unload.html">cspice_unload</a> or clearing
+   all loaded kernels and kernel pool variables with a <a href="../mice/cspice_kclear.html">cspice_kclear</a> call
+   at the end of a MATLAB script or session to avoid both exceeding the
+   maximum number of allowed loaded kernels and providing unintended access
+   to kernel data.
+<P>
+ 
+<BR><BR>
+<A NAME="Return Functions Without Input Arguments"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Return Functions Without Input Arguments
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   The constants functions return a value without an input argument list.
+<P>
+ 
+   Example of an incorrect function call:
+<P>
+ 
+<PRE>
+   &gt;&gt; x = <a href="../mice/cspice_dpr.html">cspice_dpr</a>()
+</PRE>
+   Example of a correct function call:
+<P>
+ 
+<PRE>
+   &gt;&gt; x = <a href="../mice/cspice_dpr.html">cspice_dpr</a>
+</PRE>
+<BR><BR>
+<A NAME="Path Names"></A>
+<p align="right"><a href="#top"><small>Top</small></a></p>
+<H2> Path Names
+</H2><HR ALIGN="LEFT" WIDTH=50% ><P><BR><BR>
+   Pass file path names through CSPICE in the form native to the host
+   operating system. The strings pass to the CSPICE library without
+   modification.
+<P>
+ 
+
+</TD>
+</TR>
+</TBODY>
+</TABLE>
+
+</BODY>
+
+</HTML>

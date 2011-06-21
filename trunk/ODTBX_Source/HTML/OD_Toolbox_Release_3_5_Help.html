@@ -1,0 +1,575 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 12 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:0in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+.MsoPapDefault
+	{margin-bottom:10.0pt;
+	line-height:115%;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+
+</head>
+
+<body lang=EN-US>
+
+<div class=Section1>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><b><span style='font-size:20.0pt'>OD Toolbox 3.5 Release Notes</span></b></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>May 30, 2010</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>The following sections describe the <i>New
+Features</i>, the <i>Changes to Existing Features</i>, and the <i>Known Bugs</i>
+in OD Toolbox Release 3.5.</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><i><span style='font-size:12.0pt'>NEW FEATURES:</span></i></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><i><span style='font-size:12.0pt'>&nbsp;</span></i></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Estimator Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>A Square Root Information Filter –
+</span><span style='font-size:12.0pt;font-family:"Courier New"'>estsrif</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>The corresponding math specifications can be found in <i>Orbit
+Determination Toolbox</i> &gt;  <i>Supporting Documents</i>.  An example of its
+use can be found in the Examples folder.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>A separate linear covariance
+analysis function - </span><span style='font-size:12.0pt;font-family:"Courier New"'>lincov_kf</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>This functionality used to be internal to </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>estseq</span><span
+style='font-size:12.0pt'>.  Now both </span><span style='font-size:12.0pt;
+font-family:"Courier New"'>estseq</span><span style='font-size:12.0pt'> and </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>estsrif</span><span
+style='font-size:12.0pt'> call this function to perform the covariance
+analysis.  </span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt;font-family:"Courier New"'>estseq</span><span
+style='font-size:12.0pt'> now supports numerical computation of measurement
+partials for use in the covariance analysis.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt;font-family:"Courier New"'>estseq</span><span
+style='font-size:12.0pt'> has significantly improved its accuracy by the
+implementation of the variable step integration of the states and their
+covariance.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>A new </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>odtbxOptions</span><span
+style='font-size:12.0pt'> parameter, ‘refint,’ has been created that specifies
+how the time points are assigned between measurement updates.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Measurement Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Ground stations in </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>gsmeas</span><span
+style='font-size:12.0pt'> can now be specified through their ECEF coordinates
+thereby bypassing calls to the ground station database which can significantly
+improve the speed of simulations involving </span><span style='font-size:12.0pt;
+font-family:"Courier New"'>gsmeas.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt;font-family:"Courier New"'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The rate of change of the
+delta-difference range measurement has been added to the measurement function </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>ddormeas</span><span
+style='font-size:12.0pt'>.  This </span><span style='font-size:12.0pt'>could be
+used in place of Doppler in certain circumstances.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Additional antenna pointing
+options in </span><span style='font-size:12.0pt;font-family:"Courier New"'>gpsmeas</span><span
+style='font-size:12.0pt'> have been enabled:</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt'> (2) parallel, or (-2) antiparallel to the Earth-Sun
+vector</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt'>(4) fixed with respect to apogee zenith, or (-4) nadir
+vector apogee selected as the point of highest altitude (ephemeris must include
+apogee)</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt'>(5) body fore and (-5) aft directions relative to
+geocentric LVLH</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt'>(6) body port and (-6) starboard directions relative
+to geocentric LVLH</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The function </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>comp_bs_3d</span><span
+style='font-size:12.0pt'> has been made more accurate by the replacement of the
+sidereal transformations with ECI-ECEF transformations.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>A new option ‘PrecnNutnExpire’ has
+been added to </span><span style='font-size:12.0pt;font-family:"Courier New"'>odtbxOptions</span><span
+style='font-size:12.0pt'> which the function </span><span style='font-size:
+12.0pt;font-family:"Courier New"'>gpsmeas</span><span style='font-size:12.0pt'>
+now looks for that sets the time period between recomputations of the
+precession and nutation when converting between ECI and ECEF.  The default is 1
+day.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The function </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>kepanom</span><span
+style='font-size:12.0pt'> now recognizes both ‘nu’ and ‘tran’ as a true anomaly
+field in the orbit element structure. </span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'> </span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Other Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The function </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>jatDCM</span><span
+style='font-size:12.0pt'> has been made faster by ~80% when computing
+transformations between ECI and ECEF.  A new parameter has been added to
+indicate the time period in which the precession and nutation can be kept
+constant before being recomputed. </span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The following JAT time conversion
+functions have been made more efficient:</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt;font-family:"Courier New"'>jD2MJD.m</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt;font-family:"Courier New"'>jD2MatlabTime.m</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt;font-family:"Courier New"'>matlabTime2JD.m</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt;font-family:"Courier New"'>matlabTime2MJD.m</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt;font-family:"Courier New"'>mJD2JD.m</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:1.0in;margin-bottom:.0001pt;text-indent:-.25in;line-height:
+normal'><span style='font-size:12.0pt;font-family:"Courier New"'>o<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt;font-family:"Courier New"'>mJD2MatlabTime.m</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><i><span style='font-size:12.0pt'>CHANGES TO EXISTING FEATURES:</span></i></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><i><span style='font-size:12.0pt'>&nbsp;</span></i></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Estimator Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The default values of ‘EditFlag’
+and ‘EditRatio’ in </span><span style='font-size:12.0pt;font-family:"Courier New"'>odtbxOptions</span><span
+style='font-size:12.0pt'> have changed from not performing measurement edits to
+performing edits with a 3-sigma edit ratio.</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Better handling of NaN
+measurements in </span><span style='font-size:12.0pt;font-family:"Courier New"'>kalmup</span><span
+style='font-size:12.0pt'> has been implemented.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>An error will now be issued if Po
+is not specified in </span><span style='font-size:12.0pt;font-family:"Courier New"'>estspf</span><span
+style='font-size:12.0pt'> or </span><span style='font-size:12.0pt;font-family:
+"Courier New"'>estseq</span><span style='font-size:12.0pt'>.  </span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The time vector is now correctly
+populated when the option refint=1 in </span><span style='font-size:12.0pt;
+font-family:"Courier New"'>estseq</span><span style='font-size:12.0pt'>.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The input time vector for </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>estseq</span><span
+style='font-size:12.0pt'> can now be specified as a row or a column array.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The covariance associated with a
+measurement innovation is now correctly computed in </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>ominusc</span><span
+style='font-size:12.0pt'> and </span><span style='font-size:12.0pt;font-family:
+"Courier New"'>kalmup</span><span style='font-size:12.0pt'> when excluding NaN
+measurements.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The function </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>calculatetrueanomalystep</span><span
+style='font-size:12.0pt'> has been removed.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Zero innovations in </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>estspf</span><span
+style='font-size:12.0pt'> have been replaced with NaNs.</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Corrected the 'randnarray' typo in
+</span><span style='font-size:12.0pt;font-family:"Courier New"'>covsmpl</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Measurement Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>The </span><span style='font-size:
+12.0pt;font-family:"Courier New"'>read_yuma</span><span style='font-size:12.0pt'>
+function now takes an optional argument of the simulation date and rolls over
+the GPS almanac week to get as close to that date as possible. </span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt;font-family:"Courier New"'>tdrssmeas</span><span
+style='font-size:12.0pt'> now sets the correct ground station when t(1) ~=0 </span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Force Modeling Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Corrected a transformation and an
+interpolation error in JAT atmospheric drag computation</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Corrected a coding error in </span><span
+style='font-size:12.0pt'>the calculation of the Sun ephemeris</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Changed the default ‘RelTol’ from
+1e-3 to 1e-9 in </span><span style='font-size:12.0pt;font-family:"Courier New"'>jatWorldPropagatorRKF78</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><u><span style='font-size:12.0pt'>Other Functions</span></u><span
+style='font-size:12.0pt'>:</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Corrected an incorrect value of
+Earth rotation rate in </span><span style='font-size:12.0pt;font-family:"Courier New"'>JatConstant</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormalCxSpMiddle style='margin-top:0in;margin-right:0in;margin-bottom:
+0in;margin-left:.5in;margin-bottom:.0001pt;text-indent:-.25in;line-height:normal'><span
+style='font-size:12.0pt;font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:12.0pt'>Added comments in </span><span
+style='font-size:12.0pt;font-family:"Courier New"'>odtbxOptions</span><span
+style='font-size:12.0pt'> to highlight the valid altitudes for the atmospheric
+models. The 'useAtmosphericDrag' option in the </span><span style='font-size:
+12.0pt;font-family:"Courier New"'>odtbxOptions</span><span style='font-size:
+12.0pt'> structure is functional within these valid ranges of the atmospheric
+models.</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><i><span style='font-size:12.0pt'>KNOWN BUGS:</span></i></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>None</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>

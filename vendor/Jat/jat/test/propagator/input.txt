@@ -1,0 +1,23 @@
+# This is an input file for the simulation
+
+# Coordinate System Flag
+1               # ( 1=ECI 2=ECF 3=HCF )
+
+# Initial State 
+10000.0         # x
+10000.0         # y
+10000.0         # z
+10.0            # xdot
+20.0            # ydot
+15.0            # zdot
+0.0             # initial time
+
+# Propogation Parameters 
+1000.0          # final time
+1.0             # time step
+
+# Force Model Flags (Assumes at least Two Body gravitation)
+1               # Spherical Harmonic Earth
+0               # Sun and Moon gravitation
+0               # Harris Priester
+1               # Solar Radiation

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Input xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="C:\Code\Jat\jat\xml\input\sim_input.xsd">
+	<InitialState>
+		<Cartesian>
+			<x>36607.358256</x>
+			<y>-20921.723703</y>
+			<z>0</z>
+			<xdot>1.525636</xdot>
+			<ydot>2.669451</ydot>
+			<zdot>0</zdot>
+		</Cartesian>
+	</InitialState>
+	<Time>
+		<MJD>53157.5</MJD>
+		<t0>0</t0>
+		<tf>604800</tf>
+		<dt>60</dt>
+		<thinning>10</thinning>
+	</Time>
+	<Spacecraft>
+		<Name>GEO</Name>
+		<CR>1.2</CR>
+		<cd>2.2</cd>
+		<area>20</area>
+		<mass>1000</mass>
+	</Spacecraft>
+</Input>

@@ -1,0 +1,7 @@
+\begindata
+        KERNELS_TO_LOAD = (
+                            'naif0009.tls'
+                            'de421.bsp'
+                            'pck00009.tpc'
+                           )
+\begintext

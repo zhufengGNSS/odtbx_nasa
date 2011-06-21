@@ -1,0 +1,32 @@
+Expected output for linesearch test
+
+Function 1
+Initial Guess:   xg0= 0.0  
+Search Direction: d0= 1.0  
+The min is at:    x0= 10.0  
+
+Function 2, tolerance = 1.e-2
+Initial Guess:   xg0= 0.0  
+Search Direction: d0= 1.0  
+The min is at:    x0= 16.899987549236975  
+
+Function 2, tolerance = 1.e-4
+Initial Guess:   xg0= 0.0  
+Search Direction: d0= 1.0  
+The min is at:    x0= 17.190356243183874  
+
+Function 2, tolerance = 1.e-8
+Initial Guess:   xg0= 0.0  
+Search Direction: d0= 1.0  
+The min is at:    x0= 17.206575545564526  
+
+Function 3
+Initial Guess:   xg0= 1.0  xg1= 1.0  
+Search Direction: d0= 2.0  d1= 0.5  
+The min is at:    x0= 11.588235294117647  x1= 3.6470588235294117  
+
+Initial Guess:   xg0= 1.0  xg1= 1.0  
+Search Direction: d0= 1.0  d1= 2.0  
+The min is at:    x0= 6.4  x1= 11.8  
+
+Elapsed Time = 0.01 seconds

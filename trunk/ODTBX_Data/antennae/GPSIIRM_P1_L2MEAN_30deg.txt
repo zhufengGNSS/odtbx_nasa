@@ -1,0 +1,23 @@
+% GPSIIRM_P1_L2MEAN.TXT
+%  Assumes 0.6 dB gain correction
+%  see L2all.xls
+%  ONLY OUT TO 30 DEG
+%
+%  MEAN L2 antenna gain for GPS Block IIRM Panel 1
+% angle [deg] gain [db]
+0	14.16
+2	14.02
+4	13.68
+6	13.36
+8	13.32
+10	13.56
+12	13.84
+14	13.86
+16	13.40
+18	12.37
+20	10.66
+22	8.20
+24	4.92
+26	0.98
+28	-2.64
+30	-4.57

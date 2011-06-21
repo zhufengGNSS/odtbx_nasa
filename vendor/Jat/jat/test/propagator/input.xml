@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Input File for JAT Simulation</comment>
+<entry key="cr">0</entry>
+<entry key="cd">2.2</entry>
+<entry key="area">0.6</entry>
+<entry key="mass">30</entry>
+<entry key="mjd">53158</entry>
+<entry key="t0">0</entry>
+<entry key="tf">604800</entry>
+</properties>

@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Simple 2D Flexible Spacecraft</title>
+                                         
+  <meta http-equiv="content-type" content="text/html; charset=Shift_JIS">
+</head>
+  <body>
+         
+<div align="center">      <img src="Simple2DFlexSC.GIF" alt="Title"
+ width="544" height="64">
+       
+<div align="left"><b><u>Simulation Control</u></b><br>
+ <br>
+     <b>time step</b>:         Time step for the numerical integration routine<br>
+     <b>time</b>:                Duration of the simulation periond in seconds<br>
+    <b><u><br>
+ </u></b>   </div>
+         
+<div align="left"><b><u>Description<br>
+ </u></b><br>
+    A flexible spacecraft is modeled as a central rigid body with two massless
+  beams<br>
+     attachd symmetrically to the side of the central body. Each beam has 
+a  <br>
+     concentrated mass at the tip. The flexibility comes from the flexural
+ rigidity  EI of <br>
+     the beams.<br>
+     <img src="Flexible202D.GIF"
+ alt="2D Flexible Spacecraft Illustration" width="540" height="424">
+    <br>
+   <b><u>Inputs<br>
+ </u></b><br>
+   <b>J</b>:                &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Moment of inertia<br>
+   <b>m</b>:                &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Tip mass<br>
+   <b>a</b>:                &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Distance as indicated in
+the illustration above  (m)<br>
+   <b>L</b>:                &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Length of the beam (m)<br>
+   <b>EI</b>:               &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Flexural rigidity of the
+beam (N m2) <br>
+   <b><u><small><br>
+   </small>Initial Condition<br>
+ </u></b><br>
+   <b>Alpha</b>:           &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Spacecraft angular position  <br>
+   <b>u1</b>:               &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Position of the first mass<br>
+   <b>u2</b>:               &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Position of the second mass<br>
+   <b>AlphaDot</b>:      &#160;&#160;&#160; &#160;&#160; Spacecraft angular velocity <br>
+   <b>u1Dot</b>:          &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Velocity of the first mass<br>
+   <b>u2Dot</b>:          &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Velocity of the second mass<br>
+ <br>
+ <img src="2DFlexInputOutput.GIF" alt="Input and Output" width="606"
+ height="745">
+ <br>
+         
+<h4><br>
+      <br>
+     </h4>
+   </div>
+      <br>
+     </div>
+     <br>
+     <br>
+   <br>
+</body>
+</html>

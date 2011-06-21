@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Four Reaction Wheels</title>
+                                         
+  <meta http-equiv="content-type" content="text/html; charset=Shift_JIS">
+</head>
+  <body>
+           
+<div align="center"> <img src="RW%20Control.GIF" alt="RW Control"
+ width="207" height="46">
+<b><u><br>
+ </u></b>        
+<div align="left">      
+<div align="left"><b><u>Description<br>
+ </u></b><br>
+   An attitude maneuver via momentum transfer based on the conservation of<br>
+   angular momentum was simulated. In this project, 4 reaction wheels in
+<br>
+   a pyramid configuration was used; this configuration provides redundancy 
+ <br>
+   such that if one wheels become unable to operate for some reason, <br>
+   the other three reaction wheels can provide control torque in all three
+ direction. <br>
+   <br>
+   <img src="FourReactionWheel.GIF"
+ alt="Four Reaction wheels in a pyramid configuration" width="541"
+ height="399">
+   <br>
+         <br>
+   <b><u>Inputs<br>
+ </u></b><br>
+      <b>Ixx</b>,<b> Iyy, Izz</b>                &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Moments of inertia<br>
+      <b>J</b>                               &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160;
+Reaction wheel inertia<br>
+   <b>  RW angle&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;</b>                  Tilt angle of reaction
+wheel axis<br>
+   <b>  psi</b>                             &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Commanded 
+Euler angle<br>
+   <b>  phi  </b>&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;                          Commanded 
+Euler angle<br>
+   <b>  theta</b>                         &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Commanded Euler 
+angle<br>
+     <br>
+     <b><u>Initial Condition</u></b><br>
+   <b>w1</b>, <b>w2, w3</b>:                 &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Spacecraft angular 
+velocities <br>
+         <b>q1, q2, q3, q4</b>:            &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Quaternions<br>
+    <b>Omega1 </b>&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;                     Angular velocity 
+of RW 1<br>
+   <b>  Omega2</b>                      &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Angular velocity 
+of RW 2<br>
+   <b>  Omega3 </b>&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;                     Angular velocity 
+of RW 3<br>
+   <b>  Omega4</b>                      &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; &#160;&#160;&#160; Angular velocity 
+of RW 4<br>
+             </div>
+   </div>
+   </div>
+   <br>
+   <br>
+   <br>
+</body>
+</html>

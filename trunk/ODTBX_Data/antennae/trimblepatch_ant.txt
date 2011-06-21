@@ -1,0 +1,26 @@
+% TRIMBLEPATCH_ANT.TXT
+% Trimble patch antenna:
+%  gain at zenith direction: 2.8 dBic
+%  maximum gain (at 30 degrees down): 4.5 dBic
+%  Source: C. Behre thesis
+% Zero degrees corresponds to boresite
+% angle [deg] gain [db]
+    0.00    2.8000
+    5.00    2.9000
+   10.00    3.3000
+   15.00    3.6000
+   20.00    4.0000
+   25.00    4.4000
+   30.00    4.5000
+   35.00    4.4000
+   40.00    4.1000
+   45.00    3.7000
+   50.00    2.8000
+   55.00    1.8000
+   60.00    0.8000
+   65.00    -0.7000
+   70.00    -1.7000
+   75.00    -3.2000
+   80.00    -5.2000
+   85.00    -6.2000
+   90.00    -8.7000

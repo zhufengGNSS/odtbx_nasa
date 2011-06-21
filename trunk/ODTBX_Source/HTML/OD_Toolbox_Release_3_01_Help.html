@@ -1,0 +1,524 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+    <link rel="stylesheet" href="file:///C:/Program Files/MATLAB/R2009b/toolbox/matlab/helptools/private/helpwin.css">
+    <title>ODTBX 3.01 Release Notes</title>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Linux)">
+	<META NAME="AUTHOR" CONTENT="Derek M. Surka">
+	<META NAME="CREATED" CONTENT="20091118;9330000">
+	<META NAME="CHANGEDBY" CONTENT="Sun">
+	<META NAME="CHANGED" CONTENT="20091123;20300000">
+	<STYLE>
+	<!--
+		@page { size: 8.5in 11in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+		P { margin-bottom: 0.08in; direction: ltr; color: #000000; text-align: left; widows: 2; orphans: 2 }
+		P.western { font-family: "Times New Roman", serif; font-size: 12pt; so-language: en-US }
+		P.cjk { font-family: "Times New Roman", serif; font-size: 12pt; so-language:  }
+		P.ctl { font-family: "Times New Roman", serif; font-size: 12pt; so-language: ar-SA }
+		H1 { margin-bottom: 0.04in; direction: ltr; color: #000000; text-align: left; widows: 2; orphans: 2 }
+		H1.western { font-family: "Arial", sans-serif; font-size: 16pt; so-language: en-US }
+		H1.cjk { font-family: "Times New Roman", serif; font-size: 16pt; so-language:  }
+		H1.ctl { font-family: "Arial", sans-serif; font-size: 16pt; so-language: ar-SA }
+		H2 { margin-bottom: 0.04in; direction: ltr; color: #000000; text-align: left; widows: 2; orphans: 2 }
+		H2.western { font-family: "Arial", sans-serif; font-size: 14pt; so-language: en-US; font-style: italic }
+		H2.cjk { font-family: "Times New Roman", serif; font-size: 14pt; so-language: ; font-style: italic }
+		H2.ctl { font-family: "Arial", sans-serif; font-size: 14pt; so-language: ar-SA; font-style: italic }
+		H3 { margin-bottom: 0.04in; direction: ltr; color: #000000; text-align: left; widows: 2; orphans: 2 }
+		H3.western { font-family: "Arial", sans-serif; font-size: 13pt; so-language: en-US }
+		H3.cjk { font-family: "Times New Roman", serif; font-size: 13pt; so-language:  }
+		H3.ctl { font-family: "Arial", sans-serif; font-size: 13pt; so-language: ar-SA }
+		A:link { color: #0000ff }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" TEXT="#000000" LINK="#0000ff" DIR="LTR">
+<H1 CLASS="western" ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><B>OD
+Toolbox Release 3.01 Release Notes</B></FONT></H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>January 
+8, 2010</FONT></P>
+<P CLASS="western"><FONT SIZE=3> OD Toolbox Release 3.01 is a minor release, primarily to release 
+the software under the <a href="../../License.html">NASA Open 
+Source Agreement (NOSA)</a>.  In addition, the following 
+changes have been made to Release 3.0:</FONT></P>
+<UL>
+
+  <LI><P>Corrected the 'randnarray' typo in <FONT SIZE=3><FONT FACE="Courier New, monospace">covsmpl
+  </FONT></FONT></SPAN></P>
+
+  <LI><P> Changed the default <FONT SIZE=3><FONT FACE="Courier New, monospace">RelTol</FONT></FONT>
+  from 1e-3 to 1e-9 in <FONT SIZE=3><FONT FACE="Courier New, monospace">jatWorldPropagatorRKF78
+  </FONT></FONT></P>
+
+  <LI><P> Added comments in <FONT SIZE=3><FONT FACE="Courier New, monospace">odtbxOptions
+  </FONT></FONT> to highlight the valid altitudes for the atmospheric models.  The
+	'useAtmosphericDrag' option in the <FONT FACE="Courier New, monospace" SIZE=3>
+      odtbxOptions</FONT> structure is functional within these valid ranges of the
+      atmospheric models.    </P>
+
+  <LI><P> Included some ODTBX reference papers in the Matlab Help Browser under 
+  <I>Orbit Determination Toolbox > Supporting Documentation </I></P>
+
+</UL>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western" ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><B>OD
+Toolbox Release 3.0 Release Notes</B></FONT></H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>November
+23, 2009</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western" STYLE="page-break-after: avoid"><FONT SIZE=4><I><B>What's
+New in Release 3.0</B></I></FONT></H2>
+<P CLASS="western"><FONT SIZE=3> The following sections describe the <I>New Features</I>, the <I>Changes
+to Existing Features</I>, and the <I>Known Bugs</I> in OD Toolbox Release 3.0.</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><I>New
+Features:</I></FONT></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">Matlab
+	interface to SPICE, the CSPICE library using the Matlab interface
+	"MICE" developed by JPL.  </FONT></FONT></SPAN>
+	</P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><A NAME="bugnotes"></A>
+<SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">MICE
+documentation can be accessed via the Matlab help system.  Proper
+version of Mice is installed based on the user's platform or the
+user's option.  SPICE is designed to access kernel data most of
+which are very specific to a given application. This provides SPICE
+with the ultimate flexibility to continuously add new kernels.  The
+kernels can be found from the JPL source
+</FONT></FONT></SPAN><FONT COLOR="#0000ff"><U><A HREF="ftp://naif.jpl.nasa.gov/pub/naif/"><SPAN LANG="en-US"><FONT SIZE=3>ftp://naif.jpl.nasa.gov/pub/naif/</FONT></SPAN></A></U></FONT><SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">.
+ Three of these kernels, making up a standard kernel set, have been
+packaged with the ODTBX 3.0 installer and are located in the
+mice/kernels folder. These may be loaded with the cspice_furnsh
+function (making sure to provide the full path name to the kernels in
+quotes).   These three kernels are:</FONT></FONT></SPAN></P>
+<UL>
+		<OL>
+			<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>de421.bsp
+			- SPK Planetary ephemeris kernel </FONT>
+			</P>
+			<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>naif0008.tls
+			- LSK Leapseconds kernel </FONT>
+			</P>
+			<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>pck00008.tpc
+			- PCK Planetary constants kernel</FONT></P>
+		</OL>
+</UL>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Attitude
+	dependent solar radiation pressure via a flat plate model - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">srpAccel</FONT></FONT></FONT></SPAN></P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">A
+line-of-site calculation is included to turn off solar radiation
+pressure accelerations in case of shadow from the earth and/or the
+moon.  A check on the distance from the Sun was added to the original
+model to make the penumbra calculations more realistic.  </FONT></FONT></SPAN>
+</P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Utilities
+	for simulating the Deep Space Network (DSN)</FONT></P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><FONT SIZE=3>The
+following new Matlab functions and new adaptors to existing JAT
+functions were created:</FONT></P>
+<OL>
+	<OL>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatStaAzEl</FONT></FONT><FONT SIZE=3>
+		computes the azimuth and elevation of a satellite relative to a
+		ground station. (This replaces the previously less accurate
+		</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">elevation.</FONT></FONT><FONT SIZE=3>)</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">EarthOrbitPlot</FONT></FONT><FONT SIZE=3>
+		plots 3-D Earth orbit trajectories.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">stationData</FONT></FONT><FONT SIZE=3>
+		provides access to monthly average temperature, pressure, relative
+		humidity and temperature lapse for the DSN stations for use in
+		tropospheric delay models.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">ttdelay</FONT></FONT><FONT SIZE=3>
+		models time tag delays.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">relativityLightDelay</FONT></FONT><FONT SIZE=3>
+		models the effects of relativity on DSN measurements.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">staEarthTide</FONT></FONT><FONT SIZE=3>
+		provides a model of the solid Earth tide effects on DSN station
+		locations.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatIonoDelayModel</FONT></FONT><FONT SIZE=3>
+		computes the ionospheric delay.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatTropoModel</FONT></FONT><FONT SIZE=3>
+		computes tropospheric delay.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatChargedParticleModel</FONT></FONT><FONT SIZE=3>
+		computes light time delay error due to charged particle model.</FONT></FONT></SPAN></P>
+	</OL>
+</OL>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Schmidt-Kalman
+	Filter estimator</FONT></P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>This
+functionality was implemented in </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estseq</FONT></FONT><FONT SIZE=3>
+and can be invoked with the </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">odtbxoptions</FONT></FONT><FONT SIZE=3>
+option </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">SchmidtKalman</FONT></FONT><FONT SIZE=3>.
+ The mathematical background on Schmidt-Kalman filter can be found in
+Chapter 9 of Brown, R. G. and P. Y. Hwang, <I>Introduction to Random
+Signals and Applied Kalman Filtering, With Matlab Exercises and
+Solutions</I>, Third Edition, John Wiley &amp; Sons, 1997.</FONT></FONT></SPAN></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Additive
+	divided-difference sigma point filter - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estspf</FONT></FONT></FONT></SPAN></P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><FONT SIZE=3>The
+algorithm follows the paper: Carpenter, J. R., S. Hur-Diaz, and F. L.
+Markley, "Generalized Covariance Analysis of Additive
+Divided-Difference Sigma-Point Filters," Paper AAS 09-305 at the
+AAS/AIAA Astrodynamics Specialist Conference, Pittsburgh, PA, 9-13
+August 2009.  </FONT>
+</P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>TDRSS
+	based measurements - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">tdrssmeas</FONT></FONT></FONT></SPAN></P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Modified
+</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">gsmeas</FONT></FONT><FONT SIZE=3>
+to include a return link as well as Doppler measurements.  TDRSS
+scheduling capabilities are also implemented.</FONT></FONT></SPAN></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Lunar
+	relay based measurements - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">lnrmeas</FONT></FONT></FONT></SPAN></P>
+</UL>
+<UL>
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Utility
+	to input STK ephemeris - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">stkephem</FONT></FONT></FONT></SPAN></P>
+</UL>
+<UL>
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Improved
+	GPS measurement functionality - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">gpsmeas</FONT></FONT><FONT SIZE=3>
+	</FONT></FONT></SPAN>
+	</P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><FONT SIZE=3>A
+thorough cleanup and verification of this function was performed to
+improve its speed and accuracy.  The following list summarizes the
+major changes:</FONT></P>
+<OL>
+	<OL>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Created
+		</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">dataCache</FONT></FONT><FONT SIZE=3>
+		to cache Yuma almanac data file reads over multiple </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">gpsmeas</FONT></FONT><FONT SIZE=3>
+		calls.  Approximately a 30% gain in speed was realized.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Removed
+		all but one </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">eval</FONT></FONT><FONT SIZE=3>
+		statement </FONT></FONT></SPAN>
+		</P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Cleaned
+		up all mlint warnings</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Corrected
+		bugs related to time specification in a coordinate transformation</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">alm2xyz</FONT></FONT><FONT SIZE=3>
+		issues a warning if the ephemeris is too old or too far ahead in
+		the future by 7 days.</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Added
+		the Ecliptic North/South Antenna Pointing option</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Sample
+		GPS antenna files can be found in ODTBX_Data/antennae folder.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Only
+		GPS block II/IIA data is publicly available.</FONT></P>
+	</OL>
+</OL>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>One-way
+	range measurement function - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">rrdot3D_1way</FONT></FONT><FONT SIZE=3>
+	</FONT></FONT></SPAN>
+	</P>
+</UL>
+<UL>
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Unit
+	line of sight vector measurement - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">LOSunit</FONT></FONT></FONT></SPAN></P>
+</UL>
+<UL>
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Utility
+	to plot measurement residuals or innovations - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">plot_ominusc</FONT></FONT></FONT></SPAN></P>
+</UL>
+<UL>    
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Delta
+	Differenced One-way Range (DDOR) measurement - </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">ddormeas</FONT></FONT></FONT></SPAN></P>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><FONT SIZE=3>DDOR
+is a measurement technique where two widely separated antennas will
+track a transmitting satellite simultaneously in order to measure the
+delay time between signals arriving at the two stations. This step
+alone produces a Differential One-way Range (DOR) measurement.
+Theoretically, the delay depends only on the positions of the two
+antennas and the spacecraft, but in reality, the delay is also
+affected by the troposphere, ionosphere, and clock instabilities at
+the ground stations. Delta-DOR corrects these errors by tracking a
+quasar in a direction close to the spacecraft for calibration. The
+chosen quasar's direction is already known extremely accurately by
+astronomical measurements, typically to better than a nanoradian.</FONT></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Parallel
+	processing of Monte Carlo simulations where JAT force and/or JAT
+	measurement models are used</FONT></P>
+</UL>
+<P STYLE="margin-left: 0.5in; margin-bottom: 0in"><FONT FACE="Consolas, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Times New Roman, serif">All
+three estimators (</FONT></FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estseq</FONT></FONT><FONT SIZE=3><FONT FACE="Times New Roman, serif">,
+</FONT></FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estspf</FONT></FONT><FONT SIZE=3><FONT FACE="Times New Roman, serif">,
+and </FONT></FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estbat</FONT></FONT><FONT SIZE=3><FONT FACE="Times New Roman, serif">)
+were modified so that they can run in a parallel environment.  All
+JAT classes associated with ODToolboxJATModel were made serializable
+so that they can work in a parallel environment</FONT></FONT></FONT></SPAN></FONT></FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><I>Changes
+to Existing Features:</I></FONT></P>
+<H3 CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Force
+Models</B></FONT></FONT></H3>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Added
+	a separate kilometer version of the </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatForces</FONT></FONT><FONT SIZE=3>,
+	called </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatForces_km</FONT></FONT><FONT SIZE=3>.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatForces</FONT></FONT><FONT SIZE=3>
+	(and </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatForces_km</FONT></FONT><FONT SIZE=3>)
+	now allows vectorized inputs, i.e., states specified over multiple
+	time steps. </FONT></FONT></SPAN>
+	</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">ephemDE405</FONT></FONT><FONT SIZE=3>
+	now performs a data bounds-check on the time argument and throws an
+	IllegalArgumentException if the requested time range is outside of
+	the valid range.  Furthermore, it now allows the user to provide
+	time system as an optional input by using </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">convertTime</FONT></FONT><FONT SIZE=3>
+	to convert it to TT before calling the JAT DE405 function.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>The
+	A matrix calculation for </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatForces</FONT></FONT><FONT SIZE=3>
+	is now suppressed and outputs an empty matrix.  This forces the
+	estimator to numerically estimate the matrix when the requested
+	model is other than Earth 2-body and J2.  For example, this allows
+	the use of the lunar gravity.</FONT></FONT></SPAN></P>
+</UL>
+<H3 CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Numerical
+Integrators</B></FONT></FONT></H3>
+<UL>
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>For
+                                                             Release 3.0, some of the integrators have been renamed or
+    deprecated.   The available integrators are now as follows:</FONT></P>
+    <UL>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><FONT FACE="Courier New, monospace"><FONT SIZE=3>jatWorldPropagatorRK4
+        (renamed from jatRK4)</FONT></FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><FONT FACE="Courier New, monospace"><FONT SIZE=3>jatWorldPropagatorRK8
+        (renamed from jatRK8)</FONT></FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><FONT FACE="Courier New, monospace"><FONT SIZE=3>jatWorldPropagatorRKF78
+        (renamed from jatRKF78)</FONT></FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><FONT FACE="Courier New, monospace"><FONT SIZE=3>jatRK8
+        (renamed from jatRungeKutta8)</FONT></FONT></P>
+    </UL>
+</UL>
+<P CLASS="western" STYLE="margin-left: 0.5in; margin-bottom: 0in"><SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">The
+first three were renamed to emphasize that these integrators are used
+with the jatWorld and hence only work with the </FONT></FONT></SPAN><FONT FACE="Courier New, monospace"><SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">jatForces</FONT></FONT></SPAN></FONT><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>
+or </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatForces_km</FONT></FONT><FONT SIZE=3>
+equations of motion.   The new </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatRK8</FONT></FONT><FONT SIZE=3>
+requires </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">setJatRK8Options</FONT></FONT><FONT SIZE=3>
+and </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">getJatRK8Options</FONT></FONT><FONT SIZE=3>
+for its specific options structure. These options are not the same as
+</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">odtbxOptions</FONT></FONT><FONT SIZE=3>.</FONT></FONT></SPAN></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatWorldPropagatorRKF78</FONT></FONT><FONT SIZE=3>
+	now allows for input time array length to be less than 8, the number
+	required for the internal Lagrangian interpolator.  If the number is
+	less than 8, linear interpolator is used.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">RK4</FONT></FONT><FONT SIZE=3>
+	is not supported anymore and is replaced by </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">jatRK8</FONT></FONT><FONT SIZE=3>.</FONT></FONT></SPAN></P>
+</UL>
+<H3 CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Constants</B></FONT></FONT></H3>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>In
+	</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">JATConstants</FONT></FONT><FONT SIZE=3>,
+	the incorrect value of the Moon mean radius was updated to 1738
+	kilometers.</FONT></FONT></SPAN></P>
+</UL>
+<H3 CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Equations
+of Motion</B></FONT></FONT></H3>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatHCW</FONT></FONT><FONT SIZE=3>
+	now allows for a user-specified process noise and dynamic function
+	argument parameters to be either an array or a cell.</FONT></FONT></SPAN></P>
+</UL>
+<H3 CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Coordinate
+Transformations</B></FONT></FONT></H3>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">ecef2lla</FONT></FONT><FONT SIZE=3>
+	now has a more accurate iterative method using Newton's method
+	with the exact formulation of </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">lla2ecef</FONT></FONT><FONT SIZE=3>.</FONT></FONT></SPAN></P>
+</UL>
+<H2 CLASS="western" STYLE="font-style: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Measurement
+Models</B></FONT></FONT></H2>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">LOSRange</FONT></FONT><FONT SIZE=3>,
+	</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">LOSRangeRate</FONT></FONT><FONT SIZE=3>,
+	and </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">LOSDoppler</FONT></FONT><FONT SIZE=3>
+	now replace </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">range</FONT></FONT><FONT SIZE=3>,
+	</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">rangeRate</FONT></FONT><FONT SIZE=3>,
+	and </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">Doppler</FONT></FONT><FONT SIZE=3>,
+	respectively.</FONT></FONT></SPAN></P>
+</UL>
+<H2 CLASS="western" STYLE="font-style: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Ground
+Station Functionality</B></FONT></FONT></H2>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">createGroundStationList</FONT></FONT><FONT SIZE=3>
+	now calls </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">NASA_GroundStationList</FONT></FONT><FONT SIZE=3>
+	instead of </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">GroundStationList</FONT></FONT><FONT SIZE=3>.
+	 </FONT></FONT></SPAN>
+	</P>
+</UL>
+<H3 CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><B>Universal
+Options Structure</B></FONT></FONT></H3>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>The
+	following new options have been added to </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">odtbxOptions</FONT></FONT><FONT SIZE=3>:</FONT></FONT></SPAN></P>
+	<UL>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">SchmidtKalman</FONT></FONT><FONT SIZE=3>
+		– runs </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estseq</FONT></FONT><FONT SIZE=3>
+		as a Schmidt Kalman filter</FONT></FONT></SPAN></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">EarthAtmMaskRadius</FONT></FONT><FONT SIZE=3>
+		– set mask in </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">tdrssmeas</FONT></FONT></FONT></SPAN></P>
+	</UL>
+</UL>
+<UL> 
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Implemented
+	the following formerly identified but non-functioning options:</FONT></P>
+	<UL>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>EditRatio</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>EditFlag</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>UpdateVectorized</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>MonteCarloSeed</FONT></FONT></P>
+	</UL>
+</UL>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Removed
+	the following unnecessary or unvalidated options:</FONT></P>
+	<UL>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>MeasurementSeed</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>CovarianceSeed</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>MeasOpts</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>ForceOpts</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>useGPS</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>useClockError</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>useMeasurementNoise</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>useAntenna</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>outputInterval</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>displayWarnings</FONT></FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3>dopplerType</FONT></FONT></P>
+	</UL>
+</UL>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>All
+	former uses of </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">ESTSET/ESTGET</FONT></FONT><FONT SIZE=3>
+	were converted to the </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">odtbxOptions</FONT></FONT><FONT SIZE=3>
+	structure.</FONT></FONT></SPAN></P>
+</UL>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><B>Estimators</B></FONT></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Handling
+	of NaN measurements in the Monte Carlo as well as the covariance
+	analysis sections of </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estbat</FONT></FONT><FONT SIZE=3>,
+	</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estseq</FONT></FONT><FONT SIZE=3>,
+	</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">estbat</FONT></FONT><FONT SIZE=3>
+	were corrected or improved.</FONT></FONT></SPAN></P>
+</UL>
+<UL>    
+    <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">estbat</FONT></FONT><FONT SIZE=3>
+    changes:</FONT></FONT></SPAN></P>
+    <UL>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>No
+                                                              longer crashes when consider covariance analysis is not being done
+        and datarg is a structure</FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Now
+                                                                                                                  accepts a mix of finite and infinite values for the initial
+                    covariance matrix (Corresponding updates to </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">covsmpl
+        </FONT></FONT><FONT SIZE=3>were made as well</FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">.</FONT></FONT><FONT SIZE=3>)</FONT></FONT></SPAN></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Now
+        allows for numerical estimation of the measurement Jacobian</FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>A
+                    bug in checking NaN measurements in </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">observ</FONT></FONT><FONT SIZE=3>
+        was fixed</FONT></FONT></SPAN></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Now
+        allows empty, infinite, or unspecified initial covariance matrix</FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Fixed
+        incorrect a priori conditions for Monte Carlo simulations</FONT></P>
+        <LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Has
+        an option to ignore process noise</FONT></P>
+    </UL>
+</UL>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">estseq</FONT></FONT><FONT SIZE=3>
+	changes:</FONT></FONT></SPAN></P>
+	<UL>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Fixed
+		a bug in the specification of a priori conditions for Monte Carlo
+		simulations</FONT></P>
+	</UL>
+</UL>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><B>Other
+Changes</B></FONT></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">kepel</FONT></FONT><FONT SIZE=3>
+	can now handle either a 1x3 or a 3x1 input vector.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>When
+	using functions that require time and pole conversion data stored in
+	FitIERS EOP.dat, the user will now be informed when the data-need
+	outstrips the supplied information files with the JAT adaptor
+	function </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">getIERSTimes</FONT></FONT><FONT SIZE=3>.
+	</FONT></FONT></SPAN>
+	</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">covsmpl</FONT></FONT><FONT SIZE=3>
+	now correctly executes with the 'principalAxis' argument.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">convertTime</FONT></FONT><FONT SIZE=3>
+	now handles arrays of time values correctly for all possible to/from
+	pairs.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">covmake</FONT></FONT><FONT SIZE=3>
+	now checks for non-positive covariances.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=2 STYLE="font-size: 11pt"><FONT FACE="Courier New, monospace">kepprop2b</FONT></FONT><FONT SIZE=3>
+	now accounts for non-zero mean anomaly.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">estval</FONT></FONT><FONT SIZE=3>
+	now shows a legend of the various plot elements as well as an option
+	to plot the error sigmas relative to the mean error or zero.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Obliquity
+	of the ecliptic calculation for </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">comp_bs_3d</FONT></FONT><FONT SIZE=3>
+	replaces the hard-coded value.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3>Leap
+	seconds are now loaded from a data file, </FONT><FONT SIZE=3><FONT FACE="Courier New, monospace">leapsec.dat</FONT></FONT><FONT SIZE=3>.
+	Updating UTC leap seconds now only involves editing this text file
+	rather than modifying code.  Also the missing century and 400 year
+	checks were added to the leap-year calculation algorithm.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT COLOR="#000000"><FONT SIZE=3><FONT FACE="Courier New, monospace">jatWorld</FONT></FONT><FONT SIZE=3>
+	polar motion error has been fixed.</FONT></FONT></SPAN></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Incorrect
+	or obsolete code dependencies or references were removed.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>General
+	cleanup of help comments for all functions was performed.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>The
+	ODTBX_Examples folder was scrubbed to remove nonfunctioning,
+	nonvalidated, or outdated examples, and new examples were added.</FONT></P>
+</UL>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><B>Regression
+Testing</B></FONT></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3>Regression tests have
+been provided for all <I>new</I> Release 3.0 functions.</FONT></P>
+</UL>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=3><I>Known
+Bugs:</I></FONT></P>
+<UL>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0in"><SPAN LANG="en-US"><FONT SIZE=3><FONT COLOR="#000000">The
+	'useAtmosphericDrag' option in the <FONT FACE="Courier New, monospace" SIZE=3>odtbxOptions</FONT> structure 
+    is currently nonfunctional.  A new implementation of the drag model is being considered and 
+    will be included in Release 4.0.</FONT></FONT></SPAN>
+	</P>
+</UL>
+</BODY>
+</HTML>

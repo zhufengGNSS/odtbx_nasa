@@ -1,0 +1,35 @@
+JAT Serialization
+-----------------
+
+Some JAT classes use the Serializable interface to allow Java to serialize them into binary data and to later reconstitute them into Java objects.  Object serialization is a very complicated process which is made remarkably easy in Java (perhaps a bit too easy).  Here we attempt to document where it is appropriate to make JAT classes serializable and why a JAT class should not be made serializable without reason.
+
+
+When Should a Class Be Serializable?
+------------------------------------
+
+Some classes should not be serializable because they represent a concept that defies serialization.  Examples are classes that represent or interface with entities outside of Java (like a socket or a process) and classes that represent a dynamic process (like a stream, a thread, or an algorithm).
+
+Some classes should be serializable because they are part of a class that is serializable.  Attempting to make a class serializable that contains a non-serializable class will result in an error at the time of serialization.  If you have a class that must be serializable but it contains a class that, for reasons such as those mentioned above, should not be serializable, then advanced serialization mechanisms such as transient members or overiding readObject() and writeObject() must be used.  These advanced mechanisms are outside the scope of this document.
+
+JAT's current approach is that classes that model the universe can be serializable but classes that model algorithms should not be.  So planets, and spacecraft, and all of JAT's force models and reference frames are serializable, but functions, and filters, and estimators are not.  Many of the low-level mathematic constructs like matrices and vectors are serializable.
+
+
+Deserializing Older Versions of Objects
+---------------------------------------
+
+One of the pitfalls of serialization is versioning.  There is the expectation that if you serialize a Java object to a file you should be able to later load the file and deserialize the object.  But what if the class has changed in the meantime?  What if a member has been added or remove or if the whole class looks different?  For this reason, Java introduced the serialVersionUID.
+
+SerialVersionUID identifies the version of the class.
+
+	class A implements Serializable {
+		private static final long serialVersionUID = 1l;
+	.
+	.
+	.
+
+You should increment this whenever the class fundamentally changes and cannot be deserialized from byte streams of previously serialized versions.  If the serialVersionID is not changed, then Java will attempt to deserialize older versions, dropping members that no longer 
+apply and setting to null members that are new.  All JAT classes that are serializable should assign a serialVersionID.
+
+If you want to be able to read older versions of a class that are fundamentally different you can use the serialVersionUID and override the readObject() method to code up how to handle older versions of the class, but this is outside the scope of this document.
+
+JAT's approach is to avoid the complicated issue of backward compatibility.  Although JAT has serializable classes and uses serialVersionID's, there is no guarantee of backwards compatability.  Any JAT classes serialized to a file may cease to be recoverable with a new JAT release.  We recommend using JAT's serialization for transmitting JAT objects to remote processes or machines and not for saving JAT objects in a file.

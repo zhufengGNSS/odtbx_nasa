@@ -1,0 +1,29 @@
+<Input xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="C:\Documents and Settings\rcpage\Desktop\Richard\XML\JAT\sim_input.xsd">
+	<InitialState>
+		<Cartesian>
+			<!-- km -->
+			<x>36607.358256</x>
+			<y>-20921.723703</y>
+			<z>0</z>
+			<!-- km/s -->
+			<xdot>4.525636</xdot>
+			<ydot>1.669451</ydot>
+			<zdot>0</zdot>
+		</Cartesian>
+	</InitialState>
+	<Time>
+		<MJD>53157.5</MJD>
+		<!-- sec -->
+		<t0>0</t0>
+		<tf>86400</tf>
+		<dt>1</dt>
+	</Time>
+	<SpacecraftParameters>
+		<CR>0</CR>
+		<cd>2.2</cd>
+		<!-- m^2 -->
+		<area>0.6</area>
+		<!-- kg -->
+		<mass>30</mass>
+	</SpacecraftParameters>
+</Input>

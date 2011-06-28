@@ -1,0 +1,34 @@
+        Orbit Determination Toolbox Instructions
+                     for Removal
+
+An ODTBX installation only affects two areas, this directory 
+and the installing user's MATLAB startup.m file.  
+
+To uninstall ODTBX there are only two steps.
+
+1) During installation the startup.m file in 
+   $MATLAB_HOME was overwritten 
+   by the ODTBX installer.  If there were no user-specific
+   additional modifications then simply delete this startup.m.
+
+   WARNING: If any additional user-specific modifications were
+   made after ODTBX installation and they need to be preserved
+   then simply edit this startup.m to remove the ODTBX content 
+   instead of deleting it.  
+
+   The top of the ODTBX startup.m content is marked by:
+   % ODTBX startup.m file
+
+   The bottom of the ODTBX startup.m content is marked by:
+   %
+   % End-User Customization Goes Here:
+   %
+
+   Everyting in between should be specific to the ODTBX install.
+
+2) Remove this entire ODTBX installation directory
+   ($INSTALL_PATH)
+
+   Note, some platforms won't let you delete this ODTBX directory while
+   this file is being accessed.
+

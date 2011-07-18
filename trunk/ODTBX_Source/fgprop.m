@@ -41,6 +41,16 @@ if nargin == 0 % Self-test from Vallado
     vo = [-5.64305; 4.30333;2.42879]*1e3;
     dt = 40*60;
 end
+
+% argument check to avoid problems (and computation time) with dt=0
+if dt == 0.0
+    r = ro;
+    v = vo;
+    Phi = eye(6);
+    Phinv = eye(6);
+    return;
+end
+
 % Precalculate frequently used variables:
 rtmu = sqrt(mu);
 Ro = norm(ro);

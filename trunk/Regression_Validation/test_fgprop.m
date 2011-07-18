@@ -44,4 +44,18 @@ for k = 3:-1:1
     pass(k) = norm(dPhi) < 1e-5 && norm(dX(1:3)) < 1e-3 && norm(dX(4:6)) < 1e-6 ...
         && norm(Phi*Phinv - eye(6)) < 1e-9;
 end
-fail = ~all(pass);
+
+% check corner case: dt=0
+faildt0 = 0;
+try
+[r,v,Phi,Phinv] = fgprop(ro,vo,0,mu);
+    if any(r ~= ro) || any(v ~= vo) || any(any(Phi ~= eye(6))) ...
+            || any(any(Phinv ~= eye(6)))
+        faildt0 = 1;
+    end
+catch %#ok<CTCH>
+    warning('test_fgprop: unexpected error with dt=0 corner case');
+    faildt0 = 1;  % unexpected error
+end
+
+fail = ~all(pass) || faildt0;

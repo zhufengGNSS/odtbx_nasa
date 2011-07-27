@@ -31,6 +31,8 @@ classdef Camera < handle
         f;      % Camera focal length
         FOV;    % Camera Field of View [rad]
         shadow; % Shadow landmark visibility {true|false}
+        xmax;   % Maximum visible distance in the focal plane (X)
+        ymax;   % Maximum visible distance in the focal plane (Y)
     end
     
     %% Methods
@@ -45,6 +47,10 @@ classdef Camera < handle
             obj.f = f;
             obj.FOV = FOV;
             obj.shadow = shadow;
+            
+            % Calculate maximum visible distance in focal plane
+            obj.xmax = f*tan(FOV/2);
+            obj.ymax = obj.xmax;
         end
         
         %% 
@@ -104,11 +110,9 @@ classdef Camera < handle
                 % Calculate the line-of-sight vector
                 LOS = obj.R-xi(:,i);
                 
-                % Calculate maximum visible distance in focal plane
-                max = obj.f*tan(obj.FOV/2);
-                
                 % Determine visibility based on occultation
-                vis(i) = dot(ni(:,i),LOS)>0 & abs(x(i))<max & abs(y(i))<max;
+                vis(i) = dot(ni(:,i),LOS)>0 & abs(x(i))<obj.xmax & ...
+                    abs(y(i))<obj.ymax;
                 
                 % If selected, calculate shadow visibility
                 if obj.shadow

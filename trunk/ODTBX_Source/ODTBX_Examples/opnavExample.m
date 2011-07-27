@@ -1,4 +1,4 @@
-function varargout = opnavExample()
+function varargout = opnavExample(flag)
 % OPNAVEXAMPLE  Example to demonstrate the functionality of OPNAVMEAS and perform regression tests.
 %
 % OPNAVEXAMPLE() runs OPNAVMEASEXAMPLE in demo mode.
@@ -40,10 +40,19 @@ if nargout > 0
     fail = 0;
     
     % Set the regression test tolerance
-    tol = 1e-6;
+    tol = 2e-6;
+    
+    % Set the regression test measurement partials threshold
+    thresh = 1e-20;
 else
     % Running in demo mode
     testMode = false;
+end
+
+if nargin>0
+    useCCD = strcmp(flag,'CCD');
+else
+    useCCD = 0;
 end
 
 %% BODY CLASS
@@ -122,7 +131,16 @@ FOV = 50; % degrees
 f = 30e-6;
 
 % Create an Instance of the camera class
-ocam = Camera(asteroid,Rc,eye(3,3),f,FOV*pi/180,false);
+
+if useCCD
+    E = [1e-9 1e-9 1e-9];
+    Res = [720 720];
+    
+    % Create an Instance of the camera class
+    ocam = CCDCamera(asteroid,Rc,eye(3,3),f,FOV*pi/180,false,E,Res);
+else
+    ocam = Camera(asteroid,Rc,eye(3,3),f,FOV*pi/180,false);
+end
 
 %% ESTIMATOR
 % Define estimator options and run estseq
@@ -138,7 +156,8 @@ datfun.est = @opnavmeas;
 measopts = odtbxOptions('measurement');
 measopts = setOdtbxOptions(measopts,'Camera',ocam);
 measopts = setOdtbxOptions(measopts,'Attitude',att);
-measopts = setOdtbxOptions(measopts,'OpticalSigma',6e-10);
+% measopts = setOdtbxOptions(measopts,'OpticalSigma',6e-10);
+measopts = setOdtbxOptions(measopts,'OpticalSigma',1);
 
 % Calculate the number of measurements
 n = 2*size(lmk,1);
@@ -158,11 +177,20 @@ if testMode
     [y H] = opnavmeas(tspan,x,measopts);
     
     % Uncomment to generate regression data:
-    % yref = y;
-    % save('opnavRegression','yref')
+%     if useCCD
+%         yref = y;
+%         save('opnavRegressionCCD','yref')
+%     else
+%         yref = y;
+%         save('opnavRegression','yref')
+%     end
     
     % Load test data
-    load opnavRegression
+    if useCCD
+        load opnavRegressionCCD
+    else
+        load opnavRegression
+    end
     
     % Calculate partials numerically
     [~,Hcheck] = ominusc(@opnavmeas_noH,tspan,x,y,[],[],measopts);
@@ -175,22 +203,23 @@ if testMode
         ydiff(:,i) = yref(:,i)-y(:,i);
     end
     
-    HRdiff(isnan(y)) = NaN;
-    ydiff(isnan(y)) = NaN;
+    makenan = isnan(y) | HRref<thresh | HRcheck<thresh;
+    HRdiff(makenan) = NaN;
+    ydiff(makenan) = NaN;
     
     % Calculate percent difference
     HRpd = HRdiff./max(abs(HRref),abs(HRcheck));
     ypd = ydiff./max(abs(yref),abs(y));
     
     % Check analytic partials against tolerance
-    if max(max(HRpd))>tol
+    if max(max(abs(HRpd)))>tol
         fail = 1;
         disp(['Opnavmeas regression test failed! Analytic partials ' ...
             'do not match to desired tolerance!'])
     end
     
     % Check measurements against tolerance
-    if max(max(ypd))>tol
+    if max(max(abs(ypd)))>tol
         fail = 1;
         disp(['Opnavmeas regression test failed! Measurements ' ...
             'do not match to desired tolerance!'])

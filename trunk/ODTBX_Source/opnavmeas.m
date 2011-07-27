@@ -65,7 +65,7 @@ function [y H R] = opnavmeas(t,x,options)
 
 
 % Get measurement error from options structure
-operr = getOdtbxOptions(options,'OpticalError',6e-10);
+operr = getOdtbxOptions(options,'OpticalSigma',6e-10);
 
 % Get camera and attitude objects from options structure
 camera = getOdtbxOptions(options,'Camera',[]);

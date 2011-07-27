@@ -101,6 +101,7 @@ testCases = {
         'end2end_gpsenh_vs_gpsmeas'
         'test_fgprop'
         'opnavExample'
+        'opnavExample(''CCD'')'
     % Release 4.0
         'HermiteInterpolator_regression'
         'HermiteInterpolator_regression_java'

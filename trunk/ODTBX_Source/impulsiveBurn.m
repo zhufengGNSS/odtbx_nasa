@@ -3,8 +3,8 @@ function restartRecord = impulsiveBurn(varargin)
 %
 %   [RESTARTRECORD] = IMPULSIVEBURN(RESTARTRECORD,DV,REL,ABS) applies the
 %   impulsive maneuver DV to the RESTARTRECORD with the relative execution 
-%   error REL (magnitude and direction) and the absolute execution error 
-%   ABS (magnitude only). The size of DV is [3xN+1] where N is the 
+%   error REL (magnitude only) and the absolute execution error ABS 
+%   (magnitude and direction). The size of DV is [3xN+1] where N is the 
 %   number of Monte Carlo cases in RESTARTRECORD.  DV[:,1] is associated 
 %   with the linear covariance reference trajectory.  DV[:,2:N+1] is 
 %   associated with Monte Carlo case trajectories [1:N].
@@ -70,7 +70,7 @@ for i=1:size(dv,2)
         
         % Define the maneuver execution error relative to the DV direction
         % (Gibbs method)
-        Pg = diag([(abs + rel*y) rel*y rel*y].^2);
+        Pg = diag([(abs + rel*y) abs abs].^2);
         
         % Define the DCM to rotate from the 'DV' frame to inertial
         ref = [0;0;1];

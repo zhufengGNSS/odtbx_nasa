@@ -6,7 +6,9 @@ function [y,H,R] = ddormeas(t,x,options)
 % type that this function returns is an interferometric range difference
 % with that of a "quasar". Rather than use an actual quasar database, the
 % "quasar" used in this model is assumed to be directly behind the
-% satellite at t=0 and fixed in ECI space for all times after.
+% satellite at t=0 and fixed in ECI space for all times after. To reset the
+% "quasar" position, add a "clear ddormeas.m" statement to clear the
+% persistent variable that was holding the ECI unit vector.
 %
 %   INPUTS
 %   VARIABLE        SIZE    DESCRIPTION (Optional/Default)

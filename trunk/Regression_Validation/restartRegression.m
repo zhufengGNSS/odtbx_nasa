@@ -1,4 +1,4 @@
-function fail = restartRegression
+function fail = restartRegression(flag)
 % RESTARTREGRESSION  Restart Record and Impulsive Burn Regression Test.
 %
 %   [fail] = RESTARTREGRESSION regression test to verify results from the
@@ -33,9 +33,16 @@ function fail = restartRegression
 %
 % Modification History
 % ---------------------
+% 2011/08/10 K Getzandanner Added an optional flag to check ESTSRIF
 %
 
 %% Initialize Variables
+
+if nargin>0
+    useSRIF = strcmp(flag,'SRIF');
+else
+    useSRIF = 0;
+end
 
 % Initialize fail to "pass"
 fail = 0;
@@ -85,10 +92,15 @@ tspan3 = tspan2(end):dt:(tspan2(end)+T2);
 
 %% Initial Orbit
 %
-[t1,xhat1,P1,e1,dy1,Pa1,Pv1,Pw1,Phata1,Phatv1,Phatw1,~,~,~,...
-    ~,Pm1,Phatm1,restartRecord2]= estseq(dynfun,datfun,tspan1,x0,...
-    P0,opts,dynarg,datarg);
-
+if useSRIF
+    [t1,xhat1,P1,e1,dy1,Pa1,Pv1,Pw1,Phata1,Phatv1,Phatw1,~,~,~,~,~,~,...
+        ~,Pm1,Phatm1,restartRecord2]= estsrif(dynfun,datfun,tspan1,x0,...
+        P0,opts,dynarg,datarg);
+else
+    [t1,xhat1,P1,e1,dy1,Pa1,Pv1,Pw1,Phata1,Phatv1,Phatw1,~,~,~,...
+        ~,Pm1,Phatm1,restartRecord2]= estseq(dynfun,datfun,tspan1,x0,...
+        P0,opts,dynarg,datarg);
+end
 % Assign DV values
 dv(:,1) = unit(xhat1{1}(4:6,end))*dv1;
 dv(:,2) = dv(:,1);
@@ -98,8 +110,13 @@ restartRecord2 = impulsiveBurn(restartRecord2,dv,0,0);
 
 %% Transfer Orbit
 %
-[t2,xhat2,P2,e2,dy2,Pa2,Pv2,Pw2,Phata2,Phatv2,Phatw2,~,~,~,...
-    ~,Pm2,Phatm2,restartRecord3]= estseq(restartRecord2,tspan2);
+if useSRIF
+    [t2,xhat2,P2,e2,dy2,Pa2,Pv2,Pw2,Phata2,Phatv2,Phatw2,~,~,~,~,~,~,...
+        ~,Pm2,Phatm2,restartRecord3]= estsrif(restartRecord2,tspan2);
+else
+    [t2,xhat2,P2,e2,dy2,Pa2,Pv2,Pw2,Phata2,Phatv2,Phatw2,~,~,~,...
+        ~,Pm2,Phatm2,restartRecord3]= estseq(restartRecord2,tspan2);
+end
 
 % Assign DV values
 dv(:,1) = unit(xhat2{1}(4:6,end))*dv2;
@@ -110,8 +127,13 @@ restartRecord3 = impulsiveBurn(restartRecord3,dv,0,0);
 
 %% Final Orbit
 %
-[t3,xhat3,P3,e3,dy3,Pa3,Pv3,Pw3,Phata3,Phatv3,Phatw3,~,~,~,...
-    ~,Pm3,Phatm3]= estseq(restartRecord3,tspan3);
+if useSRIF
+    [t3,xhat3,P3,e3,dy3,Pa3,Pv3,Pw3,Phata3,Phatv3,Phatw3,~,~,~,~,~,~,...
+        ~,Pm3,Phatm3]= estsrif(restartRecord3,tspan3);
+else
+    [t3,xhat3,P3,e3,dy3,Pa3,Pv3,Pw3,Phata3,Phatv3,Phatw3,~,~,~,...
+        ~,Pm3,Phatm3]= estseq(restartRecord3,tspan3);
+end
 
 %% Plot Trajectory
 %

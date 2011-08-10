@@ -80,6 +80,7 @@ clc
 testCases = {
     % Release 5.0
         'nbody_test'
+        'restartRegression(''SRIF'')'
     % Release 4.5
         'test_CompValsTol'
         'test_FilterGpsCnoThresh'

@@ -113,6 +113,17 @@ function varargout = estsrif(varargin)
 %   [T,X,P,E, ... ,XSTAR,PSTAR,ESTAR] = ESTSRIF(...) also returns the
 %   smoothed estimation errors, ESTAR.
 %
+%   [T,X,P,E, ... ,ESTAR,PM,PHATM] = ESTSRIF(...) also returns the true and 
+%   formal covariance matrix partitions associated with external noise 
+%   sources (ie maneuver execution error). External noise sources are added 
+%   by modifying the RESTARTRECORD structure.
+%
+%   [T,X,P,E, ... ,ESTAR,PM,PHATM,RESTARTRECORD] = ESTSRIF(...) also 
+%   returns a RESTARTRECORD structure that contains the necessary 
+%   parameters to restart ESTSRIF at time TFINAL.  The RESTARTRECORD can be 
+%   used to manipulate state, covariance, and filter parameters outside of 
+%   ESTSRIF and continue analysis in a subsequent run.
+%
 %   If multiple monte-carlo cases are specified using SETODTBXOPTIONS,
 %   this is capable of running the monte-carlo cases in parallel.  Simply
 %   open a pool of parallel workers using 'matlabpool' and estsrif will
@@ -174,6 +185,9 @@ function varargout = estsrif(varargin)
 %
 % Rosemary Huang                 8/4/2010      Added smoother
 % Goddard Space Flight Center
+%
+% Kenneth Getzandanner           8/10/2011     Implemented RESTARTRECORD 
+% Goddard Space Flight Center                  functionality
 
 %% ESTSRIF: Square-Root Information Filter Sequential Estimator
 %
@@ -207,6 +221,35 @@ if nargin == 1,
     testmode = varargin{1};
 else
     testmode = false;
+end
+if nargin == 2
+    restart = 1;
+    restartRecord = varargin{1};
+    Xmco = restartRecord.Xo;
+    Xhatmco = restartRecord.Xhato;
+    Xo = restartRecord.Xrefo;
+    Xbaro = restartRecord.Xsrefo;
+    Phatmco = restartRecord.Phato;
+    Pao = restartRecord.Pao;
+    Pvo = restartRecord.Pvo;
+    Pwo = restartRecord.Pwo;
+    Pmo = restartRecord.Pmo;
+    Phatao = restartRecord.Phatao;
+    Phatvo = restartRecord.Phatvo;
+    Phatwo = restartRecord.Phatwo;
+    Phatmo = restartRecord.Phatmo;
+    Sig_ao = restartRecord.Sig_ao;
+    dynfun = restartRecord.dynfun;
+    datfun = restartRecord.datfun;
+    dynarg = restartRecord.dynarg;
+    datarg = restartRecord.datarg;
+    options = restartRecord.options;
+    S = restartRecord.S;
+    C = restartRecord.C;
+    tspan = varargin{2};
+    tspan = tspan(:)';
+else 
+    restart = 0;
 end
 if nargin >= 4,
     if all(isfield(varargin{1}, {'tru','est'})),
@@ -250,7 +293,7 @@ elseif nargin >= 4,
 end
 if nargin >=6,
     options = varargin{6};
-else
+elseif nargin ~= 2
     options = setOdtbxOptions('OdeSolvOpts',odeset);
 end
 upvec = getOdtbxOptions(options,'UpdateVectorized',1);
@@ -532,9 +575,20 @@ end
 n = ns + nc;
 
 %% Perform linear covariance analysis using Kalman Filter methods
-[P,Pa,Pv,Pw,~,Phata,Phatv,Phatw,~,Sig_a,Pdyt]=lincov_kf(...
-    tspan,tint,titer,niter,S,C,Po,Pbaro,Xref,Href,Yref,R,Xsref,Hsref,...
-    Ybar,Rhat,dynfun,dynarg,demomode,0,options);
+
+if restart
+    Po = Pao + Pvo + Pwo + Pmo;
+    Pbaro = Phatao + Phatvo + Phatwo + Phatmo;
+    
+    [P,Pa,Pv,Pw,Pm,Phata,Phatv,Phatw,Phatm,Sig_a,Pdyt]=lincov_kf(...
+        tspan,tint,titer,niter,S,C,Po,Pbaro,Xref,Href,Yref,R,Xsref,Hsref,...
+        Ybar,Rhat,dynfun,dynarg,demomode,0,options,...
+        Pao,Pvo,Pwo,Pmo,Phatao,Phatvo,Phatwo,Phatmo,Sig_ao);
+else
+    [P,Pa,Pv,Pw,Pm,Phata,Phatv,Phatw,Phatm,Sig_a,Pdyt]=lincov_kf(...
+        tspan,tint,titer,niter,S,C,Po,Pbaro,Xref,Href,Yref,R,Xsref,Hsref,...
+        Ybar,Rhat,dynfun,dynarg,demomode,0,options);
+end
 
 for j = lentr:-1:1,
     Sig_sa(:,:,j) = S(:,:,j)*Sig_a(:,:,j); 
@@ -572,16 +626,25 @@ if smooth == 1
     [Pstar{:}] = deal(NaN([size(Pbaro),lentr]));
 end
 
+% Minimally allocate Xmco for the parfor loop, if needed.
+if ~restart
+    Xmco = deal(cell(1,ncases));
+end
+
 % Generate true states and measurements for each case
 for j = ncases:-1:1,
     for i = 1:lents,
         if i == 1,
-            X{j}(:,1) = Xref(:,1) + covsmpl(Po, 1, eopts.monteseed(j));
+            if restart
+                X{j}(:,1) = Xmco(:,j);
+            else
+                X{j}(:,1) = Xref(:,1) + covsmpl(Po, 1, eopts.monteseed(j));
+            end
         else
             for k = ispan(i-1):ispan(i)-1
                 [~,xdum,~,sdum] = integ(dynfun.tru,tint(k:k+1),X{j}(:,k),[],dynarg.tru);
                 X{j}(:,k+1) = xdum(:,end) + covsmpl(sdum(:,:,end));
-         
+                
             end
         end
         Y{j}(:,i) = feval(datfun.tru,tspan(i),X{j}(:,ispan(i)),datarg.tru)+covsmpl(R(:,:,i));
@@ -590,11 +653,22 @@ end
 
 sizedouble = 8; %IEEE Coding standards define double precision as 8 bytes for all operating systems
 
+% Minimally allocate these variables for the parfor loop, if needed.
+if ~restart
+    Xhatmco = NaN(n,ncases);
+    Phatmco = NaN(n,n,ncases);
+end
+
 % Run SRIF on the measurements generated above
 parfor j = 1:ncases,
     
-    Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
-    Phat{j}(:,:,1) = Pbaro;
+    if restart
+        Xhat{j}(:,1) = Xhatmco(:,j);
+        Phat{j}(:,:,1) = Phatmco(:,:,j);
+    else
+        Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
+        Phat{j}(:,:,1) = Pbaro;
+    end
     
     % Convert initial estimate and covariance to information pair
     Rbar=inv(chol(Phat{j}(:,:,1),'lower'));
@@ -957,6 +1031,36 @@ if nargout >= 16,
 end
 if nargout >= 18,
     varargout{18} = estar;
+end
+if nargout >= 19,
+    varargout{19} = Pm;
+    varargout{20} = Phatm;
+end
+if nargout >= 21
+    restartRecord.Pao = Pa(:,:,end);
+    restartRecord.Pvo = Pv(:,:,end);
+    restartRecord.Pwo = Pw(:,:,end);
+    restartRecord.Pmo = Pm(:,:,end);
+    restartRecord.Phatao = Phata(:,:,end);
+    restartRecord.Phatvo = Phatv(:,:,end);
+    restartRecord.Phatwo = Phatw(:,:,end);
+    restartRecord.Phatmo = Phatm(:,:,end);
+    restartRecord.Xrefo = Xref(:,end);
+    restartRecord.Xsrefo = Xsref(:,end);
+    for i = ncases:-1:1
+        restartRecord.Xo(:,i) = X{i}(:,end);
+        restartRecord.Xhato(:,i) = Xhat{i}(:,end);
+        restartRecord.Phato(:,:,i) = unscrunch(Phat{i}(:,end));
+    end
+    restartRecord.Sig_ao = Sig_a(:,:,end);
+    restartRecord.dynfun = dynfun;
+    restartRecord.datfun = datfun;
+    restartRecord.dynarg = dynarg;
+    restartRecord.datarg = datarg;
+    restartRecord.options = options;
+    restartRecord.S = S(:,:,1);
+    restartRecord.C = C(:,:,1);
+    varargout{21} = restartRecord;
 end
 
 end % function

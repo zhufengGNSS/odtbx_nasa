@@ -79,6 +79,8 @@ clc
 % if the case passed, and a 1 if the case failed.
 testCases = {
     % Release 5.0
+        'gpspseudomeas_test'
+        'clktests'
         'nbody_test'
         'restartRegression(''SRIF'')'
     % Release 4.5

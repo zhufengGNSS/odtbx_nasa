@@ -389,7 +389,7 @@ if ~exist('qatt','var') || isempty(qatt)
     wstr = ['S/C body quaternion is not specified in the input.  ',...
         'Body will be assumed to be aligned with the same coordinate ',...
         'frame as the position and velocity states.'];
-    warning(wstr); %#ok<WNTAG>
+    warning('ODTBX:GPSMEAS:noBodyQuat',wstr); 
     qatt = repmat([0;0;0;1],1,nn);
 end
 if ~exist('ref2body','var')

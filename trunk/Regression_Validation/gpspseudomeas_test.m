@@ -47,12 +47,12 @@ dy2 = abs(y2 - y2a); dH2 = abs(H2 - H2a); dR2 = abs(R2 - R2a);
 dy3 = abs(y3 - y3a); dH3 = abs(H3 - H3a); dR3 = abs(R3 - R3a); 
 dy4 = abs(y4 - y4a); dH4 = abs(H4 - H4a); dR4 = abs(R4 - R4a); 
 
-ytol = eps;
+ytol = 1e-10;
 yfail = any(dy1>ytol) + any(dy2>ytol) + any(dy3>ytol) + any(dy4>ytol);
-Htol = eps;
+Htol = 1e-10;
 Hfail = any(any(dH1>Htol)) + any(any(dH2>Htol)) + any(any(dH3>Htol)) ...
     + any(any(dH4>Htol));
-Rtol = eps;
+Rtol = 1e-10;
 Rfail = any(any(dR1>Rtol)) + any(any(dR2>Rtol)) + any(any(dR3>Rtol)) ...
     + any(any(dR4>Rtol));
 

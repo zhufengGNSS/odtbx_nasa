@@ -1,6 +1,6 @@
 function [x,rtQd] = clkprop2(tspan,xo,opt)
 % [x,rtQd] = clkprop2(tspan,xo,opt) is 2-state clock error propagator.
-% Units are km, and km/s; set c = 0 for s, and s/s.
+% Units are km, and km/s; set c = 1 for s, and s/s.
 %
 % See also: gpspseudomeas, clkdyn2
 

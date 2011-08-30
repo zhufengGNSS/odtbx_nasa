@@ -1,6 +1,6 @@
 function [x,rtQd] = clkprop3(tspan,xo,opt)
 % [x,rtQd] = clkprop3(tspan,xo,opt) is a 3-state clock error propagagor.
-% Units are km, km/s, and km/s^2; set c = 0 for s, s/s, and s/s^2.
+% Units are km, km/s, and km/s^2; set c = 1 for s, s/s, and s/s^2.
 %
 % See also: gpspseudomeas, clkdyn3
 

@@ -1,6 +1,6 @@
 function [xd,A,Q] = clkdyn2(t,x,opt)
 % [xd,A,Q] = clkdyn2(~,x,opt) is a 2-state clock error dynamics model.
-% Units are km and km/s; set c = 0 for s and s/s.
+% Units are km and km/s; set c = 1 for s and s/s.
 %
 % See also: gpspseudomeas, clkdyn3
 

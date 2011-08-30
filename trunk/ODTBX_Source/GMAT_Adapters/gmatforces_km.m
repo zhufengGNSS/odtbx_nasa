@@ -61,6 +61,12 @@ for i=1:nt
     epoch = 21545.0 + t(i) / 86400.0;
     statep = libpointer('doublePtr', x(:,i));
     retval = calllib('libCInterface','SetState',epoch,statep,nx);
+    if (retval < 0)
+        fprintf(1,'Failure in libCInterface SetState()\n');
+        errmsg = calllib('libCInterface','getLastMessage');
+        fprintf(1,'The error message was: %s\n',errmsg);
+        return;
+    end
     
     % Call GetDerivatives
     dim = 0;  % Note, this value won't change

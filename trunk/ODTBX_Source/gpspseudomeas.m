@@ -60,6 +60,7 @@ if opts.useRange && (opts.useRangeRate || opts.useDoppler)
 elseif opts.useRange
     bias = repmat(x(clkind(1),:),[size(y,1) 1]);
     y = y + bias;
+    H(:,clkind(2),:) = zeros(size(y));
     H(:,clkind(1),:) = ones(size(y));
 elseif (opts.useRangeRate || opts.useDoppler)
     bias = repmat(x(clkind(2),:),[size(y,1) 1]);

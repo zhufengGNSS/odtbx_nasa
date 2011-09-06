@@ -1,10 +1,11 @@
-function [xDot,A,Q] = gmatforces_km(t,x,~)
+function [xDot,A,Q] = gmatforces_km(t,x,modelid)
 
 % GMATFORCES_KM  Returns derivatives from GMAT ODE models (state in km, sec).
 %
 %   xDot = gmatforces_km(t,x,~) returns the derivatives of the GMAT
-%   force models specified in the given gmatWorld java object. gmatWorld
-%   is an object created once prior to simulation/integration.
+%   force models specified by the given modelid.  If modelid is omitted,
+%   the first odemodel found will be used.  These models are created in a
+%   GMAT script that must be loaded using preparescript.
 %
 %   [xDot,A] = gmatforces_km(t,x,~) also returns the Jacobian
 %   (km, sec)
@@ -18,7 +19,7 @@ function [xDot,A,Q] = gmatforces_km(t,x,~)
 %       t           (1xn)       Time since start of simulation (secs)
 %       x           (6xn)       Input state (x,y,z position in km
 %                               followed by x,y,z velocity in km/s)
-%       ~           (1x1)       (Unused) configuration parameter
+%    modelid        (1x1)       Integer id for forcemodel (optional)
 %
 %   OUTPUTS
 %       xDot        (6xn)       Derivatives of state (km, seconds)
@@ -26,7 +27,7 @@ function [xDot,A,Q] = gmatforces_km(t,x,~)
 %       Q           (6x6xn)     process noise power spectral density
 %
 %   keyword: GMAT Forces
-%   See also startgmat, closegmat
+%   See also startgmat, closegmat, preparescript
 
 % GMAT: General Mission Analysis Tool
 %
@@ -39,6 +40,7 @@ function [xDot,A,Q] = gmatforces_km(t,x,~)
 %
 % Author: Darrel J. Conway, Thinking Systems, Inc.
 % Created: 2011/05/17
+% Modified: 2011/09/06 Russell Carpenter, NASA GSFC
 
 if ~(libisloaded('libCInterface'))
     error('Please load GMAT using the command startgmat before calling gmatforces');
@@ -54,6 +56,10 @@ A = zeros(nx,nx,nt);
 
 if (nt > 1)
     fprintf(1,'Warning: The interface is not yet tested for more than one spacecraft!!!');
+end
+
+if nargin > 2
+    setodemodel(modelid)
 end
 
 for i=1:nt

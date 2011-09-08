@@ -5,7 +5,7 @@ function sensmos(t,Sig_sa)
 % other times.  Warm colors indicate a strong sensitivity, while cool
 % colors indicate a weak sensitivity.
 
-Sig_sa = log(abs(eps+Sig_sa));
+Sig_sa = 10*log10(abs(eps+Sig_sa));
 [ns,n,el] = size(Sig_sa);
 pcolor(eye(ns+1,ns)*Sig_sa(:,:,end)*eye(n,n+1))
 th = text(0.5,-.1,datestr(t(end),'HH:MM'),...

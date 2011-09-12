@@ -63,13 +63,19 @@ function [y H R] = opnavmeas(t,x,options)
 %   Kenneth Getzandanner    03/29/2011      Original opnavmeas.m
 %
 
-
-% Get measurement error from options structure
-operr = getOdtbxOptions(options,'OpticalSigma',6e-10);
-
 % Get camera and attitude objects from options structure
 camera = getOdtbxOptions(options,'Camera',[]);
 attitude = getOdtbxOptions(options,'Attitude',[]);
+
+% Get measurement error from options structure
+if isa(camera,'CCDCamera')
+    operr = getOdtbxOptions(options,'OpticalSigma',1);
+else
+    operr = getOdtbxOptions(options,'OpticalSigma',6e-10);
+end
+
+% Check camera calibration flag
+cflag = getOdtbxOptions(options,'CalibrationFlag',0);
 
 % Check if camera and attitude are valid objects
 if ~isa(camera,'Camera') || ~isa(attitude,'Attitude')
@@ -81,7 +87,7 @@ n = size(camera.body.lmk,1);
 
 % Initialize measurement vector and partials
 y = NaN(n*2,length(t));
-H = NaN(n*2,6,length(t));
+H = NaN(n*2,size(x,1),length(t));
 
 % Loop through each timestep
 for i=1:length(t)
@@ -92,16 +98,55 @@ for i=1:length(t)
     % Set camera position using state vector
     camera.R = x(1:3,i);
     
+    if cflag
+        camera = setStates(x(:,i),camera);
+    end
+    
     % Get camera frame to generate measurements
     [pixel line] = getCameraFrame(camera,t(i));
     y(1:2:(end-1),i) = pixel;
     y(2:2:end,i) = line;
     
     % Get measurement partials
-    H(:,:,i) = getCameraPartials(camera,t(i));
+    % Check calibration flag
+    if cflag
+        % If CCDCamera, return partials for focal length, pixel mapping,
+        % zero pixel offset, and error coefficients
+        if isa(camera,'CCDCamera')
+            [Hc Hf Hk Ho He Ha Hb]  = getCameraPartials(camera,t(i));
+            H(:,:,i) = [Hc Hf Hk Ho He Ha Hb];
+        % If Camera, return partials for focal length and attitude
+        else
+            [Hc Hf Ha Hb] = getCameraPartials(camera,t(i));
+            H(:,:,i) = [Hc Hf Ha Hb];
+        end
+    else
+        H(:,:,i) = getCameraPartials(camera,t(i));
+    end
 end
 
 % Set measurement covariance using operr
 R = repmat(eye(2*n,2*n)*operr^2,[1 1 length(t)]);
+
+end
+
+function camera = setStates(x,camera)
+
+if isa(camera,'CCDCamera')
+    camera.f = x(7,1);
+    camera.Kx = x(8,1);
+    camera.Ky = x(9,1);
+    camera.s0 = x(10,1);
+    camera.l0 = x(11,1);
+    camera.Er = x(12,1);
+    camera.Em = x(13,1);
+    camera.En = x(14,1);
+    camera.theta = x(15:17,1);
+    camera.bias = x(16:18,1);
+else
+    camera.f = x(7,1);
+    camera.theta = x(8:10,1);
+    camera.bias = x(11:12,1);
+end
 
 end

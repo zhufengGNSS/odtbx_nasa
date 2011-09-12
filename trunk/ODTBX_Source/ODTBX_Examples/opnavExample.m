@@ -115,10 +115,7 @@ x_kep.argp = 270*(pi/180); %radians
 x_kep.tran = 180*(pi/180); %radians
 
 x0 = kep2cart(x_kep,asteroid.GM); %km & km/sec
-
 r = x0(1:3,1);
-
-P0 = diag([50e-3 50e-3 50e-3 1e-5 1e-5 1e-5].^2);
 
 %% CAMERA CLASS
 % Initialize a camera object for measurement generation
@@ -133,7 +130,7 @@ f = 30e-6;
 % Create an Instance of the camera class
 
 if useCCD
-    E = [1e-9 1e-9 1e-9];
+    E = [1e6 1 1];
     Res = [720 720];
     
     % Create an Instance of the camera class
@@ -142,11 +139,21 @@ else
     ocam = Camera(asteroid,Rc,eye(3,3),f,FOV*pi/180,false);
 end
 
+if testMode
+    if useCCD
+        x0 = [x0; ocam.f; ocam.Kx; ocam.Ky; ocam.s0; ocam.l0; ...
+            ocam.Er; ocam.Em; ocam.En; 1e-6*ones(3,1);1e-7*ones(2,1)];
+    else
+        x0 = [x0; ocam.f; 1e-6*ones(3,1); 1e-7*ones(2,1)];
+    end
+else
+    P0 = diag([50e-3 50e-3 50e-3 1e-5 1e-5 1e-5].^2);
+end
 %% ESTIMATOR
 % Define estimator options and run estseq
 
 % Define the dynamics function (restricted 2-body)
-dynfun = @r2bp;
+dynfun = @r2bp_wrap;
 
 % Define the measurement functions
 datfun.tru = @opnavmeas_tru;
@@ -156,8 +163,18 @@ datfun.est = @opnavmeas;
 measopts = odtbxOptions('measurement');
 measopts = setOdtbxOptions(measopts,'Camera',ocam);
 measopts = setOdtbxOptions(measopts,'Attitude',att);
-% measopts = setOdtbxOptions(measopts,'OpticalSigma',6e-10);
-measopts = setOdtbxOptions(measopts,'OpticalSigma',1);
+
+if testMode
+    measopts = setOdtbxOptions(measopts,'CalibrationFlag', 1);
+else
+    measopts = setOdtbxOptions(measopts,'CalibrationFlag', 0);
+end
+
+if useCCD
+    measopts = setOdtbxOptions(measopts,'OpticalSigma',1);
+else
+    measopts = setOdtbxOptions(measopts,'OpticalSigma',6e-10);
+end
 
 % Calculate the number of measurements
 n = 2*size(lmk,1);
@@ -173,16 +190,21 @@ if testMode
     % Integrate trajectory
     [~,x] = integ(dynfun,tspan,x0,[],GM);
     
+    options = odtbxOptions('estimator');
+    options = setOdtbxOptions(options,'DatJTolerance',1e-12);
+    
     % Generate measurements
     [y H] = opnavmeas(tspan,x,measopts);
     
     % Uncomment to generate regression data:
 %     if useCCD
 %         yref = y;
-%         save('opnavRegressionCCD','yref')
+%         Href = H;  
+%         save('opnavRegressionCCD','yref','Href')
 %     else
 %         yref = y;
-%         save('opnavRegression','yref')
+%         Href = H;
+%         save('opnavRegression','yref','Href')
 %     end
     
     % Load test data
@@ -192,34 +214,28 @@ if testMode
         load opnavRegression
     end
     
-    % Calculate partials numerically
-    [~,Hcheck] = ominusc(@opnavmeas_noH,tspan,x,y,[],[],measopts);
-    
     % Calculate differences
-    for i=length(tspan):-1:1
-        HRref(:,i) = H(:,1:3,i)*x(1:3,i);
-        HRcheck(:,i) = Hcheck(:,1:3,i)*x(1:3,i);
-        HRdiff(:,i) = HRref(:,i)-HRcheck(:,i);
-        ydiff(:,i) = yref(:,i)-y(:,i);
-    end
+    Hdiff = Href-H;
+    ydiff = yref-y;
     
-    makenan = isnan(y) | HRref<thresh | HRcheck<thresh;
-    HRdiff(makenan) = NaN;
+    makenan = isnan(y);
     ydiff(makenan) = NaN;
-    
-    % Calculate percent difference
-    HRpd = HRdiff./max(abs(HRref),abs(HRcheck));
     ypd = ydiff./max(abs(yref),abs(y));
     
+    for i=1:size(H,3)
+        Hdiff(makenan(:,i),:,i) = NaN;
+    end
+    Hpdiff = Hdiff./((H+Href)./2);
+    
     % Check analytic partials against tolerance
-    if max(max(abs(HRpd)))>tol
+    if max(max(max(Hpdiff(~isnan(Hpdiff)))))>tol
         fail = 1;
         disp(['Opnavmeas regression test failed! Analytic partials ' ...
             'do not match to desired tolerance!'])
     end
     
     % Check measurements against tolerance
-    if max(max(abs(ypd)))>tol
+    if max(max(ypd))>tol
         fail = 1;
         disp(['Opnavmeas regression test failed! Measurements ' ...
             'do not match to desired tolerance!'])
@@ -265,12 +281,19 @@ nadir(att,t,x(1:3,:));
 
 end
 
-%% OPNAVMEAS_NOH
-% Wrapper function to return an empty H matrix for numerical calculation of
-% measurement partials
-function [y H R] = opnavmeas_noH(t,x,options)
+%% R2BP_WRAP
+% Wrapper function to include derivatives of camera calibration parameters
+function [xdot A Q] = r2bp_wrap(t,x,options)
 
-[y,~,R] = opnavmeas(t,x,options);
-H = [];
+n = size(x,1);
+xdot = zeros(n,1);
+A = zeros(n,n);
+Q = zeros(n,n);
+
+[xdotr Ar Qr] = r2bp(t,x,options);
+
+xdot(1:6,1) = xdotr;
+A(1:6,1:6) = Ar;
+Q(1:6,1:6) = Qr;
 
 end

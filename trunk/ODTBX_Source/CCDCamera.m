@@ -61,7 +61,7 @@ classdef CCDCamera < Camera
         %% 
         % *getCameraFrame(obj,dt)* Returns the position of landmarks on the 
         % camera CCD at time dt
-        function [s l x y] = getCameraFrame(obj,dt)
+        function [s l x y P] = getCameraFrame(obj,dt)
             
             % Calculate landmark positions in the camera focal plane
             [x y] = getCameraFrame@Camera(obj,dt);
@@ -73,13 +73,13 @@ classdef CCDCamera < Camera
                     y(i)*(x(i)^2+y(i)^2) y(i)^2 x(i)*y(i)];
                 
                 % Add distortion effects
-                P = [x(i);y(i)] + A*[obj.Er;obj.Em;obj.En];
+                P(:,i) = [x(i);y(i)] + A*[obj.Er;obj.Em;obj.En];
                 
                 % Map to pixel/line locations
-                S = [obj.s0;obj.l0] + [obj.Kx 0;0 obj.Ky]*P;
+                S = [obj.s0;obj.l0] + [obj.Kx 0;0 obj.Ky]*P(:,i);
                 
-                s(i) = S(1);
-                l(i) = S(2);
+                s(i) = S(1) + obj.bias(1);
+                l(i) = S(2) + obj.bias(2);
             end
             
         end
@@ -87,23 +87,46 @@ classdef CCDCamera < Camera
         %%
         % *getCameraPartials(obj,dt)* Returns the measurement partials
         % matrix H for measurements generated at time dt
-        function H = getCameraPartials(obj,dt)
+        function [H Hf Hk Ho He Ha Hb] = getCameraPartials(obj,dt)
             
             % Calculate measurement partials with respect to xy
-            H = getCameraPartials@Camera(obj,dt);
-            [~,~,x y] = getCameraFrame(obj,dt);
+            if nargout > 5
+                [H Hf Ha] = getCameraPartials@Camera(obj,dt);
+            elseif nargout > 1
+                [H Hf] = getCameraPartials@Camera(obj,dt);
+            else
+                H = getCameraPartials@Camera(obj,dt);
+            end
+            [~,~,x y P] = getCameraFrame(obj,dt);
             
             % Use the chain rule to calculate measurement partials with
             % respect to pixel/line locations
-            for i = length(x):-1:1
-                Hp(:,:,i) = [2*x(i)*obj.En+y(i)*obj.Em+2*x(i)^2*obj.Er+obj.Er*(x(i)^2+y(i)^2)+1 ...
-                    x(i)*obj.Em+2*x(i)*y(i)*obj.Er;
-                    obj.En*y(i)+2*x(i)*y(i)*obj.Er x(i)*obj.En+2*y(i)*obj.Em+2*obj.Er*y(i)^2+...
-                    obj.Er*(x(i)^2+y(i)^2)+1];
+            for i = (length(x):-1:1)*2
+                Hp = xyPrimePartial(obj,x(i/2),y(i/2));
+                H(i-1:i,:) = diag([obj.Kx obj.Ky])*Hp*H(i-1:i,:);
                 
-            end
-            for i = (1:length(x))*2
-                H(i-1:i,:) = diag([obj.Kx obj.Ky])*Hp(:,:,i/2)*H(i-1:i,:);
+                if nargout > 1
+                    Hf(i-1:i,1) = ...
+                        diag([obj.Kx obj.Ky])*Hp*Hf(i-1:i,1);
+                end
+                if nargout > 2
+                    Hk(i-1:i,:) = diag(P(:,i/2));
+                end
+                if nargout > 3
+                    Ho(i-1:i,:) = eye(2);
+                end
+                if nargout > 4
+                    He(i-1:i,:) = diag([obj.Kx obj.Ky])*...
+                        [x(i/2)*(x(i/2)^2+y(i/2)^2) x(i/2)*y(i/2) x(i/2)^2;
+                         y(i/2)*(x(i/2)^2+y(i/2)^2) y(i/2)^2 x(i/2)*y(i/2)];
+                end
+                if nargout > 5
+                    Ha(i-1:i,:) = ...
+                        diag([obj.Kx obj.Ky])*Hp*Ha(i-1:i,:);
+                end
+                if nargout > 6
+                    Hb(i-1:i,:) = eye(2,2);
+                end
             end
         end
         
@@ -118,6 +141,19 @@ classdef CCDCamera < Camera
             set(gca,'XAxisLocation','top')
             xlabel('Pixel [s]')
             ylabel('Line [l]')
+        end
+    end
+    
+    methods (Access = private)
+        
+        %%
+        % *xyPrimePartial(obj,x,y)* Returns the partial derivatives of x'
+        % & y' with respect to x & y
+        function Hp = xyPrimePartial(obj,x,y)
+            Hp = [2*x*obj.En+y*obj.Em+2*x^2*obj.Er+obj.Er*(x^2+y^2)+1 ...
+                    x*obj.Em+2*x*y*obj.Er;
+                    obj.En*y+2*x*y*obj.Er x*obj.En+2*y*obj.Em+2*obj.Er*y^2+...
+                    obj.Er*(x^2+y^2)+1];
         end
     end
 end

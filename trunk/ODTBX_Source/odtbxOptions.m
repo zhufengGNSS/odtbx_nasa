@@ -379,6 +379,13 @@ function options = odtbxOptions(type)
 %   conversions which are done inside the GPS computations.  
 %   The default value is 1 day.
 %
+% Camera - Class to model an onboard imaging device in OPNAVMEAS
+%
+% Attitude- Class to store spacecraft attitude information
+%
+% CalibrationFlag- Flag to indicate if camera calibration parameter partial
+%   derivatives should be returned in OPNAVMEAS
+%
 %   keyword: options
 %   See also GETODTBXOPTIONS, SETODTBXOPTIONS, VALIDATEODTBXOPTIONS, 
 %   CREATEJATWORLD, CREATEGROUNDSTATIONLIST, GSMEAS, GPSMEAS, LOSRANGE,
@@ -437,6 +444,8 @@ function options = odtbxOptions(type)
 %   Russell Carpenter   02/10/2011      Added useAngles option
 %   Benjamin Asher      05/10/2011      Added: CentralBody, PointMasses,
 %                                       SpiceFiles, GM, GM_CB, GM_PM
+%   K. Getzandanner     08/15/2011      Added: CalibrationFlag
+
 types = {
     'estimator'
     'forceModels'
@@ -488,7 +497,12 @@ forceModelOptions = {
     'SpiceFiles'
     'GM'
     'GM_CB'
-    'GM_PM'};
+    'GM_PM'
+    'AttitudeSigma'
+    'AttitudeTimeConstant'
+    'OpticalBiasSigma'
+    'OpticalBiasTimeConstant'
+    'isCCD'};
 
 measurementOptions = {
     'epoch'                     % datenum epoch
@@ -519,6 +533,7 @@ measurementOptions = {
     'OpticalSigma'
     'Camera'
     'Attitude'
+    'CalibrationFlag'
     };
 
 allOptions = {

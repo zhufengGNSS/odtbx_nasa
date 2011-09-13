@@ -79,6 +79,8 @@ clc
 % if the case passed, and a 1 if the case failed.
 testCases = {
     % Release 5.0
+        'sensmos'
+        'fixzoom'
         'gpspseudomeas_test'
         'clktests'
         'nbody_test'
@@ -375,8 +377,10 @@ for i=1:length(testCases)
         results = results + failed;
         if (failed);
             failedTests{end+1} = strcat(testCases{i},localrunName);
+            disp(sprintf('Failed!\n'));
         else
             passedTests{end+1} = strcat(testCases{i},localrunName);
+            disp(sprintf('Passed!\n'));
         end
 
     catch

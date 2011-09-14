@@ -258,8 +258,9 @@ else
         set(a(4),'facecolor',[.5 1 .2])
     end
     hold off
-    set(gca,'yticklabel',num2str(abs(str2num(get(gca,'yticklabel'))))) %#ok<ST2NM>
+    fixYLabel;
     axis manual
+    set(get(gca,'ylabel'),'Units','Normalized')
     ylpos = get(get(gca,'ylabel'),'position');
     text(ylpos(1),0.25,'Formal Variance','HorizontalAl','Center',...
         'VerticalAl','Bot','Rotation',90,'Units','Normalized')
@@ -286,6 +287,8 @@ end
 function fixYLabel(~,~)
 
 set(gca,'YticklabelMode','auto')
-set(gca,'yticklabel',num2str(abs(str2num(get(gca,'yticklabel'))))) %#ok<ST2NM>
+lim = max(abs(get(gca,'ylim')));
+set(gca,'ylim',[-lim lim])
+set(gca,'yticklabel',num2str(abs(get(gca,'ytick')')))
 
 end

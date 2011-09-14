@@ -1,4 +1,4 @@
-function [xDot,A,Q] = gmatforces_km(t,x,modelid)
+function [xDot,A,Q] = gmatforces_km(t,x,options)
 
 % GMATFORCES_KM  Returns derivatives from GMAT ODE models (state in km, sec).
 %
@@ -58,13 +58,16 @@ if (nt > 1)
     fprintf(1,'Warning: The interface is not yet tested for more than one spacecraft!!!');
 end
 
-if nargin > 2
+t0 = getOdtbxOptions(options,'epoch',0)/86400;
+modelid = getOdtbxOptions(options,'modelid',[]);
+
+if ~isempty(modelid)
     setodemodel(modelid)
 end
 
 for i=1:nt
     % Set the state.  Note that GMAT needs an a.1 epoch.
-    epoch = 21545.0 + t(i) / 86400.0;
+    epoch = t0 + 21545.0 + t(i) / 86400.0;
     statep = libpointer('doublePtr', x(:,i));
     retval = calllib('libCInterface','SetState',epoch,statep,nx);
     if (retval < 0)

@@ -502,7 +502,8 @@ forceModelOptions = {
     'AttitudeTimeConstant'
     'OpticalBiasSigma'
     'OpticalBiasTimeConstant'
-    'isCCD'};
+    'isCCD'
+    'modelid'};
 
 measurementOptions = {
     'epoch'                     % datenum epoch

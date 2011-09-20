@@ -418,7 +418,7 @@ for ANT=1:loop
                     init2fixed(:,:,i)' * los_unit_3d(:,i,j);
             end
             RX_az(:,j,ANT) = atan2(los_ant(2,:),los_ant(1,:))*r2d;
-            RX_el(:,j,ANT) = 90 - asin(los_ant(3,:));
+            RX_el(:,j,ANT) = 90 - asin(los_ant(3,:))*r2d;
             
         end
         

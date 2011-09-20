@@ -240,9 +240,9 @@ rx_gain = gps_gain(gps_meas, phys_param{1}, RX_link, TX_link, tx_pat, 2);
 
 %% Compare receive gain data
 Ar_actual = interp2(rx_pat(1,2:end)*pi/180,rx_pat(2:end,1)*pi/180,rx_pat(2:end,2:end),rx_gain(3,:),rx_gain(4,:),'spline');
-if max(abs(rx_gain(2,:)-Ar_actual)) > 1e-7    
+if max(abs(rx_gain(2,:)-Ar_actual)) > 1e-6 % dB, started at 1e-7
     fail = 1;
-    fprintf(1,'end2end_gpsenh_vs_gpsmeas: estimated receive gain from gps_gain fails to match actual pattern!');
+    fprintf(1,'end2end_gpsenh_vs_gpsmeas: estimated receive gain from gps_gain fails to match actual pattern!\n');
 else
     fprintf(1,'Passed estimated rx gain comparison.\n');
 end
@@ -261,9 +261,9 @@ end
 
 %% Compare transmit gain data
 At_actual = interp2(tx_pat(1,2:end)*pi/180,tx_pat(2:end,1)*pi/180,tx_pat(2:end,2:end),tx_gain(3,:),tx_gain(4,:),'spline');
-if max(abs(tx_gain(2,:)-At_actual)) > 1e-7
+if max(abs(tx_gain(2,:)-At_actual)) > 1e-6 % dB, started at 1e-7
     fail = 1;
-    fprintf(1,'end2end_gpsenh_vs_gpsmeas: estimated transmit gain from gps_gain fails to match actual pattern!');
+    fprintf(1,'end2end_gpsenh_vs_gpsmeas: estimated transmit gain from gps_gain fails to match actual pattern!\n');
 else
     fprintf(1,'Passed estimated tx gain comparison.\n');
 end

@@ -251,6 +251,10 @@ el = (acos(dot(tx_ECI_pos_unit, LOS_unit))) * 180/pi;
 if length(size(el)) > 2
     % only squeeze if we have 3 dimensions
     el = squeeze(el)';
+    % correct the squeeze if needed:
+    if size(el,1) ~= size(LOS_ant,3)
+        el = el';
+    end
 end
 
 % Compute the azimuth of the satellite antenna in degrees from 0 to 359
@@ -264,6 +268,7 @@ for j = 1:1:size(LOS_ant,2)
 end
 
 az(az<0)=az(az<0)+360;
+
 end
 
 

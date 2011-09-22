@@ -62,7 +62,7 @@ t0 = getOdtbxOptions(options,'epoch',0)/86400;
 modelid = getOdtbxOptions(options,'modelid',[]);
 
 if ~isempty(modelid)
-    setodemodel(modelid)
+    setodemodel(modelid);
 end
 
 for i=1:nt

@@ -65,6 +65,22 @@ classdef Attitude < handle
             for i=1:nt
                 obj.C_CI(:,:,obj.tspan == t(i)) = DCM(:,:,i);
             end 
-        end 
+        end
+        
+        %%
+        % *plotAttitude(obj,t,r)* 3D plot of the basis vectors defined by
+        % C_CI at time t and position r
+        function plotAttitude(obj,r)
+            for i=length(obj.tspan):-1:1
+                m(:,i) = obj.C_CI(:,:,i)'*[1;0;0];
+                n(:,i) = obj.C_CI(:,:,i)'*[0;1;0];
+                l(:,i) = obj.C_CI(:,:,i)'*[0;0;1];
+            end
+            
+            hold on
+            quiver3(r(1,:),r(2,:),r(3,:),m(1,:),m(2,:),m(3,:),0.25)
+            quiver3(r(1,:),r(2,:),r(3,:),n(1,:),n(2,:),n(3,:),0.25)
+            quiver3(r(1,:),r(2,:),r(3,:),l(1,:),l(2,:),l(3,:),1)
+        end
     end
 end

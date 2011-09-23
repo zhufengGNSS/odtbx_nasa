@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>GMAT Interface</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000001">
+<p align="center"><font size="7" face="Geneva, Arial, Helvetica, san-serif">
+GMAT Interface</font></p>
+
+<p><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+ODTBX includes an interface to the General Mission Analysis Tool, a NASA
+Goddard-developed, open-source, mission design and analysis tool. This interface
+allows ODTBX to use GMAT instead of JAT or r2bp for force model derivatives,
+but currently has no utility features like coordinate system or time system
+conversion.
+<br><br>
+
+<p><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+To start using the interface, follow these steps:
+
+<ol>
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Make a GMAT script file</b> that configures your spacecraft initial state and
+force model. An example of such a file is included in the ODTBX installation at
+the following path: <tt><i>&lt;ODTBX&gt;</i>/gmat/matlab/libCInterface/GmatConfig.script</tt>,
+where <tt><i>&lt;ODTBX&gt;</i></tt> is the location of your ODTBX installation.
+
+<!-- Not needed with current version of opengmat.m
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Copy <tt>gmat_startup_file.txt</tt></b> to the same directory as your ODTBX script.
+An example file is included in the ODTBX installation at the following path:
+<tt><i>&lt;ODTBX&gt;</i>/gmat/bin/gmat_startup_file.txt</tt>.
+
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Adjust the <tt>ROOT_PATH</tt> variable</b> in the new <tt>gmat_startup_file.txt</tt>
+to point to the root directory of ODTBX's GMAT installation. By default, this
+is <tt><i>&lt;ODTBX&gt;</i>/gmat</tt>.
+-->
+
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Include <tt>startgmat(<i>&lt;scriptfile&gt;</i>, <i>&lt;propagator&gt;</i>)</tt></b> in your ODTBX script,
+above the first usage of <tt>gmatforces_km</tt>. Replace <tt><i>&lt;scriptfile&gt;</i></tt>
+with the path to the GMAT script you created in step 1, and <tt><i>&lt;propagator&gt;</i></tt>
+with the name of the <tt>Propagator</tt> in the GMAT script that you want to use. You can omit
+this second argument if there is only one <tt>Propagator</tt>.
+
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Use <tt>gmatforces_km</tt> as your <i>dynfun</i></b>.
+
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Call <tt>closegmat()</tt></b> at the end of your ODTBX script.
+</ol>
+
+<br><br>
+
+<p><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<b>Known limitations:</b>
+<ul>
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+The GMAT interface currently does not work with drag forces, as the necessary
+partials are not calculated.
+</ul>
+
+<br><br>
+
+<p><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+The GMAT Adapter Functions are listed below.
+
+<ul>
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+<a href="gmat_adapters.html">GMAT Adapters List</a></font></li>
+</ul>
+
+</p>
+</body>
+</html>

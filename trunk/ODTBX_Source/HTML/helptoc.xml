@@ -16,6 +16,9 @@
     <tocitem target="matlabjatinterface.html">MATLAB JAT Interface
     <tocitem target="jat_adapters.html">JAT Adapters Listing</tocitem>
     </tocitem>
+    <tocitem target="gmatinterface.html">GMAT Interface
+    <tocitem target="gmat_adapters.html">GMAT Adapters Listing</tocitem>
+    </tocitem>
 <!--
 </tocitem>
 -->

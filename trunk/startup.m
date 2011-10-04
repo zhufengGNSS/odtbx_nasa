@@ -85,6 +85,10 @@
 % may choose to build their bytecode in these folders as well.
 %jatSrcPath =  'C:\Users\abrown\Projects\ODTBX\jat\branches\ODTBX';
 %
+% The path to the top-level GMAT folder (contains directories like: bin,
+% data, plugins, etc.):
+%gmatPath = 'C:\Users\jjparker\Documents\Software\GMAT\Nightly';
+%
 % (Optional) The path to the JAT folder that contains the Java bytecode
 % (*.class files).  Most developers won't need this if they want to place
 % their bytecode in the same folders as their source location, above.
@@ -146,6 +150,7 @@ if startuptype == 0
         odtbxMicePath = fullfile(baseIstPath,'mice');
         jatSrcPath = fullfile(baseIstPath,'Jat');
         jatBytecodePath = jatSrcPath;
+        gmatPath = fullfile(baseIstPath,'gmat');
     end
     
     clear baseIstPath;
@@ -200,6 +205,7 @@ end
 addpath(fullfile(odtbxPath,'ODTBX_Source'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','ODTBX_Examples'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','JAT_Adapters'));
+addpath(fullfile(odtbxPath,'ODTBX_Source','GMAT_Adapters'));
 
 % Set these Matlab paths for OD Toolbox
 % However, an end-user install may not provide these directories.
@@ -241,6 +247,10 @@ if exist('jatBytecodePath','var') && ~isempty(jatBytecodePath)
     javaaddpath(jatBytecodePath);
 end
 
+% Set Matlab paths for GMAT
+addpath(fullfile(gmatPath,'bin'));
+addpath(fullfile(gmatPath,'matlab','libCInterface'));
+
 if(startuptype == 1)
     % Recursively generate a path string containing the ODTBX_Data directory
     % and everything (unfortunately including .svn directories!) below it.
@@ -277,7 +287,7 @@ end
 
 % Clear the remnants out of the workspace to leave only the path setttings.
 clear d i p p2check pseps ;
-clear basePath jatSrcPath jatBytecodePath miceTopPath miceArch startuptype odtbxMicePath odtbxPath ;
+clear basePath jatSrcPath jatBytecodePath miceTopPath miceArch gmatPath startuptype odtbxMicePath odtbxPath ;
 
 %
 %% End-User Customization Goes Below Here:

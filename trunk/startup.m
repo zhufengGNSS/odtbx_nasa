@@ -150,7 +150,7 @@ if startuptype == 0
         odtbxMicePath = fullfile(baseIstPath,'mice');
         jatSrcPath = fullfile(baseIstPath,'Jat');
         jatBytecodePath = jatSrcPath;
-        gmatPath = fullfile(baseIstPath,'gmat');
+%        gmatPath = fullfile(baseIstPath,'gmat');
     end
     
     clear baseIstPath;
@@ -248,8 +248,8 @@ if exist('jatBytecodePath','var') && ~isempty(jatBytecodePath)
 end
 
 % Set Matlab paths for GMAT
-addpath(fullfile(gmatPath,'bin'));
-addpath(fullfile(gmatPath,'matlab','libCInterface'));
+%addpath(fullfile(gmatPath,'bin'));
+%addpath(fullfile(gmatPath,'matlab','libCInterface'));
 
 if(startuptype == 1)
     % Recursively generate a path string containing the ODTBX_Data directory

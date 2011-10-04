@@ -58,8 +58,16 @@ this second argument if there is only one <tt>Propagator</tt>.
 <b>Known limitations:</b>
 <ul>
 <li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-The GMAT interface currently does not work with drag forces, as the necessary
-partials are not calculated.
+The interface can include drag forces in the state derivatives (if
+configured), but cannot include them in the Jacobian, as the necessary
+information is not calculated within GMAT. [GMAT Bug <a href="http://pows003.gsfc.nasa.gov/bugzilla/show_bug.cgi?id=2557">#2557</a>]
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+On 64-bit Mac, to use Solar radiation pressure, set <tt>SolarSystem.EphemerisSource = 'SPICE'</tt>
+in your GMAT script. Note that this will prevent outer planets (Jupiter and beyond)
+from being used as gravity sources. [GMAT Bug <a href="http://pows003.gsfc.nasa.gov/bugzilla/show_bug.cgi?id=2556">#2566</a>]
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+On 64-bit Mac, there is a known crash if <tt>startgmat</tt> or <tt>opengmat</tt> is called
+multiple times without calling <tt>closegmat</tt> between.
 </ul>
 
 <br><br>

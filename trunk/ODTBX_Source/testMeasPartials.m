@@ -1,17 +1,16 @@
-function Ypd = testMeasPartials(datfun,datarg)
+function Hpd = testMeasPartials(datfun,datarg)
 % TESTMEASPARTIALS compares the numerically estimated H matrix to the H matrix provided by a measurement model.
-%   YPD = TESTMEASPARTIALS(DATFUN,DATARG) uses the supplied measurement
+%   HPD = TESTMEASPARTIALS(DATFUN,DATARG) uses the supplied measurement
 %   data function DATFUN to compute measurements y and the measurement
 %   partials matrix H for a random orbit using the options provided in
-%   DATARG. The function then calls OMINUSC to numerically compute H
-%   using NUMJAC. The function will display the largest percent difference
-%   that it finds between the resulting H*x of each method, and return the
-%   percent difference of H*x for all time steps in YPD. If any errors
-%   are found larger than 10%, the function will produce an error message 
-%   and provide the initial conditions that resulted in the largest
-%   difference. For debugging purposes, "dbstop if error" can be called
-%   before running TESTMEASPARTIALS to enter into Matlab's debug mode
-%   within the function's workspace.
+%   DATARG. The function then calls OMINUSC to numerically compute H using
+%   NUMJAC. The function will display the largest percent difference that
+%   it finds between the resulting H of each method, and return the percent
+%   difference of H for all time steps as HPD. If the median percent
+%   difference is larger than 0.001%, the function will produce an error
+%   message. For debugging purposes, "dbstop if error" can be called before
+%   running TESTMEASPARTIALS to enter into Matlab's debug mode within the
+%   function's workspace.
 %
 %   Example 
 %       epoch  = datenum('Jan 1 2010');
@@ -25,7 +24,7 @@ function Ypd = testMeasPartials(datfun,datarg)
 %       measOptions = setOdtbxOptions(measOptions,'epoch',epoch);
 %       measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',-90); %Ignore the horizon
 %       measOptions = setOdtbxOptions(measOptions,'gsECEF',gsECEF);
-%       Ypd = TestMeasPartials(@gsmeas,measOptions);
+%       Hpd = TestMeasPartials(@gsmeas,measOptions);
 %
 %   See also
 %      Numerical Jacobian:    OMINUSC, NUMJAC
@@ -54,6 +53,8 @@ function Ypd = testMeasPartials(datfun,datarg)
 %  REVISION HISTORY
 %   Author      		Date         	Comment
 %   Kevin Berry         08/18/2010      Original
+%   Kevin Berry         10/25/2011      Modified the code to work for
+%                                       non-linear measurement models
 
 clear functions %this clears the persistent variables in estjac
 
@@ -82,45 +83,23 @@ T = 2*pi*sqrt(kep1.sma^3/gm);
 %% Get the measurement and partials matrix from the data function
 [Y,Href] = feval(datfun,tspan,Xref,datarg);
 
-%% Find the measurement values that are valid (not NaNs)
-isel_y = ~isnan(Y);
-
 %% Get the partials numerically from the estjac function within ominusc
 eOpts = odtbxOptions('estimator');
-eOpts = setOdtbxOptions(eOpts,'DatJTolerance',eps);
+eOpts = setOdtbxOptions(eOpts,'DatJTolerance',median(abs(Xref')));
 eOpts = setOdtbxOptions(eOpts,'DatVectorized',2);
 [~,Hcheck] = ominusc(@EmptyH,tspan,Xref,Y,eOpts,[],{datfun, datarg});
 
 %% Difference the H matrices and display the maximum difference
-% Since Y = H*X + v, to compare the different H matrices I want to look at:
-%   Y_ref   = H_ref*X + e
-%   Y_check = H_check*X + e
-%   Y_diff  = Y_ref1 - Y_check1
-%           = H_ref*X + e - H_check*X - e
-%           = H_ref*X - H_check*X
-% Then the percent difference is simply:
-%   Y_pd    = 100*Y_diff/Y
+tol = eps; %tolerance for H values too close to zero to compare
+Hdiff      = abs(Href - Hcheck);
+isel_Hdiff = ~isinf(Hdiff)&~isnan(Hdiff)&abs(Href.*Hcheck)>tol; %Infs and NaNs show up when dividing by zero or 0/0
 
-tol = 1e-6; %tolerance for Y values too close to zero to compare
-Ypd = zeros(size(Y));
-for n=1:size(Href,3)
-    Yref       = Href(isel_y(:,n),:,n)*Xref(:,n); %ignoring the part of y that is independant of x
-    Ycheck     = Hcheck(isel_y(:,n),:,n)*Xref(:,n); %ignoring the part of y that is independant of x
-    Ydiff      = abs(Yref - Ycheck);
-    isel_Ydiff = ~isinf(Ydiff)&~isnan(Ydiff)&abs(Yref.*Ycheck)>tol; %Infs and NaNs show up when dividing by zero or 0/0
-    
-    Ypd_n              = 100*Ydiff./max(abs(Yref),abs(Ycheck));
-    Ypd_n(~isel_Ydiff) = 0;
-    Ypd(isel_y(:,n),n) = Ypd_n;
-end
+Hpd              = 100*Hdiff./max(abs(Href),abs(Hcheck));
+Hpd(~isel_Hdiff) = 0;
 
-disp(['The maximum percent difference in Y = H*x is ',num2str(max(max(max(abs(Ypd)))))])
-if max(max(max(abs(Ypd))))>10
-    ind  = find(max(max(max(abs(Ypd)))) == abs(Ypd));
-    indn = ceil(ind/size(Ypd,1));
-    disp(['x0 = ',num2str(x0(:)')])
-    disp(['t = ',num2str(tspan(indn))])
-    error('The percent difference in Y = H*x is larger than 10% for the initial conditions shown above')
+disp(['The median percent difference in H is ',num2str(median(median(median(Hpd))),15)])
+if median(median(median(Hpd)))>0.001
+    error('The median percent difference in H is larger than 0.001%')
 end
 
 function [y,H,R] = EmptyH(tspan,Xref,options)

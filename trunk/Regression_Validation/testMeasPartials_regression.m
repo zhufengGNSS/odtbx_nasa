@@ -1,7 +1,5 @@
 function failed = testMeasPartials_regression
-
-% This function tests the H matrix derivations of gsmeas, tdrssmeas,
-% ddormeas, and lnrmeas
+% This function tests the H matrix derivations of gsmeas, tdrssmeas, ddormeas, lnrmeas, and gpsmeas.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -43,7 +41,7 @@ measOptions = setOdtbxOptions(measOptions,'useAngles',true);
 measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',-90); %Ignore the horizon
 measOptions = setOdtbxOptions(measOptions,'gsECEF',gsECEF);
 
-Ypd1 = testMeasPartials(@gsmeas,measOptions);
+Hpd1 = testMeasPartials(@gsmeas,measOptions);
 
 %% Test gsmeas H matrix with Doppler
 epoch  = datenum('Jan 1 2010');
@@ -63,7 +61,7 @@ measOptions = setOdtbxOptions(measOptions,'useUnit',true);
 measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',-90); %Ignore the horizon
 measOptions = setOdtbxOptions(measOptions,'gsECEF',gsECEF);
 
-Ypd2 = testMeasPartials(@gsmeas,measOptions);
+Hpd2 = testMeasPartials(@gsmeas,measOptions);
 
 %% Test tdrssmeas H matrix with RangeRate
 epoch  = datenum([2008  9 26  0  0   .000]);
@@ -103,7 +101,7 @@ measOptions = setOdtbxOptions(measOptions,'useDoppler', false);
 measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', 0); %Ignore the Earth
 measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
 
-Ypd3 = testMeasPartials(@tdrssmeas,measOptions);
+Hpd3 = testMeasPartials(@tdrssmeas,measOptions);
 
 %% Test tdrssmeas H matrix with Doppler
 epoch  = datenum([2008  9 26  0  0   .000]);%datenum('1 Oct 2008 09:27:52.832');
@@ -143,7 +141,7 @@ measOptions = setOdtbxOptions(measOptions,'useDoppler', false);
 measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', 0); %Ignore the Earth
 measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
 
-Ypd4 = testMeasPartials(@tdrssmeas,measOptions);
+Hpd4 = testMeasPartials(@tdrssmeas,measOptions);
 
 %% Test ddormeas H matrix
 epoch    = datenum('01 Jul 2007 14:00:00.000');
@@ -159,7 +157,7 @@ measOptions = setOdtbxOptions(measOptions,'gsECEF',gsECEF);
 measOptions = setOdtbxOptions(measOptions,'epoch',epoch); %datenum format
 measOptions = setOdtbxOptions(measOptions,'ddor',ddor);
 
-Ypd5 = testMeasPartials(@ddormeas,measOptions);
+Hpd5 = testMeasPartials(@ddormeas,measOptions);
 
 %% Test lnrmeas H matrix
 epoch  = datenum('1 Dec 2016 00:00:00.000');
@@ -174,7 +172,7 @@ measOptions = setOdtbxOptions(measOptions,'useRangeRate', false);
 measOptions = setOdtbxOptions(measOptions,'useDoppler', true);
 measOptions = setOdtbxOptions(measOptions,'relay', relay);
 
-Ypd6 = testMeasPartials(@lnrmeas,measOptions);
+Hpd6 = testMeasPartials(@lnrmeas,measOptions);
 
 %% Test gpsmeas H matrix
 measOptions.('epoch')           = datenum('Jan 1 2006');
@@ -186,26 +184,27 @@ measOptions.('AtmosphereMask')  = - JATConstant('rEarth','WGS84') / 1000; %remov
 measOptions.('AntennaPattern')  = {'omni.txt'};
 measOptions.('AntennaPointing') = -1;
 measOptions.('PrecnNutnExpire') = 0; % always update precession and nutation
-Ypd7 = testMeasPartials(@gpsmeas,measOptions);
+warning('off', 'ODTBX:GPSMEAS:noBodyQuat')
+Hpd7 = testMeasPartials(@gpsmeas,measOptions);
 
 %% Uncomment this section to reset regression test data
-% Ypd1_sav = Ypd1;
-% Ypd2_sav = Ypd2;
-% Ypd3_sav = Ypd3;
-% Ypd4_sav = Ypd4;
-% Ypd5_sav = Ypd5;
-% Ypd6_sav = Ypd6;
-% Ypd7_sav = Ypd7;
-% save('testMeasPartials_RegressionData.mat','Ypd1_sav','Ypd2_sav','Ypd3_sav','Ypd4_sav','Ypd5_sav','Ypd6_sav','Ypd7_sav');
+% Hpd1_sav = Hpd1;
+% Hpd2_sav = Hpd2;
+% Hpd3_sav = Hpd3;
+% Hpd4_sav = Hpd4;
+% Hpd5_sav = Hpd5;
+% Hpd6_sav = Hpd6;
+% Hpd7_sav = Hpd7;
+% save('testMeasPartials_RegressionData.mat','Hpd1_sav','Hpd2_sav','Hpd3_sav','Hpd4_sav','Hpd5_sav','Hpd6_sav','Hpd7_sav');
 
 %% Check the results
-tol = 0.1;
+tol = 0.0001;
 load('testMeasPartials_RegressionData.mat')
-err1 = max(max(abs(Ypd1-Ypd1_sav)));
-err2 = max(max(abs(Ypd2-Ypd2_sav)));
-err3 = max(max(abs(Ypd3-Ypd3_sav)));
-err4 = max(max(abs(Ypd4-Ypd4_sav)));
-err5 = max(max(abs(Ypd5-Ypd5_sav)));
-err6 = max(max(abs(Ypd6-Ypd6_sav)));
-err7 = max(max(abs(Ypd7-Ypd7_sav)));
+err1 = max(max(max(abs(Hpd1-Hpd1_sav))));
+err2 = max(max(max(abs(Hpd2-Hpd2_sav))));
+err3 = max(max(max(abs(Hpd3-Hpd3_sav))));
+err4 = max(max(max(abs(Hpd4-Hpd4_sav))));
+err5 = max(max(max(abs(Hpd5-Hpd5_sav))));
+err6 = max(max(max(abs(Hpd6-Hpd6_sav))));
+err7 = max(max(max(abs(Hpd7-Hpd7_sav))));
 failed = max([err1,err2,err3,err4,err5,err6,err7])>tol;

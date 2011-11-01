@@ -1,4 +1,4 @@
-% This example tests the H matrix derivations of gsmeas, tdrssmeas, ddormeas, and lnrmeas.
+% This example tests the H matrix derivations of gsmeas, tdrssmeas, ddormeas, lnrmeas, and gpsmeas.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -182,4 +182,5 @@ measOptions.('AtmosphereMask')  = - JATConstant('rEarth','WGS84') / 1000; %remov
 measOptions.('AntennaPattern')  = {'omni.txt'};
 measOptions.('AntennaPointing') = -1;
 measOptions.('PrecnNutnExpire') = 0; % always update precession and nutation
+warning('off', 'ODTBX:GPSMEAS:noBodyQuat')
 testMeasPartials(@gpsmeas,measOptions);

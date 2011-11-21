@@ -245,7 +245,7 @@ if nargin >= 5,
         Po = diag( inf*ones( size(Xo) ) );
     end
     if isempty(Pbaro) || all(all(isinf(Pbaro)))
-        Pbaro = diag( inf*ones( size(Xo) ) );
+        Pbaro = diag( inf*ones( size(Xbaro) ) );
     end
 elseif nargin >= 4,
     Po = diag( inf*ones( size(Xo) ) );
@@ -808,7 +808,7 @@ Xhato = cell(ncases);
 
 % Run the batch estimator on the measurements generated above.
 Xsref0 = Xsref(:,1); 
-parfor j = 1:ncases,
+for j = 1:ncases,
     Xhato{j} = Xsref0;
     for i = 1:niter,
         [J,L] = observ(dynfun.est,datfun.est,tspan,Xhato{j},options,...

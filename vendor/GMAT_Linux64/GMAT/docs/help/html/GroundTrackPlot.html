@@ -1,0 +1,71 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>GroundTrackPlot</title><link href="../files/style.css" type="text/css" rel="stylesheet"><meta content="DocBook XSL-NS Stylesheets V1.76.1" name="generator"><link rel="home" href="index.html" title="General Mission Analysis Tool (GMAT)"><link rel="up" href="Resources.html" title="Resources"><link rel="prev" href="GroundStation.html" title="GroundStation"><link rel="next" href="ImpulsiveBurn.html" title="ImpulsiveBurn"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">GroundTrackPlot</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="GroundStation.html">Prev</a>&nbsp;</td><th align="center" width="60%">Resources</th><td align="right" width="20%">&nbsp;<a accesskey="n" href="ImpulsiveBurn.html">Next</a></td></tr></table><hr></div><div class="refentry" title="GroundTrackPlot"><a name="GroundTrackPlot"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>GroundTrack Plot &mdash; A GroundTrack Plot.</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><pre class="synopsis">Create GroundTrackPlot <em class="replaceable"><code>name</code></em>
+<em class="replaceable"><code>name</code></em>.<em class="replaceable"><code>field</code></em> = <em class="replaceable"><code>value</code></em>
+&#133;</pre></div><div class="refsection" title="Description"><a name="N113AC"></a><h2>Description</h2><p>A <span class="guiicon">GroundTrackPlot</span> is a graphical display of the
+    locus of subsatellite latitude and longitude points. The
+    <span class="guibutton">GroundTrackPlot</span> in GMAT allows you to view a
+    spacecraft's subsatellite point as illustrated by a spacecraft icon and
+    the label for the spacecraft. Similarly, <span class="guiicon">GroundStation</span>
+    locations are indicated with a ground station icon and label. The
+    <span class="guibutton">GroundTrackPlot</span> object can display the ground track
+    for multiple spacecraft simultaneously and can animate the ground track
+    evolution after a GMAT run is complete. Like other graphical dispaly
+    objects in GMAT, you can control how data is written to a ground track
+    plot in iterative processes.</p></div><div class="refsection" title="Fields"><a name="N113BD"></a><h2>Fields</h2><div class="refsection" title="Fields Associated with Plot Options"><a name="N113C0"></a><h3>Fields Associated with Plot Options</h3><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">DataCollectFrequency</span></p></td><td><p>The <code class="systemitem">DataCollectFrequency</code> field
+            allows you to select a subset of the ephemeris data for drawing to
+            a <span class="guiicon">GroundTrackPlot</span>. It is often inefficient to
+            draw every ephemeris point associated with a trajectory and
+            drawing a subset of the data provides a smooth groundtrack plot
+            with faster execution times. The
+            <code class="varname">DataCollectFrequency</code> is an integer that
+            represents how many ephemeris points to skip between plotted data
+            points in a <span class="guiicon">GroundTrackPlot</span>. If
+            <code class="varname">DataCollectFrequency</code> is set to 10, then data is
+            collected every 10 integration steps.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>1</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>Integer &ge; 1</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>Integration Steps</p></td></tr></tbody></table></div></td></tr><tr><td><p><span class="term">UpdatePlotFrequency</span></p></td><td><p>The UpdatePlotFrequency field allows you to specify the
+            number of ephemiris data points to collect before updating a
+            GroundTrackPlot with new latitude and longitude data. Data is
+            collected every N propagation steps where N is defined by
+            DataCollectFrequency. After M points are collected, where M is
+            defined by UpdatePlotFrequency, the GroundTrackPlot is updated
+            with new data. For example, if UpdatePlotFrequency is set to 10
+            and DataCollectFrequency is set to 2, then the plot is updated
+            with new data every 20 (10*2) integration steps.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>50</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>Integer &ge; 1</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>Integration Steps</p></td></tr></tbody></table></div></td></tr><tr><td><p><span class="term">NumPointsToRedraw</span></p></td><td><p>When NumPointsToRedraw is set to zero, all collected
+            ephemeris points are drawn. When NumPointsToRedraw is set to a
+            positive integer, say 10 for example, only the last 10 collected
+            data points are drawn. See DataCollectFrequency and
+            UpdatePlotFrequency for an explanation of how data is collected
+            for a GroundTrackPlotx.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>0</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>Integer &ge; 0</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>Integration Steps</p></td></tr></tbody></table></div></td></tr><tr><td><p><span class="term">ShowPlot</span></p></td><td><p>The ShowPlot field allows you to turn off the
+            GroundTrackPlot display window without deleting the plot object or
+            removing it from the script. If you select true, then the plot
+            will be displayed. If you select false, then the plot will not be
+            displayed.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>true</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>true , false</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>N/A</p></td></tr></tbody></table></div></td></tr></tbody></table></div></div><div class="refsection" title="Fields Associated with Drawing Options"><a name="N1143B"></a><h3>Fields Associated with Drawing Options</h3><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Add</span></p></td><td><p>The Add field allows you to add Spacecraft and
+            GroundStations to a GroundTrackPlot.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>DefaultSC, Earth</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>SpacecraftName CelestialBodyName</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>N/A</p></td></tr></tbody></table></div></td></tr><tr><td><p><span class="term">Central Body</span></p></td><td><p>The CentralBody field allows you to specify the central body
+            of a GroundTrackPlot. Currently, GMAT</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>Earth</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>CelestialBodyName</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>N/A</p></td></tr></tbody></table></div></td></tr></tbody></table></div></div><div class="refsection" title="Fields Associated with Other Options"><a name="N11473"></a><h3>Fields Associated with Other Options</h3><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">SolverIterations</span></p></td><td><p>The SolverIterations field determines if and how perturbed
+            trajectories are drawn to a GroundTrackPlot during iterative a
+            solver sequences. When SolverIterations is set to All, all solver
+            iterations perturbations and iterations are shown on the plot.
+            When SolverIterations is set to Current, only the current solver
+            pass is shown on the plot and the iteration history is not
+            retained. When SolverIterations is set to None, no perturbations
+            or iterations are drawn and the GroundTrackPlot is not updated
+            until the solver has converged.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>Current</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>All, Current, None</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>N/A</p></td></tr></tbody></table></div></td></tr><tr><td><p><span class="term">TextureMap</span></p></td><td><p>The TextureMap field allows you to define a custom map file
+            for use in a GroundTrackPlot.</p><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Default</span></p></td><td><p>Current</p></td></tr><tr><td><p><span class="term">Limits</span></p></td><td><p>Texture map in jpg or bmp file.</p></td></tr><tr><td><p><span class="term">Units</span></p></td><td><p>N/A</p></td></tr></tbody></table></div></td></tr></tbody></table></div></div></div><div class="refsection" title="Additional Information"><a name="N114AB"></a><h2>Additional Information</h2><p>When working in the GroundTrackPlot GUI, if you change the
+    CentralBody field, the TextureMap field will automatically change to the
+    default texture map for the new central body. If you have specified a
+    custom texture map file and path, that information will be lost when you
+    change the CentralBody field.</p></div><div class="refsection" title="Interactions"><a name="N114B0"></a><h2>Interactions</h2><div class="variablelist"><table border="0"><col valign="top" align="left"><tbody><tr><td><p><span class="term">Spacecraft</span></p></td><td><p>Any spacecraft in your mission is available to a
+          GroundTrackPlot for display.</p></td></tr><tr><td><p><span class="term">GroundStations</span></p></td><td><p>Any GroundSation in your mission is available to a
+          GroundTrackPlot for display.</p></td></tr><tr><td><p><span class="term">PenUp/PenDown Commands</span></p></td><td><p>You can use the PenUp and PenDown commands to control when
+          data is written to a GroundTrackPlot</p></td></tr><tr><td><p><span class="term">Toggle Command</span></p></td><td><p>You can use the Toggle command to control when data is written
+          to a GroundTrackPlot</p></td></tr></tbody></table></div></div><div class="refsection" title="Examples"><a name="N114CC"></a><h2>Examples</h2><pre class="programlisting"><code class="code">Create GroundTrackPlot GroundTrackPlot1;
+GMAT GroundTrackPlot1.CentralBody = Earth;
+GMAT GroundTrackPlot1.Add = {Sat, Earth};
+GMAT GroundTrackPlot1.SolverIterations = Current;
+GMAT GroundTrackPlot1.DataCollectFrequency = 1;
+GMAT GroundTrackPlot1.UpdatePlotFrequency = 50;
+GMAT GroundTrackPlot1.NumPointsToRedraw = 0;
+GMAT GroundTrackPlot1.ShowPlot = true;
+GMAT GroundTrackPlot1.TextureMap = '../MyMaps/MyTexture.jpg';
+GMAT GroundTrackPlot1.UpperLeft = [ 0 0 ];
+GMAT GroundTrackPlot1.Size = [ 0 0 ];
+GMAT GroundTrackPlot1.RelativeZOrder = 0;
+</code></pre></div></div><div class="navfooter"><hr><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="GroundStation.html">Prev</a>&nbsp;</td><td align="center" width="20%"><a accesskey="u" href="Resources.html">Up</a></td><td align="right" width="40%">&nbsp;<a accesskey="n" href="ImpulsiveBurn.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%">GroundStation&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;ImpulsiveBurn</td></tr></table></div></body></html>

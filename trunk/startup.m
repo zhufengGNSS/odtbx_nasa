@@ -69,24 +69,26 @@
 %
 % The path to the ODTBX folder (the directory above ODTBX_Source, e.g. the
 % working copy or export of 
-% https://gs-fftb-collab.gsfc.nasa.gov/svn/odtbx/matlab/trunk):
+% https://odtbx.svn.sourceforge.net/svnroot/odtbx/trunk):
 %odtbxPath = 'C:\Users\abrown\Projects\ODTBX\matlab\trunk'; 
 %
 % The path to a specific MICE folder (the top-level folder of a MICE 
 % distribution, usually named "mice", and it contains directories like:
 % data, doc, include, lib, src, etc., e.g. the working copy or export of
-% https://gs-fftb-collab.gsfc.nasa.gov/svn/odtbx/matlab/vendor/<<your_arch>>/mice):
+% https://odtbx.svn.sourceforge.net/svnroot/odtbx/vendor/<<your_arch>>/mice):
 %odtbxMicePath = 'C:\Users\abrown\Projects\ODTBX\matlab\vendor\WinMice_32\mice';
 %
 % The path to the JAT folder that contains the source and data files
 % (the directory above jat/, e.g. the working copy or export of 
-% https://gs-fftb-collab.gsfc.nasa.gov/svn/jat/branches/ODTBX or
+% https://odtbx.svn.sourceforge.net/svnroot/odtbx/vendor/Jat or
 % https://gs-fftb-collab.gsfc.nasa.gov/svn/jat/trunk).  Some developers
 % may choose to build their bytecode in these folders as well.
 %jatSrcPath =  'C:\Users\abrown\Projects\ODTBX\jat\branches\ODTBX';
 %
-% The path to the top-level GMAT folder (contains directories like: bin,
-% data, plugins, etc.):
+% The path to the top-level GMAT folder (the top-level folder of a GMAT
+% distribution, usually named "gmat", and it contains directories like:
+% bin, data, plugins, etc., e.g. the working copy or export of
+% https://odtbx.svn.sourceforge.net/svnroot/odtbx/vendor/<<your_arch>>/GMAT
 %gmatPath = 'C:\Users\jjparker\Documents\Software\GMAT\Nightly';
 %
 % (Optional) The path to the JAT folder that contains the Java bytecode
@@ -128,7 +130,12 @@ end
 %       src
 %       lib
 %       kernels, (etc)
-%
+%   gmat (the appropriate GMAT arch version is installed here)
+%       bin
+%       data
+%       docs
+%       matlab, (etc)
+%       
 % Note, the installer may not install all ODTBX directories.  See below.
 
 % If we don't know what type of run this is, check for an installed run.
@@ -192,6 +199,7 @@ if startuptype == 1
     odtbxMicePath = fullfile(basePath,'..','mice');
     jatSrcPath = fullfile(basePath,'..','jat');
     jatBytecodePath = fullfile(basePath,'..','jat','maven','target','classes');
+    gmatPath = fullfile(basePath,'..','gmat');
 end
 %
 %% REGRESSION SETUP END

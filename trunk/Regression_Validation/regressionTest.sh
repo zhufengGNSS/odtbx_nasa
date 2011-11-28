@@ -71,6 +71,7 @@ svn update $DIR/odtbx
 svn update $DIR/mice
 svn update $DIR/jat
 svn update $DIR/jat-lib
+svn update $DIR/gmat
 
 # record the svn info:
 echo "Gathering information on working copies for log files."
@@ -81,6 +82,7 @@ svn info $DIR/odtbx >> $INFO_LOG_FILE
 svn info $DIR/mice >> $INFO_LOG_FILE
 svn info $DIR/jat >> $INFO_LOG_FILE
 svn info $DIR/jat-lib >> $INFO_LOG_FILE
+svn info $DIR/gmat >> $INFO_LOG_FILE
 
 echo -e "\n" >> $INFO_LOG_FILE
 echo "Maven build results:" >> $INFO_LOG_FILE

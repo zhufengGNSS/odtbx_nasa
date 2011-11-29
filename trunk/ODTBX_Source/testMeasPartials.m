@@ -90,7 +90,7 @@ eOpts = setOdtbxOptions(eOpts,'DatVectorized',2);
 [~,Hcheck] = ominusc(@EmptyH,tspan,Xref,Y,eOpts,[],{datfun, datarg});
 
 %% Difference the H matrices and display the maximum difference
-tol = eps; %tolerance for H values too close to zero to compare
+tol = 1e-10; %tolerance for H values too close to zero to compare
 Hdiff      = abs(Href - Hcheck);
 isel_Hdiff = ~isinf(Hdiff)&~isnan(Hdiff)&abs(Href.*Hcheck)>tol; %Infs and NaNs show up when dividing by zero or 0/0
 

@@ -26,6 +26,15 @@ function [xDot,A,Q] = gmatforces_km(t,x,options)
 %       A           (6x6xn)     State transition matrix (km, seconds)
 %       Q           (6x6xn)     process noise power spectral density
 %
+% OPTIONS is an OD Toolbox Measurement Options data structure. See
+% ODTBXOPTIONS for all available options settings. The options parameters
+% that are valid for this function are:
+%
+%   PARAMETER           VALID VALUES            NOTES
+%   modelid             Integer ForceModel ID   See findodemodel
+%   epoch            	Datenum Value           Default GMAT Time Frame
+%                      {01 JAN 2000 12:00:00}   (A.1)
+%                                                       
 %   keyword: GMAT Forces
 %   See also startgmat, closegmat, preparescript
 
@@ -58,7 +67,8 @@ if (nt > 1)
     fprintf(1,'Warning: The interface is not yet tested for more than one spacecraft!!!');
 end
 
-t0 = getOdtbxOptions(options,'epoch',0)/86400;
+% Default epoch is 01 January 2000 12:00:00.000 (J2000)
+t0 = getOdtbxOptions(options,'epoch',730486.5);
 modelid = getOdtbxOptions(options,'modelid',[]);
 
 if ~isempty(modelid)
@@ -67,7 +77,7 @@ end
 
 for i=1:nt
     % Set the state.  Note that GMAT needs an a.1 epoch.
-    epoch = t0 + 21545.0 + t(i) / 86400.0;
+    epoch = t0 - 708941.5 + t(i) / 86400.0;
     statep = libpointer('doublePtr', x(:,i));
     retval = calllib('libCInterface','SetState',epoch,statep,nx);
     if (retval < 0)

@@ -198,7 +198,7 @@ Hpd7 = testMeasPartials(@gpsmeas,measOptions);
 % save('testMeasPartials_RegressionData.mat','Hpd1_sav','Hpd2_sav','Hpd3_sav','Hpd4_sav','Hpd5_sav','Hpd6_sav','Hpd7_sav');
 
 %% Check the results
-tol = 0.01;
+tol = 0.05;
 load('testMeasPartials_RegressionData.mat')
 err1 = max(max(max(abs(Hpd1-Hpd1_sav))));
 err2 = max(max(max(abs(Hpd2-Hpd2_sav))));

@@ -42,8 +42,6 @@ if nargout > 0
     % Set the regression test tolerance
     tol = 2e-6;
     
-    % Set the regression test measurement partials threshold
-    thresh = 1e-20;
 else
     % Running in demo mode
     testMode = false;
@@ -191,7 +189,6 @@ if testMode
     [~,x] = integ(dynfun,tspan,x0,[],GM);
     
     options = odtbxOptions('estimator');
-    options = setOdtbxOptions(options,'DatJTolerance',1e-12);
     
     % Generate measurements
     [y H] = opnavmeas(tspan,x,measopts);

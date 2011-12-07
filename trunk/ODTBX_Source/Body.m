@@ -104,16 +104,25 @@ classdef Body < handle
             
             % Generate DCM to rotate from body-fixed to inertial
             % coordinates using the body spin state
-            D3 = dcm('ax3',obj.RA);
-            D2 = dcm('ax2',obj.DEC);
-            D3w = dcm('ax3',theta);
-            D = D3w*D2*D3;
+            D3w = [cos(-theta) sin(-theta) 0;
+                -sin(-theta) cos(-theta) 0;
+                0 0 1];
+            
+            D1 = [1 0 0;
+                0 cos(obj.DEC-pi/2) sin(obj.DEC-pi/2);
+                0 -sin(obj.DEC-pi/2) cos(obj.DEC-pi/2)];
+            
+            D3 = [cos(-pi/2-obj.RA) sin(-pi/2-obj.RA) 0;
+                -sin(-pi/2-obj.RA) cos(-pi/2-obj.RA) 0;
+                0 0 1];
+            
+            D = D3*D1*D3w;
             
             xb = getBodyLmk(obj);
             
             % Rotate landmark coordinates into inertial frame using the DCM
             for i=size(obj.lmk,1):-1:1
-                xi(:,i) = D'*xb(:,i);
+                xi(:,i) = D*xb(:,i);
             end
         end
         

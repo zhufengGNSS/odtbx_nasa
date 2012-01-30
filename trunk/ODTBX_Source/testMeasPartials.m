@@ -4,7 +4,7 @@ function Hpd = testMeasPartials(datfun,datarg)
 %   data function DATFUN to compute measurements y and the measurement
 %   partials matrix H for a random orbit using the options provided in
 %   DATARG. The function then calls OMINUSC to numerically compute H using
-%   NUMJAC. The function will display the largest percent difference that
+%   NUMJAC. The function will display the median percent difference that
 %   it finds between the resulting H of each method, and return the percent
 %   difference of H for all time steps as HPD. If the median percent
 %   difference is larger than 0.001%, the function will produce an error

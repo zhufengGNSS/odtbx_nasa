@@ -49,56 +49,79 @@ function Output = EarthOrbitPlot(Trajectory)
 %  REVISION HISTORY
 %   Author      		Date         	Comment
 %               	   (MM/DD/YYYY)
-%   Keith Speckman          09/08/2007          Original
+%   Keith Speckman     09/08/2007       Original
+%   Russell Carpenter  02/13/2012       Various Improvements
 
 % Determine whether this is an actual call to the program or a test
 
-if strcmpi(Trajectory,'ValidationTest') | strcmpi(Trajectory,'RegressionTest')
-
+if strcmpi(Trajectory,'ValidationTest') || strcmpi(Trajectory,'RegressionTest')
 	Output = EarthOrbitPlot_regression_validation_test();
-
 else
-
 	getPlot(Trajectory);
 	Output = 0;
-
 end
 
-end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function getPlot(xprop);
-
-
-[X,Y,Z] = sphere(20);
+function getPlot(xprop)
 
 figure
-	% Plot Trajectory
-	plot3(xprop(1,:),xprop(2,:),xprop(3,:));
-	hold on
+% Plot Trajectory
+plot3(xprop(1,:),xprop(2,:),xprop(3,:));
+hold on
 
-	% Plot Earth Sphere
-	surf(6378*X,6378*Y,6378*Z)
-	colormap( [(0) (.7) (1)])
+% Plot Earth Sphere
+earth(6378)
 
-	title('Earth Orbit Trajectory Plot')
-	xlabel('X (Km)')
-	ylabel('Y (Km)')
-	zlabel('Z (Km)')
-	axis equal
-	hold off
+title('Earth Orbit Trajectory Plot')
+xlabel('X (Km)')
+ylabel('Y (Km)')
+zlabel('Z (Km)')
+whitebg('k')
+hold off
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function earth(varargin)
+% Sphere with Earth map superimposed
+% Optional arguments
+% - Earth radius
+% - Globe transparency level, 1 = opaque, through 0 = invisible
+% - Number of globe panels around the equator deg/panel = 360/npanels
+
+% Original by Khashayar Parsay
+% Modified by Russell Carpenter
+
+if nargin < 1 || isempty(varargin{1})
+    Re = 1;
+else
+    Re = varargin{1};
 end
+if nargin < 2 || isempty(varargin{2})
+    alpha = 1;
+else
+    alpha = varargin{2};
+end
+if nargin < 3 || isempty(varargin{3})
+    npanels = 72;
+else
+    npanels = varargin{3};
+end   
+[x, y, z] = ellipsoid(0, 0, 0, Re, Re, Re, npanels);
+globe = surf(x, y, -z, 'FaceColor', 'none', 'EdgeColor', 0.5*[1 1 1]);
+cdata = imread('earth.jpg');
+set(globe, 'FaceColor', 'texturemap', 'CData', cdata, 'FaceAlpha', alpha, ...
+    'EdgeColor', 'none');
+axis equal
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Validation and Regression Test
 %
 % Validation is done by inspection of the plot.
 % Regression is confirmed if the script runs without a failure.
 
-function Output = EarthOrbitPlot_regression_validation_test();
+function Output = EarthOrbitPlot_regression_validation_test()
 
 % Create an ellipsoid trajectory
 a = 6378*4;
@@ -106,11 +129,9 @@ b = 6378*3.5;
 e = acos(b/a);
 h = a*e;
 k = 0;
-t = [0:2*pi/100:2*pi];
+t = 0:2*pi/100:2*pi;
 Trajectory(1,:) = h+a*cos(t);
 Trajectory(2,:) = k+b*sin(t)*cos(pi/6); 
 Trajectory(3,:) = k+b*sin(t)*sin(pi/6); 
 
 Output = EarthOrbitPlot(Trajectory);
-
-end

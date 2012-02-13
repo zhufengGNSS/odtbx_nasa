@@ -1,4 +1,4 @@
-function X = kep2cart(KOE,GM)
+function X = kep2cart(varargin)
 % KEP2CART  Convert Keplerian orbital elements to cartesian states.
 %   X = KEP2CART(KOE) converts the two-body Keplerian orbital elements in
 %   the structure KOE to Cartesian position/velocity vectors, X = [R;V],
@@ -18,6 +18,9 @@ function X = kep2cart(KOE,GM)
 %   the corresponding set of osculating elements in the fields of KOE.
 %
 %   X = KEP2CART(KOE,GM) uses the input GM instead of the EGM-96 value.
+%
+%   Alternatively, the KOE's can be input individually in the order listed
+%   above, rather than as a structure.
 %
 % keyword: Utilities, 
 %
@@ -48,17 +51,31 @@ function X = kep2cart(KOE,GM)
 % Russell Carpenter
 % NASA JSC and NASA GSFC
 
-if nargin == 1,
-    GM=3.986004415e+14;
+if nargin == 1 || nargin == 6
+    GM = 3.986004415e+14;
+elseif nargin == 2
+    GM = varargin{2};
+else
+    GM = varargin{7};
+end
+if nargin >= 6
+    a = varargin{1}; % semi-major axis
+    e = varargin{2}; % eccentricity
+    i = varargin{3}; % inclination (radians)
+    p = varargin{4}; % argument of perigee (radians)
+    n = varargin{5}; % ascending node (radians)
+    w = varargin{6}; % true anomaly (radians)
+else
+    KOE = varargin{1};
+    a = [KOE(:).sma];  
+    e = [KOE(:).ecc];
+    i = [KOE(:).incl];
+    p = [KOE(:).argp];
+    n = [KOE(:).raan];
+    w = [KOE(:).tran];
 end
 
 % el2xyz code (vectorized by RC):
-a = [KOE(:).sma]         ;% semi-major axis
-e = [KOE(:).ecc]         ;% eccentricity
-i = [KOE(:).incl]        ;% inclination (radians)
-p = [KOE(:).argp]        ;% argument of perigee (radians)
-n = [KOE(:).raan]        ;% ascending node (radians)
-w = [KOE(:).tran]        ;% true anomaly (radians)
 
 sp = sin(p);   cp = cos(p);
 sn = sin(n);   cn = cos(n);
@@ -77,6 +94,6 @@ slr = a.*(1 - e.^2);              % semi-latus rectum
 rmag = slr./(1 + e.*cw);          % position vector magnitude
 
 % Position and velocity vectors:
-r(1:3,:) = [ P*diag(cw) + Q*diag(sw)     ] * diag(rmag);
-v(1:3,:) = [-P*diag(sw) + Q*diag(e + cw) ] * diag(sqrt(GM./slr));
+r(1:3,:) = ( P*diag(cw) + Q*diag(sw)     ) * diag(rmag);
+v(1:3,:) = (-P*diag(sw) + Q*diag(e + cw) ) * diag(sqrt(GM./slr));
 X = [r;v];

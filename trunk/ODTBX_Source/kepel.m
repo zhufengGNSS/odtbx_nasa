@@ -1,4 +1,4 @@
-function KOE = kepel(r,v,GM)
+function varargout = kepel(r,v,GM)
 % KEPEL  Compute Keplerian orbital elements from Cartesian states.
 %   KOE = KEPEL(R,V) computes the two-body Keplerian orbital elements
 %   from input position vectors R and V, using the EGM-96 value of the
@@ -21,7 +21,10 @@ function KOE = kepel(r,v,GM)
 %      KOE.tran = true anomaly
 %   All angles are in radians, and SMA is in the units of R and GM.
 %
-% keyword: Utilities, 
+%   If called with six output arguments instead of one, the KOE's are
+%   returned in the order listed above.
+%
+% keyword: Utilities
 %
 % See also
 %      Converting back to Cartesian states: KEP2CART
@@ -59,15 +62,15 @@ if ~xor(nr==1,nc==1), % NOT(Either but not both)
     error('KEPEL:inp1NotVec', 'First input must be a vector.')
 end
 el = length(r);
-if nargin == 1 | isempty(v),
+if nargin == 1 || isempty(v),
     if el ~= 6,
         error('KEPEL:xNot6d', 'X must be 6x1 or 1x6.')
     end
     v = r(4:6);
     r = r(1:3);
-else,
+else
     [nrv,ncv] = size(v);
-    if ~xor(nrv==1,ncv==1) | length(v)~=3,
+    if ~xor(nrv==1,ncv==1) || length(v)~=3,
         error('KEPEL:vNot3d', 'V must be 3x1 or 1x3.')
     end
     if el ~= 3,
@@ -108,3 +111,13 @@ if dot(r,v) < -eps	% Fix quadrant.
    KOE.tran = 2*pi - KOE.tran;
 end
 KOE = orderfields(KOE,[2 1 3:6]);
+if nargout == 1
+    varargout{1} = KOE;
+else
+    varargout{1} = KOE.sma;
+    varargout{2} = KOE.ecc;
+    varargout{3} = KOE.incl;
+    varargout{4} = KOE.raan;
+    varargout{5} = KOE.argp;
+    varargout{6} = KOE.tran;
+end 

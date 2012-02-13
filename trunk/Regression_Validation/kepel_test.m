@@ -76,6 +76,14 @@ if failed
     disp(sprintf('kepel_test.m failure occurrend in test 5'));
 end
 
+% Test 6: output elements as separate variables instead of struct
+[at,et,it,Wt,wt,ft] = kepel(rijk,vijk);
+failed = check(KOE1,at,et,it,Wt,wt,ft,scaledtol);
+if failed
+    disp(sprintf('kepel_test.m failure occurrend in test 6'));
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Support function to do the checks
 function failed = check(KOE,a,e,i,raan,argp,truean,scaledtol)

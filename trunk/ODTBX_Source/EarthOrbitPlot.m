@@ -6,6 +6,12 @@ function Output = EarthOrbitPlot(Trajectory)
 %   EarthOrbitPlot plots a three dimentional inertial Earth orbit around
 %   a spherical representation of the earth.  The plot can be zoomed and
 %   rotated using Matlab's built-in plot utilities.
+%
+% Note: running this file will change the background color of the figure in
+% which it plots to black.  Although other figures are unaffected, this
+% figure will continue to have a black background, even if you close it,
+% for the remainder of the Matlab session.  To change it back to white, use
+% the command "whitebg."
 % 
 % INPUT
 %      VARIABLE       SIZE       DESCRIPTION (Optional/Default)
@@ -77,7 +83,7 @@ title('Earth Orbit Trajectory Plot')
 xlabel('X (Km)')
 ylabel('Y (Km)')
 zlabel('Z (Km)')
-whitebg('k')
+whitebg(gcf,'k')
 hold off
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -43,9 +43,8 @@ V = x(4:6,:);
 xd = [V; repmat(-g,3,1).*Ur];
 if nargout > 1,
    I = repmat(eye(3),[1 1 m]);
-   UUT = repmat(permute(shiftdim(Ur,-1),[2 1 3]),[1 3]) .* ...
-       repmat(shiftdim(Ur,-1),[3 1]);
-   G = repmat(shiftdim(-g./r,-1),[3 3]).*(I - 3*UUT);
+   UUT = bsxfun(@times,reshape(Ur,3,1,m),reshape(Ur,1,3,[]));
+   G = bsxfun(@times,reshape(-g./r,1,1,m),(I - 3*UUT));
    A(4:6,1:3,:) = G;
    A(1:3,4:6,:) = I;
    %Above does the following, but is often faster.

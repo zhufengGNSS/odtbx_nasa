@@ -34,14 +34,15 @@ function [u,l] = unit(v)
 %   (for other changes, see the svn repository)
 
 [m,n] = size(v);
-if m==1 & n==1, % Input is a scalar
+if m==1 && n==1, % Input is a scalar
     warning('UNIT:scalar', 'Input is a scalar.')
     l = v;
     u = 1;
 elseif xor(m==1,n==1), % One or the other but not both, i.e. vector input
     l = norm(v);
     u = v/l;
-else, % Matrix input; treat as collection of column vectors
+else % Matrix input; treat as collection of column vectors
     l = sqrt(sum(v.^2));
-    u = v.*repmat(1./l,m,1);
+    % u = v.*repmat(1./l,m,1);
+    u = bsxfun(@times,v,1./l); % Faster for large n
 end

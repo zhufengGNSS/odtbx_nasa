@@ -85,6 +85,7 @@ testCases = {
         'clktests'
         'nbody_test'
         'restartRegression(''SRIF'')'
+        % 'polydyn_regression'
     % Release 4.5
         'test_CompValsTol'
         'test_FilterGpsCnoThresh'
@@ -302,7 +303,7 @@ if nargin > 1
     if nargin > 2
         smtpServer = varargin{3};
     else
-        smtpServer = 'localhost';
+        smtpServer = 'mailhost.gsfc.nasa.gov';
     end
 else
     email = '';

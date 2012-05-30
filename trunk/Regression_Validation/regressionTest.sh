@@ -36,7 +36,7 @@
 
 # keb - send mail to the nasa mail list
 DEFAULT_EMAIL='odtbx@lists.nasa.gov'
-DEFAULT_SMTP_SERVER=localhost
+DEFAULT_SMTP_SERVER='mailhost.gsfc.nasa.gov'
 
 export LANG=en_US.UTF-8
 

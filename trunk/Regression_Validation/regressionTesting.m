@@ -85,7 +85,7 @@ testCases = {
         'clktests'
         'nbody_test'
         'restartRegression(''SRIF'')'
-        % 'polydyn_regression'
+        'polydyn_regression'
     % Release 4.5
         'test_CompValsTol'
         'test_FilterGpsCnoThresh'

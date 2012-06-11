@@ -33,15 +33,14 @@ function [y,H,R] = tdrssmeas(t,x,options)
 %   trdss               structure(km, radians) Structure of all TDRS data
 %       Keplerian Version:
 %           tdrss.type         = 'Keplerian';
-%           tdrss.sat(i).epoch = datenum([2008  9 26  0  0   .000]); %UTC
-%           tdrss.sat(i).sma   = 42165.3431; %semi-major axis in km
-%           tdrss.sat(i).ecc   = 0.00026248; %eccentricity
-%           tdrss.sat(i).incl  = 1.7350*pi/180; %inclination in radians
-%           tdrss.sat(i).raan  = 278.2107*pi/180; %right ascension of the
-%                                                 ascending node in radians
-%           tdrss.sat(i).argp  = 270.1285*pi/180; %argument of periapse in
-%                                                 radians
-%           tdrss.sat(i).tran  = 135.9336*pi/180; %true anomaly in radians
+%           tdrss.sat(i).epoch = datenum('30 Apr 2012 18:00:00.000'); %UTC
+%           tdrss.sat(i).sma   = 42164.1363; %semi-major axis in km
+%           tdrss.sat(i).ecc   = 0; %eccentricity
+%           tdrss.sat(i).incl  = 0; %inclination in radians
+%           tdrss.sat(i).raan  = 88*pi/180; %right ascension of the
+%                                            ascending node in radians
+%           tdrss.sat(i).argp  = 0; %argument of periapse in radians
+%           tdrss.sat(i).tran  = 0; %true anomaly in radians
 %       Ephem Version:
 %           tdrss.type            = 'SPEphem';
 %           tdrss.sat(1).filename = 'TD0_SPephem_2008270.txt'; %TDRS-East
@@ -118,6 +117,7 @@ function [y,H,R] = tdrssmeas(t,x,options)
 %   Kevin Berry         06/25/2009      Added time scale comments
 %   Brandon Farzad      08/06/2009      Added Scheduling capabilities
 %   Kevin Berry         02/03/2010      Changed to faster gsmeas options
+%   Kevin Berry         04/30/2012      Added default TDRSS locations
 
 %% Determine whether this is an actual call to the program or a test
 
@@ -145,8 +145,35 @@ useDoppler   = getOdtbxOptions(options, 'useDoppler', false );
 numtypes     = useRange + useRangeRate + useDoppler;
 
 if isnan(epoch); error('An epoch must be set in the options structure.'); end
-if isempty(tdrss); error('tdrss state information must be set in the options structure'); end
 if size(t,1)==length(t), t=t'; end
+if isempty(tdrss) % Use default tdrss locations
+    % From http://nssdc.gsfc.nasa.gov/multi/tdrs.html, The operational 
+    % spacecraft are located at 41°, 174° and 275° West longitude
+    w = [0;0;JATConstant('wEarth')];
+    D = jatDCM('ecef2eci', epoch, 0);
+    M = rotransf(-D*w,D);
+    
+    tdrss.type = 'Keplerian';
+    tdrss.sat(1).epoch = epoch; %UTC
+    tdrss.sat(1).sma   = 42164.1363; %semi-major axis in km
+    tdrss.sat(1).ecc   = 0; %eccentricity
+    tdrss.sat(1).incl  = 0; %inclination in radians
+    X_ecef=[42164.1363*cosd(-41);42164.1363*sind(-41);0;0;0;0];
+    X_eci = M(1:6,1:6)*X_ecef;
+    tdrss.sat(1).raan  = atan2(X_eci(2),X_eci(1)); %right ascension of the ascending node in radians
+    tdrss.sat(1).argp  = 0; %argument of periapse in radians
+    tdrss.sat(1).tran  = 0; %true anomaly in radians
+
+    tdrss.sat(2) = tdrss.sat(1);    
+    X_ecef=[42164.1363*cosd(-174);42164.1363*sind(-174);0;0;0;0];
+    X_eci = M(1:6,1:6)*X_ecef;
+    tdrss.sat(2).raan  = atan2(X_eci(2),X_eci(1)); %right ascension of the ascending node in radians
+    
+    tdrss.sat(3) = tdrss.sat(1);  
+    X_ecef=[42164.1363*cosd(-275);42164.1363*sind(-275);0;0;0;0];
+    X_eci = M(1:6,1:6)*X_ecef;
+    tdrss.sat(3).raan  = atan2(X_eci(2),X_eci(1)); %right ascension of the ascending node in radians
+end
 
 %% Get TDRS state
 if strcmpi(tdrss.type, 'keplerian')

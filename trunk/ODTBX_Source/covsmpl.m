@@ -55,7 +55,7 @@ if nargin > 2,
         warning('COVSMPL:seedReset', 'Resetting random number seed')
         try % new syntax for ML 7.7+
 %             RandStream('mcg16807', 'Seed', varargin{2})
-            RandStream.setDefaultStream(RandStream('shr3cong','Seed',varargin{2}));
+            RandStream.setGlobalStream(RandStream('shr3cong','Seed',varargin{2}));
         catch %#ok<CTCH>
             randn('state', varargin{2}) %#ok<RAND>
         end
@@ -92,7 +92,7 @@ for j = ns:-1:1,
         % this won't work, so use the eigenvalue decomposition instead, and
         % force any negative eigenvalues to be zero.
         try
-            randarray = RandStream.getDefaultStream.randn(nj,k);
+            randarray = RandStream.getGlobalStream.randn(nj,k);
         catch
             randarray = randn(nj,k);
         end

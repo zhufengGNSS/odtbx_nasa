@@ -94,7 +94,7 @@ toc
 load polydyn_data
 
 % Compare generated and test data
-tol = 1e-10;
+tol = 1e-9;
 
 dx = x-x_test;
 
@@ -102,6 +102,7 @@ if dx<tol
     f = 0;
 else
     f = 1;
+    fprintf('POLYDYN Regression test failed! dx = %g\n\n',max(max(dx)))
 end
 
 end

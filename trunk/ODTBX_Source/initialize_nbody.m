@@ -207,7 +207,6 @@ if SF_Check == 1 && (~isempty(BadPMIndices) || ~isempty(BadCBIndices))
     end
     % Check CentralBody names against SpiceFiles
     if ~isempty(BadCBIndices)
-        disp(1)
         match5 = strcmpi(CentralBody, refSpiceCell);
         indices5 = find(match5 == 1,1);
         if isempty(indices5)

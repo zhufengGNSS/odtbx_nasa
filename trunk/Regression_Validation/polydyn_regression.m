@@ -96,7 +96,7 @@ load polydyn_data
 % Compare generated and test data
 tol = 1e-9;
 
-dx = x-x_test;
+dx = abs(x-x_test);
 
 if dx<tol
     f = 0;

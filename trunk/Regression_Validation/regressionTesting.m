@@ -79,6 +79,7 @@ clc
 % if the case passed, and a 1 if the case failed.
 testCases = {
     % Release 5.0
+        'estpar_regression'
         'initialize_cov_test'
         'sensmos'
         'fixzoom'

@@ -210,11 +210,13 @@ else
     fid1 = 1;
 end
 
-runNames = { '' 'No toolboxes' };
+% runNames = { '' 'No toolboxes' };
+runNames = { 'No toolboxes' };
 
 for run = 1:length(runNames)
     
-    if run == 2
+%     if run == 2
+    if run == 1
         removeToolboxPaths(); % remove all optional toolboxes
     end
 

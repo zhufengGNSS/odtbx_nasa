@@ -45,6 +45,7 @@ function [t,x,Phi,S] = integ(dynfun,tspan,x0,options,dynarg)
 %   keyword: Integrators, 
 %
 %   See also
+%      INTEGEV
 %      Numerical Jacobian:    NUMJAC
 %      ODE solvers:           ODE113, ODE23, ODE45
 %
@@ -70,86 +71,11 @@ function [t,x,Phi,S] = integ(dynfun,tspan,x0,options,dynarg)
 % NASA Goddard Space Flight Center
 % Date: 2005-02-22 12:07:47 -0500 (Tue, 22 Feb 2005)
 
-nx = length(x0);
-nx2 = nx^2;
-if nargout == 4,
-    z0(nx+nx2+1:nx+2*nx2,:) = zeros(nx2,1);
+switch nargout
+    case 2
+        [t,x] = integev(dynfun,tspan,x0,options,dynarg);
+    case 3
+        [t,x,Phi] = integev(dynfun,tspan,x0,options,dynarg);
+    case 4
+        [t,x,Phi,S] = integev(dynfun,tspan,x0,options,dynarg);
 end
-if nargout > 2,
-    z0(nx+1:nx+nx2,:) = reshape(eye(nx),nx2,1);
-end
-z0(1:nx,:) = x0;
-odesolv = getOdtbxOptions(options,'OdeSolver',@ode113);
-odeopts = getOdtbxOptions(options,'OdeSolvOpts',...
-    odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10)); 
-[t,z] = feval(odesolv,@odefun,tspan,z0,odeopts,options,dynfun,nx,dynarg);
-x = z(:,1:nx)';
-if nargout > 2,
-    nt = length(t);
-    Phi = reshape(z(:,nx+1:nx+nx2)',nx,nx,nt);
-end
-if nargout == 4,
-    S = reshape(z(:,nx+nx2+1:end)',nx,nx,nt);
-end
-
-%-------------------------------------------------------------------------
-function zdot = odefun(t,z,options,dynfun,nx,dynarg)
-% ODEFUN  Derivative function for ODE Solvers
-
-% FYI: nx = (realsqrt(1+8*nz)-1)/4;
-
-[nz,mz] = size(z);
-nx2 = nx^2;
-x = z(1:nx,:);
-if nz > nx,
-    Phi = reshape(z(nx+(1:nx2),:),nx,nx,mz);
-    [xdot,A,Q] = feval(dynfun,t,x,dynarg);
-    if isempty(A),
-        for k = mz:-1:1,
-            A(:,:,k) = estjac(dynfun,t(k),x(:,k),xdot(:,k),options,dynarg);
-        end
-    end
-    if nz > nx+nx2 && ~isempty(Q),
-        S = reshape(z(nx2+nx+1:end,:),nx,nx,mz);
-        for k = mz:-1:1,
-            Sdot = A(:,:,k)*S(:,:,k) + S(:,:,k)*A(:,:,k)' + Q(:,:,k);
-            zdot(nx2+nx+1:2*nx2+nx,k) = Sdot(:);
-        end
-    end
-    for k = mz:-1:1,
-        Phidot = A(:,:,k)*Phi;
-        zdot(nx+(1:nx2),k) = Phidot(:);
-    end
-else
-    xdot = feval(dynfun,t,x,dynarg);
-end
-zdot(1:nx,:) = xdot;
-
-%-------------------------------------------------------------------------
-function A = estjac(f,t,x,xdot,options,dynarg)
-% ESTJAC  Helper function for numerical Jacobian function evaluation.
-%   Note this is slightly different from the ESTJAC subfunction that
-%   OMINUSC uses, due to difference in the fields of the OPTIONS structure.
-%   Also, keeping them separate keeps their persistent variables distinct.
-%
-%   See also NUMJAC
-
-persistent FAC THRESH VECTRIZD JPATTRN JG
-if length(THRESH)~=length(x)
-    THRESH = [];
-    FAC = [];
-end
-if isempty(options) || ~isfield('OdeSolvOpts',options)
-    options.OdeSolvOpts = [];
-end
-if isempty(THRESH),
-    atol = odeget(options.OdeSolvOpts,'AbsTol',1e-6,'fast');
-    THRESH = zeros(size(x))+ atol(:);
-end
-if isempty(VECTRIZD),
-    VECTRIZD = odeget(options.OdeSolvOpts,'Vectorized','off','fast');
-end
-if isempty(JPATTRN),
-    JPATTRN = odeget(options.OdeSolvOpts,'Jpattern',[],'fast');
-end
-[A,FAC,JG] = numjac(f,t,x,xdot,THRESH,FAC,VECTRIZD,JPATTRN,JG,dynarg);

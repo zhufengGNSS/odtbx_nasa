@@ -88,6 +88,8 @@ testCases = {
         'nbody_test'
         'restartRegression(''SRIF'')'
         'polydyn_regression'
+        'integ_test'
+        'integev_test'
     % Release 4.5
         'test_CompValsTol'
         'test_FilterGpsCnoThresh'

@@ -75,7 +75,7 @@ switch nargout
     case 2
         [t,x] = integev(dynfun,tspan,x0,options,dynarg);
     case 3
-        [t,x,Phi] = integev(dynfun,tspan,x0,options,dynarg);
+        [t,x,~,~,Phi] = integev(dynfun,tspan,x0,options,dynarg);
     case 4
-        [t,x,Phi,S] = integev(dynfun,tspan,x0,options,dynarg);
+        [t,x,~,~,Phi,~,S] = integev(dynfun,tspan,x0,options,dynarg);
 end

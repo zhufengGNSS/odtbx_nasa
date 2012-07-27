@@ -1,53 +1,47 @@
-function [t,x,Phi,S,te,xe,Phie,Se] = integev(dynfun,tspan,x0,options,dynarg,evtfun)
+function [t,x,te,xe,Phi,Phie,S,Se] = integev(dynfun,tspan,x0,options,dynarg,evtfun)
 % INTEGEV  Integration of state, and possibly STM, etc. w/event handling.
-%   [T,X] = INTEG(DYNFUN,TSPAN,X0,OPTIONS) uses the supplied dynamics
+%   [T,X] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS) uses the supplied dynamics
 %   function DYNFUN to integrate the ordinary differential equation,
 %   dx(t)/dt = f(t,x), with x(t0) = x0.  Function DYNFUN(T,X) must return a
 %   column vector corresponding to f(t,x).  If DYNFUN is "vectorized," then
 %   f(t,x) must be a 2-D array with each column corresponding to
 %   f(t(i),x(t(i)).  
 %
-%   [T,X,PHI] = INTEG(DYNFUN,TSPAN,X0,OPTIONS) will also integrate the
-%   differential equation of the state transition matrix, d/dt[Phi'(t,t0)]
-%   = A(t) Phi(t,t0), where A(t) = df(t,x)/dx.  Function DYNFUN(T,X) must
-%   return an additional output if called with two output arguments, which
-%   may either be a matrix corresponding to A(t), or else an empty matrix,
-%   in which case INTEG will numerically compute A(t) using NUMJAC. If
-%   A(t) is supplied, it must be a 3-D array for the vectorized case, with
-%   each "slice" corresponding to A(t(i)).
-%
-%   [T,X,PHI,S] = INTEG(DYNFUN,TSPAN,X0,OPTIONS) will also integrate the
-%   differential equation of the discrete process noise matrix, dS(t)/dt =
-%   A(t)S(t) + S(t)A'(t) + Q(t), if DYNFUN returns the process noise
-%   spectral density matrix, Q = E[ww'], where x' = f(t,x) + w, as an
-%   additional output.  If DYNFUN is vectorized, then Q must be a 3-D
-%   array, with each "slice" corresponding to Q(t(i)).
-%
-%   [T,X,...] = INTEG(DYNFUN,TSPAN,X0,OPTIONS,DYNARG) passes DYNARG to
+%   [T,X,...] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS,DYNARG) passes DYNARG to
 %   DYNFUN as DYNFUN(T,X,DYNARG).  Use OPTIONS = [] as a place holder if no
 %   options are set.
 %
-%   [t,x,Phi,S,te,xe,Phie,Se] = integ(dynfun,tspan,x0,options,dynarg,evtfun)
-%   support event functions.
+%   [T,X,TE,XE] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS,DYNARG,EVTFUN) will detect
+%   events specifed by EVTFUN and return the event times and states in TE
+%   and XE.  Event functions have the form 
+%      [VALUE,ISTERMINAL,DIRECTION] = EVTFUN(T,X)
+%   where VALUE, ISTERMINAL, and DIRECTION are vectors for which the ith
+%   element corresponds to the ith event function:
+%      VALUE(i) is the value of the ith event function.
+%      ISTERMINAL(i) = 1, if the integration stops at a zero of the function, 
+%                    = 0, otherwise.
+%      DIRECTION(i) = 0 if all zeros are to be located (the default), 
+%                   = +1 if only zeros where the event function is increasing, 
+%                   = -1 if only zeros where the event function is decreasing. 
 %
-%   Examples (" means same as above)
-%      Given xdot = pr2bp(t,x,mu), pr2bp not vectorized
-%         [t,x] = integ(@pr2bp,tspan,x0,[],mu)
-%      Given [xdot,A] = pr2bp("):
-%         [t,x,Phi] = integ(") % pr2bp returns A
-%         [t,x,Phi] = integ(") % pr2bp returns A=[]
-%      Given [xdot,A,Q] = pr2bp("):
-%         [t,x,Phi,S] = integ(") % pr2bp returns Q
-%      With opts = setOdtbxOptions('OdeSolvOpts',odeset('Vectorized','on')) and
-%      pr2bp vectorized:
-%         [t,x] = integ(@pr2bp,tspan,x0,opts,mu) 
-%         [t,x,Phi] = integ(") % pr2bp returns A
-%         [t,x,Phi] = integ(") % pr2bp returns A=[]
-%         [t,x,Phi,S] = integ(") % pr2bp returns Q
-% 
-%   keyword: Integrators, 
+%   [T,X,TE,XE,PHI,PHIE] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS) will also
+%   integrate the differential equation of the state transition matrix,
+%   d/dt[Phi'(t,t0)] = A(t) Phi(t,t0), where A(t) = df(t,x)/dx.  Function
+%   DYNFUN(T,X) must return an additional output if called with two output
+%   arguments, which may either be a matrix corresponding to A(t), or else
+%   an empty matrix, in which case INTEGEV will numerically compute A(t)
+%   using NUMJAC. If A(t) is supplied, it must be a 3-D array for the
+%   vectorized case, with each "slice" corresponding to A(t(i)).
+%
+%   [T,X,TE,XE,PHI,PHIE,S,SE] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS) will also
+%   integrate the differential equation of the discrete process noise
+%   matrix, dS(t)/dt = A(t)S(t) + S(t)A'(t) + Q(t), if DYNFUN returns the
+%   process noise spectral density matrix, Q = E[ww'], where x' = f(t,x) +
+%   w, as an additional output.  If DYNFUN is vectorized, then Q must be a
+%   3-D array, with each "slice" corresponding to Q(t(i)).
 %
 %   See also
+%      INTEG
 %      Numerical Jacobian:    NUMJAC
 %      ODE solvers:           ODE113, ODE23, ODE45
 %
@@ -78,47 +72,46 @@ nx2 = nx^2;
 if nargin < 4 || isempty(options)
     options = odtbxOptions;
 end
-if nargout > 4
+if nargin == 6
     options = setOdtbxOptions(options,'OdeSolvOpts',...
         odeset(options.OdeSolvOpts,'events',evtfun));
 end
-if nargout > 3
+if nargout > 6 % Output process noise
     z0(nx+nx2+1:nx+2*nx2,:) = zeros(nx2,1);
 end
-if nargout > 2
+if nargout > 4 % Output STM
     z0(nx+1:nx+nx2,:) = reshape(eye(nx),nx2,1);
 end
 z0(1:nx,:) = x0;
 odesolv = getOdtbxOptions(options,'OdeSolver',@ode113);
 odeopts = getOdtbxOptions(options,'OdeSolvOpts',...
     odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10)); 
-if nargout > 4
+if nargin == 6
     [t,z,te,ze] = feval(odesolv,@odefun,tspan,z0,odeopts,options,dynfun,nx,dynarg);
 else
     [t,z] = feval(odesolv,@odefun,tspan,z0,odeopts,options,dynfun,nx,dynarg);
 end
 x = z(:,1:nx)';
-if nargout > 2
+if nargout > 4 % STM
     nt = length(t);
     Phi = reshape(z(:,nx+1:nx+nx2)',nx,nx,nt);
 end
-if nargout > 3
+if nargout > 6 % Process noise
     S = reshape(z(:,nx+nx2+1:end)',nx,nx,nt);
 end
-if nargout > 4 && ~isempty(ze)
+if nargin == 6 && ~isempty(ze)
     xe = ze(:,1:nx)';
+    if nargout > 5
+        nte = length(te);
+        Phie = reshape(ze(:,nx+1:nx+nx2)',nx,nx,nte);
+    end
+    if nargout > 7
+        Se = reshape(ze(:,nx+nx2+1:end)',nx,nx,nte);
+    end
 else
+    te = [];
     xe = [];
-end
-if nargout > 6 && ~isempty(ze)
-    nte = length(te);
-    Phie = reshape(ze(:,nx+1:nx+nx2)',nx,nx,nte);
-else
     Phie = [];
-end
-if nargout > 7 && ~isempty(ze)
-    Se = reshape(ze(:,nx+nx2+1:end)',nx,nx,nte);
-else
     Se = [];
 end
 

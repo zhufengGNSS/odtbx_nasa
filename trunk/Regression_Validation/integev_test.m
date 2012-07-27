@@ -35,7 +35,7 @@ q = 1;
 tspan = [0 30];
 x0 = [30; -1];
 
-[~,x,Phi,Qd,te,xe,Phie,Qde] = integev(@dynfun,tspan,x0,[],q,@evtfun);
+[~,x,te,xe,Phi,Phie,Qd,Qde] = integev(@dynfun,tspan,x0,[],q,@evtfun);
 dt = tspan(end) - tspan(1);
 Phichk = [1 dt; 0 1];
 Qdchk = q*[dt^3/3 dt^2/2; dt^2/2 dt];

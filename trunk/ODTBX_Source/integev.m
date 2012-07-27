@@ -14,7 +14,7 @@ function [t,x,te,xe,Phi,Phie,S,Se] = integev(dynfun,tspan,x0,options,dynarg,evtf
 %   [T,X,TE,XE] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS,DYNARG,EVTFUN) will detect
 %   events specifed by EVTFUN and return the event times and states in TE
 %   and XE.  Event functions have the form 
-%      [VALUE,ISTERMINAL,DIRECTION] = EVTFUN(T,X)
+%      [VALUE,ISTERMINAL,DIRECTION] = EVTFUN(T,X,VARARGIN)
 %   where VALUE, ISTERMINAL, and DIRECTION are vectors for which the ith
 %   element corresponds to the ith event function:
 %      VALUE(i) is the value of the ith event function.
@@ -23,6 +23,8 @@ function [t,x,te,xe,Phi,Phie,S,Se] = integev(dynfun,tspan,x0,options,dynarg,evtf
 %      DIRECTION(i) = 0 if all zeros are to be located (the default), 
 %                   = +1 if only zeros where the event function is increasing, 
 %                   = -1 if only zeros where the event function is decreasing. 
+%   Note that extra input VARARGIN must be included in event function
+%   signature, because INTEGEV uses it internally.
 %
 %   [T,X,TE,XE,PHI,PHIE] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS) will also
 %   integrate the differential equation of the state transition matrix,

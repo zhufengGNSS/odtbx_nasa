@@ -166,7 +166,27 @@ function varargout = estbat(varargin)
 %                            "dynamic" consider parameters
 % 2011-02-07 R. Carpenter    Added test case 3 that will stimulate
 %                            "dynamic" consider parameters
-
+% 2012-08-06 R. Carpenter    Changed monte carlo solution method so that it
+%                            uses the same algorith as the linear
+%                            covariance analysis method.  For long-arc
+%                            solutions with weak observability, the method
+%                            used in lincov was found to be much more
+%                            stable, as it avoids the need to invert an
+%                            ill-conditioned normal matrix.  To solve for
+%                            the batch gain matrix, a more stable solution
+%                            based on the QR decomposition was used.
+%                            Finally, the use of the option
+%                            UpdateIterations was changed so that it is now
+%                            an upper limit on iterations, rather than a
+%                            fixed limit.  The solver will now iterate as
+%                            many times as necessary in order to reduce the
+%                            change in the solution from one iteration to
+%                            the next, until the norm of the change is less
+%                            than 0.1*det(Pao+Pvo+Pwo)^(1/2/n), ie it is
+%                            less than 1/10th of the mean standard
+%                            deviation of the truth covariance computed by
+%                            the lincov, up to a maximum set by
+%                            UpdateIterations, which defaults to 10.
 %% ESTBAT: Batch Estimator
 %
 % ESTBAT is the primary batch estimator for OD Toolbox.  The original
@@ -257,7 +277,7 @@ else
     options = setOdtbxOptions('OdeSolvOpts',odeset);
 end
 ncases = getOdtbxOptions(options,'MonteCarloCases',1);
-niter = getOdtbxOptions(options,'UpdateIterations',3);
+niter = getOdtbxOptions(options,'UpdateIterations',10);
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
         dynarg = varargin{7};
@@ -513,7 +533,8 @@ end
 % Compute the gains
 for i = lent:-1:1,
     k = find(~isnan(Ybar(:,i)));
-    K{i} = J\Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i));
+    %K{i} = J\Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i));
+    K{i} = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
     Ktilde{i} = Stilde(:,:,i)*K{i};
 end
 
@@ -803,25 +824,70 @@ for j = ncases:-1:1,
     Y{j} = feval(datfun.tru,tspan,X{j},datarg.tru) + covsmpl(R); 
 end
 
-Phato = cell(ncases);
-Xhato = cell(ncases);
+Phato = cell(ncases,1);
+Xhato = cell(ncases,1);
 
 % Run the batch estimator on the measurements generated above.
 Xsref0 = Xsref(:,1); 
-for j = 1:ncases,
+tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
+disp('sqrt(diag(Phatao+Phatvo)) = ')
+disp(sqrt(diag(Phatao+Phatvo))')
+disp('sqrt(diag(Pao+Pvo+Pwo)) = ')
+disp(sqrt(diag(Pao+Pvo+Pwo))')
+parfor j = 1:ncases,
+    Dxo = Inf;
+    iter = 0;
     Xhato{j} = Xsref0;
-    for i = 1:niter,
-        [J,L] = observ(dynfun.est,datfun.est,tspan,Xhato{j},options,...
-            Pbaro,Y{j},dynarg.est,datarg.est); %#ok<PFBNS>
-        if rank(J) < ns,
+    while Dxo > tol
+        [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); %#ok<PFBNS>
+        lentj = length(tj);
+        J = inv(Pbaro);
+        dY = NaN(size(Y{j}));
+        [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options,[],...
+            datarg.est); %#ok<PFBNS>
+        for i = 1:lentj
+            k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
+            if ~isempty(k)
+                dY(k,i) = dy(k,i);
+                J = J + Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)) ...
+                    *Hs(k,:,i)*Phiss(:,:,i);
+            end
+        end
+        fullrank = (prod(svd(J))>0);
+        if ~fullrank
             error('ESTBAT:notobserv',['System is not observable.  ',...
                 'Rank of Normal Matrix = ', num2str(rank(J))])
+        end 
+        dxo = 0;
+        for i = 1:lentj,
+            if i == 1,
+                ImKHsj = eye(ns);
+                Pbarfoj = Pbaro;
+                Pbarfoj(isinf(Pbaro))=0; %infinite values are set to zero.
+                Phato{j} = 0;
+            end
+            k = find(~isnan(Y{j}(:,i)));
+            Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+            ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
+            Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
+            dxo = dxo + Kj*dY(k,i);
         end
-        Phato{j} = inv(J); 
-        Xhato{j} = Xhato{j} + Phato{j}*L; 
+        Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
+        disp(['Iteration number: ',num2str(iter)])
+        disp('dxo = ')
+        disp(dxo')
+        disp('sqrt(diag(Phato{j})) = ')
+        disp(sqrt(diag(Phato{j}))')
+        Xhato{j} = Xhato{j} + dxo;
+        if iter < niter
+            iter = iter + 1;
+            Dxo = norm(dxo);
+        else
+            warning('ESTBAT:maxit','Max iterations reached in estbat');
+            break
+        end
     end
 end
-
 
 %% Estimation Error Ensemble
 % Generate the time series of estimation errors and residuals for each
@@ -833,7 +899,8 @@ clear t Phat
 for j = ncases:-1:1,
     [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
     for i = length(t{j}):-1:1,
-        Phat{j}(:,i) = scrunch(Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)');
+        pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
+        Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
         e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
     end
     [y{j},~,~,Pdy{j}] = ominusc(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
@@ -913,6 +980,18 @@ if nargout >= 14
     varargout{14} = Pdyt;
 end 
 end % function
+
+function x = robustls(A,b)
+% More robust least-squares solution to Ax = b.  This is based on the help
+% for the QR function, which shows how "the least squares approximate
+% solution to A*x = b can be found with the Q-less qr decomposition and one
+% step of iterative refinement."
+R = triu(qr(A));
+x = R\(R'\(A'*b));
+r = b - A*x;
+e = R\(R'\(A'*r));
+x = x + e;
+end
 
 % Self-test user functions
 function [Xdot,A,Q] = rwdyn(t,X,q) % Test 1 dynfun

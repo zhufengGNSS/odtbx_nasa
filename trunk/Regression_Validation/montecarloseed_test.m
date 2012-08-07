@@ -638,7 +638,7 @@ function [failed] = montecarloseed_test
     
     % Execute the current processing.
     % Set the number of Monte Carlo cases and the number of update iterations. 
-    opts = setOdtbxOptions('MonteCarloCases', 1, 'UpdateIterations', 1);
+    opts = setOdtbxOptions('MonteCarloCases', 1)%, 'UpdateIterations', 1);
     
     % Set the Monte Carlo Seed.
     opts = setOdtbxOptions(opts, 'MonteCarloSeed', 10);

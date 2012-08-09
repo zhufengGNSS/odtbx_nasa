@@ -208,6 +208,7 @@ function [failed] = montecarloseed_test
 
     est{1} = @estseq;
     est{2} = @estsrif;
+    est = {};
     
     %
     % Case 1:
@@ -764,7 +765,7 @@ function [failed] = montecarloseed_test
     
     % Execute the current processing.
     % Set the number of Monte Carlo cases and the number of update iterations. 
-    opts = setOdtbxOptions('MonteCarloCases', 3, 'UpdateIterations', 1);
+    opts = setOdtbxOptions('MonteCarloCases', 3, 'UpdateIterations', 10);
     
     % Set the Monte Carlo Seed.
     opts = setOdtbxOptions(opts, 'MonteCarloSeed', 10);
@@ -890,7 +891,7 @@ function [failed] = montecarloseed_test
     
     % Execute the current processing.
     % Set the number of Monte Carlo cases and the number of update iterations. 
-    opts = setOdtbxOptions('MonteCarloCases', 3, 'UpdateIterations', 1);
+    opts = setOdtbxOptions('MonteCarloCases', 3, 'UpdateIterations', 10);
     
     % Set the Monte Carlo Seed.
     opts = setOdtbxOptions(opts, 'MonteCarloSeed', [10 20 30]);

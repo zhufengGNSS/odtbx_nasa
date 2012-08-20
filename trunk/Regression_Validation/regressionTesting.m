@@ -79,8 +79,10 @@ clc
 % if the case passed, and a 1 if the case failed.
 testCases = {
     % Release 5.0
+        'gasdyn_regression'
+        'opt_sched_regression'
+        'initialize_cov_regression'
         'estpar_regression'
-        'initialize_cov_test'
         'sensmos'
         'fixzoom'
         'gpspseudomeas_test'

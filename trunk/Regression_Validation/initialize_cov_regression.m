@@ -1,9 +1,8 @@
-function f = initialize_cov_test
-% INITIALIZE_COV_TEST Regression test for intialize_cov.
+function f = initialize_cov_regression
+% INITIALIZE_COV_REGRESSION Regression test for intialize_cov.
 %
-% F = INITIALIZE_COV_TEST runs the regression test
+% F = INITIALIZE_COV_REGRESSION runs the regression test
 %
-% keyword: covariance
 % See also INITIALIZE_COV
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
@@ -26,20 +25,18 @@ function f = initialize_cov_test
 %
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
-%   Benjamin Asher          06/22/2012      Original
+%   Benjamin Asher          08/09/2012      Original
 
 
 % Initial conditions
 r=[4387.08;4806.18;-852.852];
 v=[-5.41772;4.31046;-3.57805];
-sig_pos = 1e-1;
-sig_vel = 1e-4;
 sig_rad = 1e-3;
 sig_spd = 1e-6;
 mu = 3.986004418e5;
 
 % Generate test data
-Po = initialize_cov(r,v,sig_pos,sig_vel,sig_rad,sig_spd,mu);
+Po = initialize_cov(r,v,sig_rad,sig_spd,mu);
 
 % Uncomment to generate regression test data
 % Po_test = Po;
@@ -50,9 +47,9 @@ load initialize_cov_data.mat
 
 % Compare generated and test data
 tol = 1e-9;
-dP = Po_test-Po;
+dP = abs(Po_test-Po);
 
-if abs(dP)<tol
+if dP < tol
     f = 0;
 else
     f = 1;

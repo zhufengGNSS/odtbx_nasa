@@ -817,9 +817,10 @@ for j = ncases:-1:1,
     else
         wd{j} = zeros(n,lent); 
     end
+    [~,xdum] = integ(dynfun.tru,tspan,Xo+xo,options,dynarg.tru);
     for i = lent:-1:1,
-        x = Phi(:,:,i)*xo + wd{j}(:,i);
-        X{j}(:,i) = Xref(:,i) + x; 
+        %x = Phi(:,:,i)*xo + wd{j}(:,i);
+        X{j}(:,i) = xdum(:,i) + wd{j}(:,i); 
     end
     Y{j} = feval(datfun.tru,tspan,X{j},datarg.tru) + covsmpl(R); 
 end

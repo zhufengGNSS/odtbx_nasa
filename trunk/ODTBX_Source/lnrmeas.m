@@ -312,21 +312,10 @@ measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
 measOptions = setOdtbxOptions(measOptions,'useLightTime', false);
 measOptions = setOdtbxOptions(measOptions,'relay', relay);
 
-% Set Expected Results
-y_expected = [
-                NaN                  NaN    9645.49637103052    3939.05200862224
-                NaN                  NaN    9239.64990361131     3014.9384805763
-                NaN                  NaN    8987.88933112158    1291.22801776669
-                NaN                  NaN    8957.98898388253   -772.817100801659
-                NaN                  NaN    9153.33398939171   -2551.98907960198
-                NaN                  NaN    9510.58789351661   -3550.09324832582
-                NaN                  NaN    9926.68456057415   -3576.69543705606
-                NaN                  NaN                 NaN                 NaN
-                NaN                  NaN                 NaN                 NaN
-    5416.93303164034    3925.69683247531                 NaN                 NaN
-    4996.14287680098    3104.86241657283                 NaN                 NaN
-    4787.65584693306    236.727659300572                 NaN                 NaN
-    4984.58642679476   -3707.02353386861    9329.01673853115    5714.83524733748]';
+% Load Expected Results
+% NOTE: These results are based on the most recent July 2012 leap second. If a
+% more recent leap second is added, then these results must be updated.
+load('lnrmeas_expected.mat');
 
 % Display Expected Results
 fprintf('%s\n',char(ones(1,66)*'-'));
@@ -353,13 +342,14 @@ fprintf('%4s %13s %14s %14s %14s\n','(s)','(km)','(Hz)','(km)','(Hz)');
 fprintf('%s\n',char(ones(1,66)*'-'));
 for n=1:13
     fprintf('%-6i %14.5f %14.5f %14.5f %14.5f\n',t(n),y(:,n))
+    %fprintf('%-6i %20.11f %20.11f %20.11f %20.11f\n',t(n),y(:,n))
 end     
 
 passed = tol > max( max( abs( y - y_expected ) ) );
 failed = ~passed;
 if failed
     disp(' ')
-    disp('Test Failed!')
+    disp('Test Failed! Please check that the most recent leap second is July 2012.')
 else
     disp(' ')
     disp('Test Passed.')

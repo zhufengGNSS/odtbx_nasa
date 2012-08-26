@@ -1,7 +1,7 @@
-# JAT Accumulated Leap Seconds data file, August 2009.
+# JAT Accumulated Leap Seconds data file, April 2012
 #
-# Good past December 31, 2009 per IERS Bulletin C 38, July 4, 2009, 
-# http://www.iers.org/products/16/12666/orig/bulletinc-038.txt. 
+# Good past June 30, 2012 per IERS Bulletin C 43, Jan 5, 2012, 
+# http://data.iers.org/products/16/14889/orig/bulletinc-043.txt. 
 #
 # source:  http://maia.usno.navy.mil/ser7/tai-utc.dat
 # Has minor modifications, use # to comment a line.
@@ -46,3 +46,4 @@
  1999 JAN  1 =JD 2451179.5  TAI-UTC=  32.0       S + (MJD - 41317.) X 0.0      S
  2006 JAN  1 =JD 2453736.5  TAI-UTC=  33.0       S + (MJD - 41317.) X 0.0      S
  2009 JAN  1 =JD 2454832.5  TAI-UTC=  34.0       S + (MJD - 41317.) X 0.0      S
+ 2012 JUL  1 =JD 2456109.5  TAI-UTC=  35.0       S + (MJD - 41317.) X 0.0      S

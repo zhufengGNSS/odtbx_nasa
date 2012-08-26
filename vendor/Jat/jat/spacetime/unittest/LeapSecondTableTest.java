@@ -152,8 +152,9 @@ public class LeapSecondTableTest extends TestCase {
 			assertTrue(leapsectbl.hasLeapSecs());
 			
 			// Corresponds to leapsec.dat:
-			// 2009 JAN  1 =JD 2454832.5  TAI-UTC=  34.0
-			assertTrue(leapsectbl.latestLeapSec() == 54832);
+			// 2009 JAN  1 =JD 2454832.5  TAI-UTC=  34.0 = 54832.0 (old)
+			// 2012 JUL  1 =JD 2456109.5  TAI-UTC=  35.0 = 56109.0 (current)
+			assertTrue(leapsectbl.latestLeapSec() == 56109.0);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -244,33 +245,34 @@ public class LeapSecondTableTest extends TestCase {
 		
 		// TEST: dates after the table
 		// leapsec.dat:
-		// 2009 JAN  1 =JD 2454832.5  TAI-UTC=  34.0
+		// 2009 JAN  1 =JD 2454832.5  TAI-UTC=  34.0 = 54832.0 (old)
+		// 2012 JUL  1 =JD 2456109.5  TAI-UTC=  35.0 = 56109.0 (current)
 		mjd = 60000.0;
-		ls = 34;
+		ls = 35;
 		lsd = leapsectbl.getData(mjd);
 		assertTrue(lsd.accumLeapSecs == ls);
-		assertTrue(lsd.mjd_utc_start == 54832.0);
+		assertTrue(lsd.mjd_utc_start == 56109.0);
 		assertTrue(lsd.mjd_utc_next == Double.MAX_VALUE);
 		assertTrue(leapsectbl.getAccumLeapSecs(mjd) == ls);
 		
-		mjd = 54832.001;
-		ls = 34;
+		mjd = 56109.001;
+		ls = 35;
 		lsd = leapsectbl.getData(mjd);
 		assertTrue(lsd.accumLeapSecs == ls);
-		assertTrue(lsd.mjd_utc_start == 54832.0);
+		assertTrue(lsd.mjd_utc_start == 56109.0);
 		assertTrue(lsd.mjd_utc_next == Double.MAX_VALUE);
 		assertTrue(leapsectbl.getAccumLeapSecs(mjd) == ls);
 		
 		// TEST: dates on and before leap sec boundaries
 		// from leapsec.dat, the first few leap seconds and the last two:
-		double[] startdates = {41317, 41499, 41683, 53736, 54832};
-		double[] nextdates  = {41499, 41683, 42048, 54832, Double.MAX_VALUE};
-		int[] leaps = {10, 11, 12, 33, 34};
+		double[] startdates = {41317, 41499, 41683, 53736, 54832, 56109};
+		double[] nextdates  = {41499, 41683, 42048, 54832, 56109, Double.MAX_VALUE};
+		int[] leaps = {10, 11, 12, 33, 34, 35};
 		
 		// the same file, for testing times before the leap seconds
-		double[] earlystartdates = {0.0, 41317, 41499, 51179, 53736};
+		double[] earlystartdates = {0.0, 41317, 41499, 51179, 53736, 54832};
 		double[] earlynextdates  = startdates;
-		int[] earlyleaps = {0, 10, 11, 32, 33};
+		int[] earlyleaps = {0, 10, 11, 32, 33, 34};
 		
 		// test on the dates:
 		for (int i = 0; i < startdates.length; i++) {

@@ -53,15 +53,10 @@ function [t2_lt, x2_lt] = lightTimeCorrection(t1, x1, t2, x2, options, direction
 %       t2_lt       (1xN)   Corrected times corresponding to x2_lt
 %       x2_lt       (6xN)   Positions (km) of tracker times t2_lt
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.
+%  These have been moved to lightTimeCorrection_test.m in the regression
+%  testing framework to conform with the new testing format.
 %
 %   keyword: measurement
 %   See also RRDOTLT, ODTBXOPTIONS, LOSRange
@@ -95,27 +90,19 @@ function [t2_lt, x2_lt] = lightTimeCorrection(t1, x1, t2, x2, options, direction
 %   Kevin Berry         05/19/2008      Modified for simplicity
 %   Kevin Berry         09/08/2008      Added Validation and Regression
 %                                       Tests
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 %% Determine whether this is an actual call to the program or a test
 
-if strcmpi(t1,'ValidationTest')||strcmpi(t1,'RegressionTest')
-    t2_lt = LTCor_validation_test();
-else
-    if( nargin < 6 || isempty(direction) )
-        direction = -1; %1 moves x2 forward, -1 moves x2 backwards
-    end
-    if( nargin < 7 || isempty(tol) )
-        tol = 1e-10;    % light time correction tolerance
-    end
-    if( nargin < 8 || isempty(maxn) )
-        maxn = 10;  % maximum light-time iterations
-    end
-    [t2_lt, x2_lt] = GetLTCorrection(t1, x1, t2, x2, options, direction, tol, maxn);
+if( nargin < 6 || isempty(direction) )
+    direction = -1; %1 moves x2 forward, -1 moves x2 backwards
 end
+if( nargin < 7 || isempty(tol) )
+    tol = 1e-10;    % light time correction tolerance
 end
-
-%% Main function
-function [t2_lt, x2_lt] = GetLTCorrection(t1, x1, t2, x2, options, direction, tol, maxn)
+if( nargin < 8 || isempty(maxn) )
+    maxn = 10;  % maximum light-time iterations
+end
 
 % Its possible to only enter 1 position for first vehicle, but 2nd must
 % have more than one for interpolation
@@ -150,48 +137,4 @@ end
 
 x2_lt = interp1(t2,x2',t2_lt,'spline')';
 
-end
-%% Validation Test
-
-function failed = LTCor_validation_test()
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-fprintf('%8s%12s%17s%19s%17s%19s%18s\n','t (sec)','Pos 1 (km)','Pos 2 (km)','Vel 1 (km/s)','Vel 2 (km/s)','Expected (sec)','Calculated (sec)')
-fprintf('%s\n\n',char(ones(1,110)*'-'));
-
-tol = 1e-7;
-options = odtbxOptions('measurement');
-options = setOdtbxOptions(options,'epoch',datenum('Jan 1 2006'));
-options = setOdtbxOptions(options,'useGPSIonosphere',false);
-options = setOdtbxOptions(options,'useIonosphere',false);
-options = setOdtbxOptions(options,'useTroposphere',false);
-options = setOdtbxOptions(options,'useChargedParticle',false);
-options = setOdtbxOptions(options, 'useRange', true );
-options = setOdtbxOptions(options, 'useRangeRate', true );
-options = setOdtbxOptions(options, 'useDoppler', false );
-t=(1:9)*60*60;
-e1 = [1; 0; 0]; e2 = [0; 1; 0]; e3 = [0; 0; 1];
-r1 = [repmat(e1,1,3) repmat(e2,1,3) repmat(e3,1,3)]*9;
-r2 = repmat([e1 e2 e3],1,3)*5;    
-v1 = repmat(e1,1,9);
-v2 = repmat([e1 e2 e3],1,3);
-x1 = [r1;v1]; x2 = [r2;v2];
-
-Ex_t2 = [3599.99998665744 7199.99996565747 10799.9999656575 14399.9999656575 ...
-    17999.9999866574 21599.9999656575 25199.9999656575 28799.9999656575 32399.9999866574];
-t2_lt = GetLTCorrection(t, x1, t, x2, options,-1,1e-10,10);
-
-fprintf('%6i %6.2f %4.2f %4.2f %6.2f %4.2f %4.2f %6.2f %4.2f %4.2f %6.2f %4.2f %4.2f %16.6f %16.6f\n',...
-    [t; r1; r2; v1; v2; Ex_t2; t2_lt]);
-
-failed = tol < max( abs( Ex_t2 - t2_lt ) );
-if failed
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
-end
 end

@@ -50,17 +50,10 @@ function Sta = stationData(ID,Sta)
 %
 %   This code is based on Will Campbell's work.
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%   To perform a validation test, replace the ID input with
-%   'ValidationTest' as the input argument.  If the data file is not in the path
-%   this will perform as an example.
-%
-% REGRESSION TEST
-%
-%   To perform a regression test, replace the ID input with 
-%   'RegressionTest' as the input argument.  If the data file is not in the path
-%   this will perform as an example
+%   These tests have been moved to stationData_test.m to conform to the
+%   new regression testing format.
 %
 %   keywords: ground station
 %
@@ -85,10 +78,8 @@ function Sta = stationData(ID,Sta)
 %  REVISION HISTORY
 %   Author      		Date         	Comment
 %               	   (MM/DD/YYYY)
-%   Keith Speckman          06/10/2008          Original
-
-% Determine whether this is an actual call to the program or a test
-
+%   Keith Speckman      06/10/2008          Original
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 % Data monthly averages for DSN Stations 12, 41, & 61
 
@@ -247,16 +238,6 @@ if nargin == 0
 	Sta.RelHum = RH(:,site_IDs);
 	Sta.TempLapse = GAM(:,site_IDs)/1e3;
 
-elseif strcmpi(ID,'ValidationTest')
-% Run validation tests
-
-	Sta = stationData_validation_test();
-
-elseif strcmpi(ID,'RegressionTest')
-% Run regression tests
-
-	Sta = stationData_regression_test();
-
 else
 % Output data for specified IDs
 
@@ -284,82 +265,3 @@ end
 
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% stationData_validation_test - Validation for stationData.m
-
-function failed = stationData_validation_test();
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/10/2008	 	Original
-
-disp(' ')
-disp('Performing Validation Test....')
-disp(' ')
-disp('This test passes if there is no error.')
-disp(' ')
-
-Sta = stationData([12 27 43 66])
-
-Sta = stationData([23 26 61],Sta)
-
-Sta = stationData
-
-failed = 0;
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% stationData_regression_test - Regression for stationData.m
-
-function failed = stationData_regression_test();
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/10/2008	 	Original
-
-disp(' ')
-disp('Performing Regression Test....')
-disp(' ')
-
-tol = 1e-10;
-
-Sta(1) = stationData;
-Sta(2) = stationData([12 13 14 15 16 17 23 24 25 26 27 28 33 34 42 43 45 46 53 54 61 63 65 66]);
-Sta(3) = stationData([12 13 14 15 16 17 23 24 25 26 27 28 33 34 42 43 45 46 53 54 61 63 65 66],...
-                     Sta(2))
-
-StaResults = [];
-for k = 1:3
-	StaResults = [StaResults;Sta(k).DSS_IDs;Sta(k).siteIDs;Sta(k).lat;Sta(k).lon;...
-	              Sta(k).height;Sta(k).staPos;Sta(k).posUnc;Sta(k).Press;Sta(k).Temp;...
-		      Sta(k).RelHum;Sta(k).TempLapse];
-end
-
-%PreviousStaResults = StaResults;
-%save stationData_RegressionData6_08 PreviousStaResults
-
-failed = 0;
-
-if exist('stationData_RegressionData6_08.mat') == 2
-	disp(' ')
-	disp('Performing Regression Test...')
-	disp(' ')
-
-	% Load the stationData outputs
-	load stationData_RegressionData6_08
-
-	Diff = PreviousStaResults - StaResults;
-
-	if any(any( abs(Diff) > tol )) |  any(any(isnan(Diff)))
-		failed = 1;
-	end
-
-else
-	failed = 1;
-end
-
-
-end

@@ -17,15 +17,9 @@ function [availTimes PossibleSched] = gsCoverage(dynfun,datfun,x0,t0,dt,tn,optio
 % The gs_index corresponds to index of the ground stations in gsID or 
 % gsECEF. The start_time and stop_time will be in seconds from epoch.
 %
-% VALIDATION TEST
-%
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.
+% VALIDATION/REGRESSION TESTS
+%  These tests have been extracted to gsCoverage_test.m in the
+%  regression testing framework.
 %
 % keyword: measurement
 % See also GSMEAS
@@ -51,18 +45,7 @@ function [availTimes PossibleSched] = gsCoverage(dynfun,datfun,x0,t0,dt,tn,optio
 %  REVISION HISTORY
 %   Author      		Date         	Comment
 %   Kevin Berry         05/03/2010      Original
-
-%% Determine whether this is an actual call to the program or a test
-
-if strcmpi(dynfun,'ValidationTest')||strcmpi(dynfun,'RegressionTest')
-    availTimes = Test_gsCoverage();
-else
-    [availTimes PossibleSched] = Get_gsCoverage(dynfun,datfun,x0,t0,dt,tn,options,dynarg,datarg);
-end
-end
-
-%% Main function
-function [availTimes PossibleSched] = Get_gsCoverage(dynfun,datfun,x0,t0,dt,tn,options,dynarg,datarg)
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 %% Check dynfun, datfun, x0, dynarg, and datarg for structured inputs
 [dynfun,datfun,x0,dynarg,datarg] = checkInput(dynfun,datfun,x0,dynarg,datarg);
@@ -140,64 +123,4 @@ for n=1:length(varargin)
         varargout{n} = varargin{n};
     end
 end
-end
-
-%% Regression/Validation Test
-function failed = Test_gsCoverage()
-% Define the initial conditions
-x_kep.sma  = 7000; %km
-x_kep.ecc  = 0.01; %unitless
-x_kep.incl = 35*(pi/180); %radians
-x_kep.raan = 250*(pi/180); %radians
-x_kep.argp = 270*(pi/180); %radians
-x_kep.tran = 100*(pi/180); %radians
-
-muEarth   = 398600.4415; %km^3/s^2
-x0 = kep2cart(x_kep,muEarth); %km & km/sec
-
-EpochString = 'April 15, 2010 13:52:24';
-epoch = datenum(EpochString);
-
-% Define the dynamics
-dynfun = @r2bp;
-dynarg = muEarth;
-
-% Define the data
-gsList = createGroundStationList();
-gsID   = {'HBKS','USHS','USPS','WHSX'};
-gsECEF = zeros(3,length(gsID));
-for n=1:length(gsID)
-    gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
-end
-
-datfun = @gsmeas;
-datarg = odtbxOptions('measurement');
-datarg = setOdtbxOptions(datarg,'epoch',epoch);
-datarg = setOdtbxOptions(datarg,'gsID',{'HBKS','USHS','USPS','WHSX'});
-datarg = setOdtbxOptions(datarg,'rSigma',[1e-2 1e-5 1e-2 1e-5 1e-2 1e-5 1e-2 1e-5]);
-datarg = setOdtbxOptions(datarg,'gsECEF',gsECEF);
-
-% Run gsCoverage
-[availTimes PossibleSched] = gsCoverage(dynfun,datfun,x0,0,10,60*60*2,[],dynarg,datarg);
-
-% Define expected results
-exp_availTimes = [0:10:310 590:10:1180 3080:10:3530 4350:10:4840 5980:10:6560 6770:10:7200];
-exp_PossibleSched = ...
-          [2           0         310;
-           4         590        1180;
-           1        3080        3530;
-           3        4350        4840;
-           2        5980        6560;
-           4        6770        7200];
-       
-passed = all(all(PossibleSched==exp_PossibleSched)) & all(exp_availTimes==availTimes);
-failed = ~passed;
-if failed
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
-end
- 
 end

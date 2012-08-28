@@ -1,4 +1,4 @@
-function failed = testMeasPartials_regression
+function failed = testMeasPartials_test
 % This function tests the H matrix derivations of gsmeas, tdrssmeas, ddormeas, lnrmeas, and gpsmeas.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
@@ -18,6 +18,11 @@ function failed = testMeasPartials_regression
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 %% Set the random number seed
 RandStream.setDefaultStream(RandStream('shr3cong','Seed',546.4737))
@@ -195,11 +200,11 @@ Hpd7 = testMeasPartials(@gpsmeas,measOptions);
 % Hpd5_sav = Hpd5;
 % Hpd6_sav = Hpd6;
 % Hpd7_sav = Hpd7;
-% save('testMeasPartials_RegressionData.mat','Hpd1_sav','Hpd2_sav','Hpd3_sav','Hpd4_sav','Hpd5_sav','Hpd6_sav','Hpd7_sav');
+% save('testMeasPartials_TestData.mat','Hpd1_sav','Hpd2_sav','Hpd3_sav','Hpd4_sav','Hpd5_sav','Hpd6_sav','Hpd7_sav');
 
 %% Check the results
 tol = 0.05;
-load('testMeasPartials_RegressionData.mat')
+load('testMeasPartials_TestData.mat')
 err1 = max(max(max(abs(Hpd1-Hpd1_sav))));
 err2 = max(max(max(abs(Hpd2-Hpd2_sav))));
 err3 = max(max(max(abs(Hpd3-Hpd3_sav))));

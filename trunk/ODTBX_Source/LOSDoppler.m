@@ -32,15 +32,10 @@ function doppler = LOSDoppler(t, r1, v1, r2, v2, options)
 % OUTPUTS
 %      doppler   (1xN)  doppler (Hz)
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.  
+%  These have been moved to rrdotlt_test.m in the regression testing
+%  framework to conform with the new testing format. 
 %
 % keyword: measurement
 % See also LOSRANGE, LOSRANGERATE, RRDOT, RRDOTLT
@@ -73,64 +68,11 @@ function doppler = LOSDoppler(t, r1, v1, r2, v2, options)
 %                                       Tests
 %   Kevin Berry         09/08/2008      Added Charged Particle Model
 %   Kevin Berry         06/25/2009      Added time scale comments
-
-%% Determine whether this is an actual call to the program or a test
-
-if strcmpi(t,'ValidationTest')||strcmpi(t,'RegressionTest')
-    doppler = losdoppler_validation_test();  
-else
-	doppler = GetDoppler(t, r1, v1, r2, v2, options);
-end
-end
-
-
-%% Main function
-function doppler = GetDoppler(t, r1, v1, r2, v2, options)
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 c       = JATConstant('c')/1000;
 f       = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
 rdot    = LOSRangeRate(t, r1, v1, r2, v2, options);
 doppler = -rdot*f/c;
 
-end
-%% Validation Test
-
-function failed = losdoppler_validation_test()
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-fprintf('%12s%17s%19s%17s%18s%19s\n','Pos 1 (km)','Pos 2 (km)','Vel 1 (km/s)','Vel 2 (km/s)','Expected (Hz)','Calculated (Hz)')
-fprintf('%s\n\n',char(ones(1,102)*'-'));
-
-tol = 1e-7;
-options = odtbxOptions('measurement');
-options = setOdtbxOptions(options,'epoch',datenum('Jan 1 2006')); %UTC
-options = setOdtbxOptions(options,'useGPSIonosphere',false);
-options = setOdtbxOptions(options,'useIonosphere',false);
-options = setOdtbxOptions(options,'useTroposphere',false);
-options = setOdtbxOptions(options,'useChargedParticle',false);
-
-t=(1:9)*60*60;
-e1 = [1; 0; 0]; e2 = [0; 1; 0]; e3 = [0; 0; 1];
-r1 = [e1 e1 e1 e1 e1 e1 e1 e1 e1];
-r2 = [e2 e2 e2 e2 e2 e2 e2 e2 e2];    
-v1 = [e1 e1 e1 e2 e2 e2 e3 e3 e3];
-v2 = [e1 e2 e3 e1 e2 e3 e1 e2 e3];
-
-ExDoppler = [0 -7431.72490153421 -3715.87121520219 7431.75995935723 ...
-    0 3715.87121520219 3715.87997967862 -3715.8624507671 0];
-Doppler = GetDoppler(t, r1, v1, r2, v2, options);
-
-fprintf('%4.2f %4.2f %4.2f %6.2f %4.2f %4.2f %6.2f %4.2f %4.2f %6.2f %4.2f %4.2f %16.6f %16.6f\n',...
-    [r1; r2; v1; v2; ExDoppler; Doppler]);
-
-failed = tol < max( abs( ExDoppler - Doppler ) );
-if failed
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
-end
 end

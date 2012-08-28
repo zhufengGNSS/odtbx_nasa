@@ -48,17 +48,10 @@ function TTDelay = ttdelay(Ephem,randoms)
 %   latter is how the error is described in his thesis.
 %   S. Hur-Diaz
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%   To perform a validation test, replace the Ephem input with
-%   'ValidationTest' as the input argument.  If the data file is not in the path
-%   this will perform as an example.
-%
-% REGRESSION TEST
-%
-%   To perform a regression test, replace the Ephem input with 
-%   'RegressionTest' as the input argument.  If the data file is not in the path
-%   this will perform as an example
+%   These tests were moved to ttdelay_test.m to conform to the new
+%   regression testing framework.
 %
 %   keywords: delay, time, time tag
 %   See also: jatTropoModel, jatGPSIonoModel, jatIonoDelayModel, lightTimeCorrection
@@ -89,30 +82,7 @@ function TTDelay = ttdelay(Ephem,randoms)
 %                                       the function declaration.
 %   Kevin Berry         06/25/2009      Fixed time scale discrepancy and
 %                                       updated the regression test
-
-% Determine whether this is an actual call to the program or a test
-
-if strcmpi(Ephem,'ValidationTest')
-
-	TTDelay = ttdelay_validation_test();
-
-elseif strcmpi(Ephem,'RegressionTest')
-
-	TTDelay = ttdelay_regression_test();
-
-else
-
-	TTDelay = getTTDelay(Ephem,randoms);
-
-end
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Main function
-
-function TTDelay = getTTDelay(Ephem,randoms)
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 % Determine size of outputs (M,N)
 N = size(Ephem.satPos,2);
@@ -168,191 +138,6 @@ for n = 1:N
 		TTDelay(n,m) = randoms*1e-6 * rho_dot;
 
 	end
-end
-
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% ttdelay_validation_test - Validation for ttdelay.m
-
-function failed = ttdelay_validation_test()
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/5/2008	 	Original
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-failed = 0;
-tol = 1e-12;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Case = 1; % Mars orbit
-randoms=1; % time tag std (microsec) (according to Will Campbell's thesis)
-Ephem.staPos=[JATConstant('rEarth') 0 0]';
-Ephem.StationInfo = 'ECEF';
-Ephem.Epoch = datenum('June 10, 2008');
-[posircf,velircf] = ephemDE405('mars',Ephem.Epoch,'UTC');
-Ephem.satPos = (posircf - ephemDE405('earth',Ephem.Epoch,'UTC'))*1e3;
-Ephem.satVel = velircf * 1e3;
-
-%TTDelay = getTTDelay(Ephem.Epoch,r_stn_ECEF,scPV,tt_std_micro)
-TTDelay(Case) = getTTDelay(Ephem,randoms);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Case = 2; % Test predictable output
-
-randoms=1; % time tag std (microsec) (according to Will Campbell's thesis)
-Ephem.Epoch = datenum('June 10, 2008');
-Ephem.StationInfo = 'ECEF';
-Ephem.staPos=jatDCM('eci2ecef',Ephem.Epoch) * [JATConstant('rEarth') 0 0]';
-Ephem.satPos= [JATConstant('rEarth') 0 0]' * 10;
-Ephem.satVel= unit(Ephem.satPos);
-
-%TTDelay = getTTDelay(Ephem.Epoch,r_stn_ECEF,scPV,tt_std_micro)
-TTDelay(Case) = getTTDelay(Ephem,randoms);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Case = 3; % Test multiple satellites
-
-randoms=1; % time tag std (microsec) (according to Will Campbell's thesis)
-[lat,lon,height]=ecef2LLA([JATConstant('rEarth') 0 0]');
-Ephem.lat = [lat,lat-pi/3];
-Ephem.lon = [lon,lon+pi/3];
-Ephem.height = [height,height+100];
-Ephem.StationInfo = 'LatLonHeight';
-Ephem.Epoch = datenum('June 10, 2008');
-Ephem.Epoch(2) = datenum('June 10, 2008');
-Ephem.Epoch(3) = datenum('June 10, 2008');
-[posircf,velircf] = ephemDE405('mars',Ephem.Epoch(1),'UTC');
-Ephem.satPos = (posircf - ephemDE405('earth',Ephem.Epoch(1),'UTC'))*1e3;
-Ephem.satVel = velircf * 1e3;
-[posircf,velircf] = ephemDE405('neptune',Ephem.Epoch(2),'UTC');
-Ephem.satPos(:,2) = (posircf - ephemDE405('earth',Ephem.Epoch(2),'UTC'))*1e3;
-Ephem.satVel(:,2) = velircf * 1e3;
-[posircf,velircf] = ephemDE405('venus',Ephem.Epoch(3),'UTC');
-Ephem.satPos(:,3) = (posircf - ephemDE405('earth',Ephem.Epoch(3),'UTC'))*1e3;
-Ephem.satVel(:,3) = velircf * 1e3;
-
-%TTDelay = getTTDelay(Ephem.Epoch,r_stn_ECEF,scPV,tt_std_micro)
-TTDelayTemp = getTTDelay(Ephem,randoms) %#ok<NOPRT>
-TTDelay(Case:Case+5) = reshape(TTDelayTemp,1,6) %#ok<NOPRT>
-
-if exist('ttdelay_ValidationData6_09.mat','file') == 2
-	disp(' ')
-	disp('Performing Validation...')
-	disp(' ')
-
-	% Load the ttdelay outputs
-	load ttdelay_ValidationData6_09
-
-	Diff = Case2TTDelay - TTDelay(2);
-
-	if any( abs(Diff) > tol ) ||  any(isnan(TTDelay))
-		failed = 1;
-	end
-
-else
-	failed = 1;
-end
-
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% ttdelay_regression_test - Regression for ttdelay.m
-
-function failed = ttdelay_regression_test()
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/5/2008	 	Original
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-failed = 0;
-tol = 1e-12;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Case = 1; % Mars orbit
-randoms=1; % time tag std (microsec) (according to Will Campbell's thesis)
-Ephem.staPos=[JATConstant('rEarth') 0 0]';
-Ephem.StationInfo = 'ECEF';
-Ephem.Epoch = datenum('June 10, 2008');
-[posircf,velircf] = ephemDE405('mars',Ephem.Epoch,'UTC');
-Ephem.satPos = (posircf - ephemDE405('earth',Ephem.Epoch,'UTC'))*1e3;
-Ephem.satVel = velircf * 1e3;
-
-%TTDelay = getTTDelay(Ephem.Epoch,r_stn_ECEF,scPV,tt_std_micro)
-TTDelay(Case) = getTTDelay(Ephem,randoms);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Case = 2; % Test predictable output
-
-randoms=1; % time tag std (microsec) (according to Will Campbell's thesis)
-Ephem.Epoch = datenum('June 10, 2008');
-Ephem.StationInfo = 'ECEF';
-Ephem.staPos=jatDCM('eci2ecef',Ephem.Epoch) * [JATConstant('rEarth') 0 0]';
-Ephem.satPos= [JATConstant('rEarth') 0 0]' * 10;
-Ephem.satVel= unit(Ephem.satPos);
-
-%TTDelay = getTTDelay(Ephem.Epoch,r_stn_ECEF,scPV,tt_std_micro)
-TTDelay(Case) = getTTDelay(Ephem,randoms);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Case = 3; % Test multiple satellites
-
-randoms=1; % time tag std (microsec) (according to Will Campbell's thesis)
-[lat,lon,height]=ecef2LLA([JATConstant('rEarth') 0 0]');
-Ephem.lat = [lat,lat-pi/3];
-Ephem.lon = [lon,lon+pi/3];
-Ephem.height = [height,height+100];
-Ephem.StationInfo = 'LatLonHeight';
-Ephem.Epoch = datenum('June 10, 2008');
-Ephem.Epoch(2) = datenum('June 10, 2008');
-Ephem.Epoch(3) = datenum('June 10, 2008');
-[posircf,velircf] = ephemDE405('mars',Ephem.Epoch(1),'UTC');
-Ephem.satPos = (posircf - ephemDE405('earth',Ephem.Epoch(1),'UTC'))*1e3;
-Ephem.satVel = velircf * 1e3;
-[posircf,velircf] = ephemDE405('neptune',Ephem.Epoch(2),'UTC');
-Ephem.satPos(:,2) = (posircf - ephemDE405('earth',Ephem.Epoch(2),'UTC'))*1e3;
-Ephem.satVel(:,2) = velircf * 1e3;
-[posircf,velircf] = ephemDE405('venus',Ephem.Epoch(3),'UTC');
-Ephem.satPos(:,3) = (posircf - ephemDE405('earth',Ephem.Epoch(3),'UTC'))*1e3;
-Ephem.satVel(:,3) = velircf * 1e3;
-
-%TTDelay = getTTDelay(Ephem.Epoch,r_stn_ECEF,scPV,tt_std_micro)
-TTDelayTemp = getTTDelay(Ephem,randoms) %#ok<NOPRT>
-TTDelay(Case:Case+5) = reshape(TTDelayTemp,1,6) %#ok<NOPRT>
-
-% PreviousTTDelay = TTDelay;
-% save ttdelay_RegressionData2_10.mat PreviousTTDelay
-
-if exist('ttdelay_RegressionData2_10.mat','file') == 2
-	disp(' ')
-	disp('Performing Regression Test...')
-	disp(' ')
-
-	% Load the ttdelay outputs
-	load ttdelay_RegressionData2_10.mat
-
-	Diff = PreviousTTDelay - TTDelay;
-
-	if any( abs(Diff) > tol ) ||  any(isnan(Diff))
-		failed = 1;
-	end
-
-else
-	failed = 1;
 end
 
 

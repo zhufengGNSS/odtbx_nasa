@@ -1,8 +1,8 @@
-function [failed,results]=HermiteInterpolator_regression
+function [failed,results] = HermiteInterpolator_test
 
 % Regression unit test for interpolation in HermiteInterpolator
 % Uses test datasets for HermiteInterpolator verification
-% Test datasets are created by HermiteInterpolator_regression_data.m
+% Test datasets are created by HermiteInterpolator_test_data.m
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -40,6 +40,8 @@ function [failed,results]=HermiteInterpolator_regression
 %                                       Only outputs result file when asked.
 %                                       Added default values that should be
 %                                       in the test data.
+%   Ravi Mathur         08/27/2012      Rename to conform to new
+%                                       regression test format
 
 WRITERESULTS = 0;       % set to non-zero to write the results file
 GENTIME = datestr(now); % default time generated if not in load
@@ -48,8 +50,8 @@ DETAIL  = 0;            % default flag if not in load
 
 failed = 0;
 
-% Setup the test parameters for HermiteInterpolator_regression.m
-load DataFiles/HermiteInterpolator_regression_data
+% Setup the test parameters for HermiteInterpolator test
+load DataFiles/HermiteInterpolator_test_data
 
 % preallocate test results only if saving
 if WRITERESULTS ~= 0
@@ -112,12 +114,12 @@ for testnum=1:length(testset)
 end
 
 if failed ~= 0
-    % GENTIME is loaded from DataFiles/HermiteInterpolator_regression_data
-    warning('ODTBX:HermiteInterpolator:regression', 'Testset %s ... %d failures.\n', GENTIME, failed); 
+    % GENTIME is loaded from DataFiles/HermiteInterpolator_test_data
+    warning('ODTBX:HermiteInterpolator:test', 'Testset %s ... %d failures.\n', GENTIME, failed); 
 end
 
 if WRITERESULTS ~= 0
     RUNTIME = datestr(now);
-    % WHOGEN and GENTIME are loaded from DataFiles/HermiteInterpolator_regression_data
-    save HermiteInterpolator_regression_results.mat WHOGEN GENTIME RUNTIME failed results resultset; 
+    % WHOGEN and GENTIME are loaded from DataFiles/HermiteInterpolator_test_data
+    save HermiteInterpolator_test_results.mat WHOGEN GENTIME RUNTIME failed results resultset; 
 end

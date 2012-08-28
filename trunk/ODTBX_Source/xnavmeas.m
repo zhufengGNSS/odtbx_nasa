@@ -76,15 +76,9 @@ function [Y,H,R] = xnavmeas(t,X,options)
 %       Sched(:,2) = (datenum(TrackSched(:,2))-epoch)*86400; %start(epsecs)
 %       Sched(:,3) = (datenum(TrackSched(:,3))-epoch)*86400; %end(epsecs)
 % 
-% VALIDATION TEST
-%
-%  To perform a validation test, put 
-%  'ValidationTest' as the only input argument.
-%
-% REGRESSION TEST (not implemented in this version)
-%
-%  To perform a regression test, put 
-%  'RegressionTest' as the only input argument.  
+% VALIDATION/REGRESSION TEST
+%  The validation/regression testing capability has been extracted to
+%  xnavmeas_test.m in the regression testing framework.
 %
 % keyword: measurement
 % See also LOSRANGE, LOSRANGERATE, LOSDOPPLER, RRDOTLT, GSMEAS, 
@@ -114,17 +108,8 @@ function [Y,H,R] = xnavmeas(t,X,options)
 %   Kevin Berry         04/06/2010      Added xnav options structure
 %   Sun Hur-Diaz        07/08/2010      Added Sched option
 %   Sun Hur-Diaz        09/22/2010      Added fields to xnav structure
-%% Determine whether this is an actual call to the program or a test
+%   Ravi Mathur         08/27/2012      Extracted regression test
 
-if strcmpi(t,'ValidationTest')||strcmpi(t,'RegressionTest')
-    Y = xnavmeas_validation_test();  
-else
-	[Y,H,R] = Get_xnavmeas(t,X,options);
-end
-end
-
-%% Main function
-function [Y,H,R] = Get_xnavmeas(t,X,options)
 % specify defaults here 
 t_obs_def = 1e5; % sec
 
@@ -250,89 +235,5 @@ for k=1:num_meas
     i=M*k+1; % advance row index to next RSO by number of measurements
 
 end % loop over num_meas
-
-
-end
-%% Validation Test
-
-function failed = xnavmeas_validation_test()
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-% set up state vector and time
-Ra = 6378137.; % m
-mu = 3.986005e14;
-alt_0 = 35786*1e3; % GEO alt in meters
-Pis = Ra + alt_0;
-Vis = sqrt(mu/Pis);
-X(1:3,1) = [Pis 0 0]';
-X(4:6,1) = [0 Vis 0]';
-t=0;
-
-tol = 1e-7;
-xnav.useRangeRate = true;
-options = odtbxOptions('measurement');
-options = setOdtbxOptions(options,'epoch',datenum('Jan 1 2006')); %UTC
-options = setOdtbxOptions(options, 'xnav', xnav );
-
-ExMeas = [4419540.83700585
-          2832.20891721189
-          4004178.73744371
-         -2774.21508508712
-          16436890.7878644
-         -2595.71020850086
-%            25595548.974467
-%           1284.05142786188
-];
-y = Get_xnavmeas(t,X,options);
-
-fprintf('%s\n',char(ones(1,37)*'-'));
-disp('Calculated XNAV Measurements by time:')
-fprintf('%s\n',char(ones(1,37)*'-'));
-fprintf('%16s %18s\n','Expected','Observed');
-fprintf('%s\n',char(ones(1,37)*'-'));
-for n=1:length(y)
-    fprintf('%18.6f %18.6f\n',ExMeas(n),y(n))
-end
-fprintf('%s\n',char(ones(1,37)*'-'));
-
-failed1 = any(tol < max( abs( ExMeas - y ) ));
-if failed1
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
-end
-
-% Regression Test of the Sched capability
-Sched = [...
-    1 10 20
-    3 30 40];
-options = setOdtbxOptions(options,'Schedule',Sched);
-tt = 0:10:40;
-XX = repmat(X,1,length(tt));
-y = Get_xnavmeas(tt,XX,options);
-ytest =  [NaN 4419540.83700585 4419540.83700585                 NaN                NaN
-          NaN 2832.20891721189 2832.20891721189                 NaN                NaN
-          NaN              NaN              NaN                 NaN                NaN
-          NaN              NaN              NaN                 NaN                NaN
-          NaN              NaN              NaN    16436890.7878644   16436890.7878644
-          NaN              NaN              NaN   -2595.71020850086  -2595.71020850086
-%           NaN              NaN              NaN                 NaN                NaN
-%           NaN              NaN              NaN                 NaN                NaN
-          ];
-failed2 = any(tol < max( abs( ytest - y ) ));
-if failed2
-    disp(' ')
-    disp('Sched Test Failed!')
-else
-    disp(' ')
-    disp('Sched Test Passed.')
-end
-          
-failed = any([failed1 failed2]);
 
 end

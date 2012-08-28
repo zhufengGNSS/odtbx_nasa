@@ -31,15 +31,10 @@ function range = LOSRange(t, r1, r2, options)
 % OUTPUTS
 %      range     (1xN)  range (km)
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.  
+%  These have been moved to LOSRange_test.m in the regression testing
+%  framework to conform with the new testing format.  
 %
 % keyword: measurement
 % See also LOSRANGERATE, LOSDOPPLER, RRDOT, RRDOTLT
@@ -78,19 +73,7 @@ function range = LOSRange(t, r1, r2, options)
 %                                       jatStaAzEl.m
 %   Kevin Berry         06/25/2009      Fixed time scale discrepancy in 
 %                                       GPSIono
-
-%% Determine whether this is an actual call to the program or a test
-
-if strcmpi(t,'ValidationTest')||strcmpi(t,'RegressionTest')
-    range = losrange_validation_test();  
-else
-	range = GetRange(t, r1, r2, options);
-end
-end
-
-
-%% Main function
-function range = GetRange(t, r1, r2, options)
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 useGPSIono = getOdtbxOptions(options, 'useGPSIonosphere', false );
 useIono    = getOdtbxOptions(options, 'useIonosphere', false );
@@ -163,44 +146,4 @@ if useChPart % Charged Particle range errors (only used for ground-based
     range                     = range + drChPart';
 end
 
-end
-
-%% Validation Test
-
-function failed = losrange_validation_test()
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-fprintf('%20s%28s%25s%20s\n','Pos 1 (km)','Pos 2 (km)','R-Expected (km)','R-Calculated (km)')
-fprintf('%s\n\n',char(ones(1,92)*'-'));
-
-tol = 1e-7;
-options = odtbxOptions('measurement');
-options = setOdtbxOptions(options,'epoch',datenum('Jan 1 2006'));
-options = setOdtbxOptions(options,'useGPSIonosphere',false);
-options = setOdtbxOptions(options,'useIonosphere',false);
-options = setOdtbxOptions(options,'useTroposphere',false);
-options = setOdtbxOptions(options,'useChargedParticle',false);
-
-t=(1:9)*60*60;
-e1 = [10000; 0; 0]; e2 = [0; 10000; 0]; e3 = [0; 0; 10000];
-r1 = [e1 e1 e1 e2 e2 e2 e3 e3 e3];
-r2 = [e1 e2 e3 e1 e2 e3 e1 e2 e3];    
-
-ExRange = [0 sqrt(2e8) sqrt(2e8) sqrt(2e8) 0 sqrt(2e8) sqrt(2e8) sqrt(2e8) 0];
-Range = GetRange(t, r1, r2, options);
-
-fprintf('%8.2f %8.2f %8.2f %10.2f %8.2f %8.2f %16.6f %16.6f\n',...
-    [r1; r2; ExRange; Range]);
-
-passed = tol > max( abs( ExRange - Range ) );
-failed = ~passed;
-if failed
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
-end
 end

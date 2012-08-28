@@ -22,9 +22,11 @@
 %
 %         May 2009
 %
+% Ravi Mathur         08/28/2012      Renamed to conform to new
+%                                     regression testing framework
 
 % Begin function.
-function failed = estspf_regression
+function failed = estspf_test
 
 failed = 0;
 tol = 5e-9;

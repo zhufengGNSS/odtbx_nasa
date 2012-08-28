@@ -88,7 +88,7 @@ function [failed] = estbat_no_proc_noise_test
     %save estbat_no_proc_noise_test.mat t_b xhat_b Phat_b e_b y_b Pa_b Pv_b Pw_b Phata_b Phatv_b Phatw_b
     
     % Load data for regression testing:
-    load estbat_no_proc_noise_test.mat;
+    load estbat_no_proc_noise_data.mat;
 
     
     for(a=1:length(t))

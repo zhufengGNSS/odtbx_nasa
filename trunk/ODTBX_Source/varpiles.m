@@ -68,6 +68,7 @@ function varargout = varpiles(varargin)
 %                           variance partitions
 % 
 % 2011/01/10 K Getzandanner Added logic checks for empty legend entries
+% 2012/08/28 R Mathur       Extracted regression test
 
 %% VARPILES: Variance Sandpiles
 %
@@ -97,129 +98,36 @@ function varargout = varpiles(varargin)
 % sandpile, and the components of the formal variance as a negative
 % sandpile, and relabel the negative y-axes to indicate this.
 
-if nargout == 0,
-    demomode = true;
-else
-    demomode = false;
-end
-if nargin == 0,
-    % Demo/self-test mode: make up some data
-    t = 0:100;
-    lent = length(t);
-    % Case 1: all delta variances positive:
-    dVa = ones(1,1,lent);
-    dVv = ones(1,1,lent);
-    dVw = ones(1,1,lent);
-    Va = shiftdim(exp(-t),-1);
-    Vv = ones(1,1,lent) + 1;
-    Vw = ones(1,1,lent) + 1;
-    Vhata = Va - dVa;
-    Vhatv = Vv - dVv;
-    Vhatw = Vw - dVw;
-    V = Va + Vv + Vw;
-    Vhat = Vhata + Vhatv + Vhatw;
-    figure % Open new figure window
-    a = varpiles(t,dVa,dVv,dVw,Va,Vv,Vw,Vhata,Vhatv,Vhatw,V,Vhat);
+t = varargin{1};
+t = t(:);
+dVa = squeeze(varargin{2});
+dVv = squeeze(varargin{3});
+dVw = squeeze(varargin{4});
+Va = squeeze(varargin{5});
+Vv = squeeze(varargin{6});
+Vw = squeeze(varargin{7});
+Vhata = squeeze(varargin{8});
+Vhatv = squeeze(varargin{9});
+Vhatw = squeeze(varargin{10});
+V = squeeze(varargin{11});
+Vhat = squeeze(varargin{12});
 
-    if demomode,
-        disp('Hit any key to continue')
-        pause
-    else
-        for k = length(a):-1:1,
-            h1(k) = get(a(k));
-        end
-    end
-    % Case 2: all delta variances negative:
-    dVa = -ones(1,1,lent);
-    dVv = -ones(1,1,lent);
-    dVw = -ones(1,1,lent);
-    Va = shiftdim(exp(-t),-1);
-    Vv = ones(1,1,lent) + 1;
-    Vw = ones(1,1,lent) + 1;
-    Vhata = Va - dVa;
-    Vhatv = Vv - dVv;
-    Vhatw = Vw - dVw;
-    V = Va + Vv + Vw;
-    Vhat = Vhata + Vhatv + Vhatw;
-    a = varpiles(t,dVa,dVv,dVw,Va,Vv,Vw,Vhata,Vhatv,Vhatw,V,Vhat);
-    if demomode,
-        disp('Hit any key to continue')
-        pause
-    else
-        for k = length(a):-1:1,
-            h2(k) = get(a(k));
-        end
-    end
-    % Case 3: mixed-sign delta variances:
-    dVa = -ones(1,1,lent);
-    dVv = ones(1,1,lent);
-    dVw = zeros(1,1,lent);
-    Va = shiftdim(exp(-t),-1);
-    Vv = ones(1,1,lent) + 1;
-    Vw = ones(1,1,lent) + 1;
-    Vhata = Va - dVa;
-    Vhatv = Vv - dVv;
-    Vhatw = Vw - dVw;
-    V = Va + Vv + Vw;
-    Vhat = Vhata + Vhatv + Vhatw;
-    a = varpiles(t,dVa,dVv,dVw,Va,Vv,Vw,Vhata,Vhatv,Vhatw,V,Vhat);
-    if demomode,
-        disp('Hit any key to continue')
-    else
-        for k = length(a):-1:1,
-            h3(k) = get(a(k));
-        end
-        close % Close current figure
-    end
-    if ~demomode,
-        load varpiles_data
-        try
-            for k = length(h1):-1:1,
-                fail1(k) = any(h1(k).YData - h1_save(k).YData);
-            end
-            for k = length(h2):-1:1,
-                fail2(k) = any(h2(k).YData - h2_save(k).YData);
-            end
-            for k = length(h3):-1:1,
-                fail3(k) = any(h3(k).YData - h3_save(k).YData);
-            end
-            fail = any([fail1,fail2,fail3]);
-        catch %#ok<CTCH>
-            fail = true;
-        end
-        varargout{1} = fail;
-    end
-    return
+if nargin > 12
+    dVm = squeeze(varargin{13});
+    Vm = squeeze(varargin{14});
+    Vhatm = squeeze(varargin{15});
+    deltastring = '\Delta Var Due to Man Exec';
+    fullstring = 'Var Due to Man Exec';
 else
-    t = varargin{1};
-    t = t(:);
-    dVa = squeeze(varargin{2});
-    dVv = squeeze(varargin{3});
-    dVw = squeeze(varargin{4});
-    Va = squeeze(varargin{5});
-    Vv = squeeze(varargin{6});
-    Vw = squeeze(varargin{7});
-    Vhata = squeeze(varargin{8});
-    Vhatv = squeeze(varargin{9});
-    Vhatw = squeeze(varargin{10});
-    V = squeeze(varargin{11});
-    Vhat = squeeze(varargin{12});
-    
-    if nargin > 12
-        dVm = squeeze(varargin{13});
-        Vm = squeeze(varargin{14});
-        Vhatm = squeeze(varargin{15});
-        deltastring = '\Delta Var Due to Man Exec';
-        fullstring = 'Var Due to Man Exec';
-    else
-        dVm = [];
-        Vm = [];
-        Vhatm = [];
-        deltastring = [];
-        fullstring = [];
-    end
+    dVm = [];
+    Vm = [];
+    Vhatm = [];
+    deltastring = [];
+    fullstring = [];
 end
+
 tol = 1e-4*eps; % tolerance for plot type test
+
 if all(all(dVa>tol)) && all(all(dVv>tol)) && all(all(dVw>tol)) && all(all(dVm>tol)),
     a = area(t, [Vhat, dVa, dVv, dVw, dVm]);
     legobjs = a;
@@ -277,6 +185,7 @@ else
     z_handle = zoom(gcf);
     set(z_handle,'ActionPostCallback',@fixYLabel)
 end
+
 legend(legobjs,legstrs)
 title('Variance Sandpile')
 zoom yon

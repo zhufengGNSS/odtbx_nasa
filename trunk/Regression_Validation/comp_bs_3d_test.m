@@ -1,3 +1,4 @@
+function fail = comp_bs_3d_test
 % Validation test of pointing references 5 and 6 in COMP_BS_3D.m
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
@@ -22,7 +23,11 @@
 % Emergent Space Technologies
 % 02/07/2011
 
-function fail = test_comp_bs_3d_56
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Sun Hur-Diaz            02/07/2011      Created
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 fail = 0;
 tol = 1e-10;

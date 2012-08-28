@@ -1,5 +1,5 @@
 %
-% gpsmeas_test_driver
+% gpsmeas_testdriver_test
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -22,8 +22,8 @@
 % Brent Wm. Barbee
 
 % Begin function.
-function [failed] = gpsmeas_test_driver(testcase, dump_results)
-% gpsmeas_test_driver  Run a set of predefined test cases
+function [failed] = gpsmeas_testdriver_test(testcase, dump_results)
+% gpsmeas_testdriver_test  Run a set of predefined test cases
 %
 % Can run a single test case or all test cases.  Will return whether any
 % test cases failed and, if one failed, will display detailed result

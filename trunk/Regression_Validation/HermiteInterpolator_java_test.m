@@ -1,4 +1,4 @@
-function [failed,results]=HermiteInterpolator_regression_java
+function [failed,results] = HermiteInterpolator_java_test
 
 % Regression unit test for interpolation in java HermiteInterpolator
 %
@@ -29,6 +29,8 @@ function [failed,results]=HermiteInterpolator_regression_java
 %   Stephen D Metcalfe  09/29/2010   	Original
 %   Stephen D Metcalfe  10/04/2010      Fixed MLINs.
 %                                       Only outputs result file when asked.
+%   Ravi Mathur         08/27/2012      Rename to conform to new
+%                                       regression test format
 
 WRITERESULTS = 0;       % set to non-zero to write the results file
 
@@ -99,5 +101,5 @@ end
 
 if WRITERESULTS ~= 0 % save the test results for detailed analysis
     RUNTIME = datestr(now);
-    save HermiteInterpolator_regression_java_results.mat RUNTIME failed results resultset;
+    save HermiteInterpolator_java_test_results.mat RUNTIME failed results resultset;
 end

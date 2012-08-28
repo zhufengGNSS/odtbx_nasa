@@ -1,4 +1,4 @@
-function Output = EarthOrbitPlot(Trajectory)
+function EarthOrbitPlot(trajectory)
 % EARTHORBITPLOT Creates a 3-D plot of an Earth orbit trajectory
 %
 %  EarthOrbitPlot(Trajectory);
@@ -20,17 +20,10 @@ function Output = EarthOrbitPlot(Trajectory)
 % OUTPUT:
 %      Trajectory Plot
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%   To perform a validation test, replace the Ephem input with
-%   'ValidationTest' as the input argument.  If the data file is not in the path
-%   this will perform as an example.
-%
-% REGRESSION TEST
-%
-%   To perform a regression test, replace the Ephem input with 
-%   'RegressionTest' as the input argument.  If the data file is not in the path
-%   this will perform as an example
+%   These tests have been moved to EarthOrbitPlot_test.m to conform to
+%   the new regression testing format.
 %
 %   keywords: plot, trajectory
 %
@@ -57,23 +50,12 @@ function Output = EarthOrbitPlot(Trajectory)
 %               	   (MM/DD/YYYY)
 %   Keith Speckman     09/08/2007       Original
 %   Russell Carpenter  02/13/2012       Various Improvements
-
-% Determine whether this is an actual call to the program or a test
-
-if strcmpi(Trajectory,'ValidationTest') || strcmpi(Trajectory,'RegressionTest')
-	Output = EarthOrbitPlot_regression_validation_test();
-else
-	getPlot(Trajectory);
-	Output = 0;
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function getPlot(xprop)
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 figure
-% Plot Trajectory
-plot3(xprop(1,:),xprop(2,:),xprop(3,:));
+
+% Plot trajectory
+plot3(trajectory(1,:),trajectory(2,:),trajectory(3,:));
 hold on
 
 % Plot Earth Sphere
@@ -86,6 +68,7 @@ zlabel('Z (Km)')
 whitebg(gcf,'k')
 hold off
 
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function earth(varargin)
@@ -120,24 +103,4 @@ set(globe, 'FaceColor', 'texturemap', 'CData', cdata, 'FaceAlpha', alpha, ...
     'EdgeColor', 'none');
 axis equal
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Validation and Regression Test
-%
-% Validation is done by inspection of the plot.
-% Regression is confirmed if the script runs without a failure.
-
-function Output = EarthOrbitPlot_regression_validation_test()
-
-% Create an ellipsoid trajectory
-a = 6378*4;
-b = 6378*3.5;
-e = acos(b/a);
-h = a*e;
-k = 0;
-t = 0:2*pi/100:2*pi;
-Trajectory(1,:) = h+a*cos(t);
-Trajectory(2,:) = k+b*sin(t)*cos(pi/6); 
-Trajectory(3,:) = k+b*sin(t)*sin(pi/6); 
-
-Output = EarthOrbitPlot(Trajectory);
+end

@@ -57,15 +57,10 @@ function [y,H,R] = lnrmeas(t,x,options)
 %      H            (Mx6xN) measurement partials matrix
 %      R            (MxMxN) measurement covariance
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.  
+%   These tests have been moved to EarthOrbitPlot_test.m to conform to
+%   the new regression testing format.  
 %
 %   keyword: measurement
 %   See also LOSRANGE, LOSRANGERATE, LOSDOPPLER, ODTBXOPTIONS, GSMEAS,
@@ -102,19 +97,7 @@ function [y,H,R] = lnrmeas(t,x,options)
 %   Ravi Mathur         08/26/2012      Updated regression/validation test
 %                                       data to match leap second data for
 %                                       1 Jul 2012.
-
-%% Determine whether this is an actual call to the program or a test
-
-if strcmpi(t,'ValidationTest')||strcmpi(t,'RegressionTest')
-    y = lnrmeas_test(t);  
-else
-	[y,H,R] = Get_lnrmeas(t,x,options);
-end
-end
-
-
-%% Main function
-function [y,H,R] = Get_lnrmeas(t,x,options)
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 %% Get values from options
 epoch = getOdtbxOptions(options, 'epoch', NaN);
@@ -234,128 +217,6 @@ for n=1:length(relay.x)
     H = [H; Hs];
     R = [R; Rs];
 
-end
-
-end
-
-%% Validation/Regression Test
-
-function failed = lnrmeas_test(in_string)
-disp(' ')
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-tol = 1e-7;
-% Input Relay States as STKEphem type ephemeris files
-relay.type            = 'STKEphem';
-if strcmpi(in_string,'ValidationTest')
-    relay.sat(1).filename = 'Relay1.e'; %Lunar Relay Satellite #1
-    relay.sat(2).filename = 'Relay2.e'; %Lunar Relay Satellite #2
-    if ~exist(relay.sat(1).filename)||~exist(relay.sat(2).filename)
-        error('Validation test files could not be found.');
-    end
-elseif strcmpi(in_string,'RegressionTest')
-    relay.sat(1).filename = 'Relay1_regress.e'; %Lunar Relay Satellite #1
-    relay.sat(2).filename = 'Relay2_regress.e'; %Lunar Relay Satellite #2
-    if ~exist(relay.sat(1).filename)||~exist(relay.sat(2).filename)
-        msg = ['Regression test files could not be found. Do you have the ',...
-            'regression test folder in your path? Running the validation ',...
-            'test instead...'];
-        warning('LNRMEAS:Regression1',msg)
-        lnrmeas('ValidationTest');
-        msg = ['Regression test could not be ran because the regression ',...
-            'ephems could not be found. The validation case was ran ',...
-            'instead. The regression test is being considered a failure ',...
-            'regardless of validation case results!'];
-        warning('LNRMEAS:Regression2',msg)
-        failed = 1;
-        return
-    end
-end
-    
-% Set the radius of Moon Obscuration
-relay.MoonMaskRadius = 20+JATConstant('meanRadius','Moon')/1000;
-%Using the Mean Radius of the Moon plus 20 km to account for lunar mountains
-
-% Input relay antenna data
-relay.sat(1).antenna.maxrange  = 100000; %km
-relay.sat(2).antenna.maxrange  = 100000; %km
-
-% Set propagator information
-epoch  = datenum('1 Dec 2016 00:00:00.000'); %UTC
-tspan  = 0:600:7200;
-x0     = [-3.10570021720167e+004
-    -3.80943874664242e+005
-    -1.28680660459686e+005
-    1.05814791201683e+000
-    1.44219161241440e+000
-    6.24467648736737e-001]; %in km & km/sec
-
-jOptions = odtbxOptions('force');
-jOptions = setOdtbxOptions(jOptions, 'epoch', epoch); %UTC in datenum format
-jOptions = setOdtbxOptions(jOptions, 'earthGravityModel', 'JGM2');
-jOptions = setOdtbxOptions(jOptions, 'gravDeg', 2, 'gravOrder', 0); %max 20x20
-jOptions = setOdtbxOptions(jOptions, 'useSolarGravity', true);
-jOptions = setOdtbxOptions(jOptions, 'useLunarGravity', true);
-jatWorld = createJATWorld(jOptions); %creates a java object that stores the
-    % default information for propagating Earth-centric orbits using JAT 
-    % force models.
-eOpts = odtbxOptions('estimator');
-eOpts = setOdtbxOptions(eOpts,'ValidationCase', 0);
-[t,x] = integ(@jatForces_km,tspan,x0,eOpts,jatWorld);
-
-% Measurement Options
-measOptions = odtbxOptions('measurement');
-measOptions = setOdtbxOptions(measOptions,'epoch',epoch); %UTC
-measOptions = setOdtbxOptions(measOptions,'useRange', true);
-measOptions = setOdtbxOptions(measOptions,'useRangeRate', false);
-measOptions = setOdtbxOptions(measOptions,'useDoppler', true);
-measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
-measOptions = setOdtbxOptions(measOptions,'useLightTime', false);
-measOptions = setOdtbxOptions(measOptions,'relay', relay);
-
-% Load Expected Results
-% NOTE: These results are based on the most recent July 2012 leap second. If a
-% more recent leap second is added, then these results must be updated.
-load lnrmeas_expected.mat;
-
-% Display Expected Results
-fprintf('%s\n',char(ones(1,66)*'-'));
-disp('Expected Relay Measurements by time:')
-fprintf('%s\n',char(ones(1,66)*'-'));
-fprintf('%-6s %14s %14s %14s %14s\n','Time','#1 Range','#1 Doppler','#2 Range','#2 Doppler');
-fprintf('%4s %13s %14s %14s %14s\n','(s)','(km)','(Hz)','(km)','(Hz)');
-fprintf('%s\n',char(ones(1,66)*'-'));
-for n=1:13
-    fprintf('%-6i %14.5f %14.5f %14.5f %14.5f\n',t(n),y_expected(:,n))
-end         
-disp(' ')
-disp(' ')
-
-% Run lnrmeas
-[y,H,R] = lnrmeas(t,x,measOptions);
-
-% Display Results
-fprintf('%s\n',char(ones(1,66)*'-'));
-disp('Calculated Relay Measurements by time:')
-fprintf('%s\n',char(ones(1,66)*'-'));
-fprintf('%-6s %14s %14s %14s %14s\n','Time','#1 Range','#1 Doppler','#2 Range','#2 Doppler');
-fprintf('%4s %13s %14s %14s %14s\n','(s)','(km)','(Hz)','(km)','(Hz)');
-fprintf('%s\n',char(ones(1,66)*'-'));
-for n=1:13
-    fprintf('%-6i %14.5f %14.5f %14.5f %14.5f\n',t(n),y(:,n))
-    %fprintf('%-6i %20.11f %20.11f %20.11f %20.11f\n',t(n),y(:,n))
-end     
-
-passed = tol > max( max( abs( y - y_expected ) ) );
-failed = ~passed;
-if failed
-    disp(' ')
-    disp('Test Failed! Please check that the most recent leap second is July 2012.')
-else
-    disp(' ')
-    disp('Test Passed.')
 end
 
 end

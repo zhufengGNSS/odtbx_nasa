@@ -41,7 +41,7 @@ measOptions = setOdtbxOptions(measOptions,'useRange', false);
 % save gpspseudomeas_test y1a H1a R1a y2a H2a R2a y3a H3a R3a y4a H4a R4a
 
 % Load regression archive and test against current values
-load gpspseudomeas_test
+load gpspseudomeas_data
 dy1 = abs(y1 - y1a); dH1 = abs(H1 - H1a); dR1 = abs(R1 - R1a); 
 dy2 = abs(y2 - y2a); dH2 = abs(H2 - H2a); dR2 = abs(R2 - R2a); 
 dy3 = abs(y3 - y3a); dH3 = abs(H3 - H3a); dR3 = abs(R3 - R3a); 

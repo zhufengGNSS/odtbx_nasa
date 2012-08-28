@@ -1,4 +1,4 @@
-function fail = test_gps_phys_params()
+function fail = gps_phys_params_test()
 %
 % Regression and unit test for gps_phys_params.m
 % Note, the heavy lifting performed by getgpsmeas is not directly checked 
@@ -21,7 +21,11 @@ function fail = test_gps_phys_params()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
-
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format 
 
 fail = 0;
 
@@ -41,9 +45,9 @@ TOL = 2e-11;
 
 %% TEST 1 - nominal test
 TESTNUM = 1;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
-t1 = load('test_gps_phys_param_dat1.mat');
+t1 = load('gps_phys_param_dat1.mat');
 % contents:
 %   t1.epoch                1x1                  8  double              
 %   t1.gps_meas             1x1              12918  struct              
@@ -54,7 +58,7 @@ t1 = load('test_gps_phys_param_dat1.mat');
 % See regen_test_gps_phys_param_t1.m to recreate this test data.
 
 RX_ID = -99; 
-RX_state_source = 'test_gps_phys_params.m';
+RX_state_source = 'gps_phys_params_test.m';
 Rotation2ECI = [];
 AntOrient = dcm('ax2',pi/2);
 yuma_file = 'Yuma1134.txt';
@@ -176,7 +180,7 @@ end
 
 %% TEST 2 - missing arg checks
 TESTNUM = 2;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
 %arguments:
 % gps_meas, RX_state_source, RX_ID, epoch, tsc, xsc, qatt, Rotation2ECI, ant_bod, gps_alm_file, TX_IDs, filters)
@@ -215,7 +219,7 @@ end
 
 %% TEST 3 - bad & mismatched arg checks
 TESTNUM = 3;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
 % bad time size
 try
@@ -340,7 +344,7 @@ end
 
 %% TEST 4 - off-nominal cases: gps_meas data PRNs
 TESTNUM = 4;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
 % valid, but empty gps_meas data
 gmempty = t1.gps_meas;
@@ -351,7 +355,7 @@ gmempty.PRN_data{1}.pseudorange = [];
 gmempty.PRN_data{1}.doppler = [];
 gmempty.PRN_data{1}.phase = [];
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmempty, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         yuma_file, TX_ID, []);
@@ -368,7 +372,7 @@ end
 gmunmatched = t1.gps_meas;
 gmunmatched.GPS_PRN = 13;
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmunmatched, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         yuma_file, TX_ID, []);
@@ -384,7 +388,7 @@ end
 % unsupported PRN in almanac
 gmunmatched.GPS_PRN = 32;
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmunmatched, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         yuma_file, TX_ID, []);
@@ -405,7 +409,7 @@ TX_ID_unh{1} = makeGpsTXID(351, 1, 1); % PRN 1
 TX_ID_unh{2} = makeGpsTXID(352, 2, 1); % PRN 2
 TX_ID_unh{3} = makeGpsTXID(354, 29, 1); % PRN 29
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmunmatched, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         unhealthy_yuma_file, TX_ID_unh, []);
@@ -421,7 +425,7 @@ end
 
 %% TEST 5 - multiple PRNS
 TESTNUM = 5;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
 % multiple I/O: multiple phys_meas cell array structs
 gmmult = t1.gps_meas;
@@ -447,7 +451,7 @@ end
 
 %% TEST 6 - filtering multiple PRNS, multiple results
 TESTNUM = 6;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
 % multiple I/O: multiple phys_meas cell array structs
 gmmult = t1.gps_meas;
@@ -490,14 +494,14 @@ end
 
 %% TEST 7 - off-nominal cases: gps_meas times
 TESTNUM = 7;
-fprintf(1,'\nExecuting test_gps-phys_params.m test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting gps_phys_params test %d:\n\n',TESTNUM);
 
 % all meas times before states
 gmtime = t1.gps_meas;
 ebias = gmtime.PRN_data{1}.epoch(end) - convertTime('GPS','UTC',t1.epoch);
 gmtime.PRN_data{1}.epoch = gmtime.PRN_data{1}.epoch - ebias - 1/86400; % and one more second so no times match
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmtime, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         yuma_file, TX_ID, []);
@@ -516,7 +520,7 @@ ebias = gmtime.PRN_data{1}.epoch(1) - ...
     convertTime('GPS','UTC',(t1.epoch + ((t1.t(end)-t1.t(1) + 1)/86400)) ); % and one more second so no times match
 gmtime.PRN_data{1}.epoch = gmtime.PRN_data{1}.epoch - ebias;
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmtime, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         yuma_file, TX_ID, []);
@@ -536,7 +540,7 @@ gmtime.PRN_data{1}.epoch(1:10) = gmtime.PRN_data{1}.epoch(1:10) - ebias;
 ebias = gmtime.PRN_data{1}.epoch(end) - gmtime.PRN_data{1}.epoch(end-10);
 gmtime.PRN_data{1}.epoch(end-10:end) = gmtime.PRN_data{1}.epoch(end-10:end) + ebias;
 try
-    fprintf(1,'\n\ntest_gps_phsy_params.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_phys_params_test.m: The following warning is expected:\n\n');
     phys_param = gps_phys_params(gmtime, RX_state_source, RX_ID, t1.epoch, ...
         t1.t, t1.x, t1.qatt, Rotation2ECI, AntOrient, ...
         yuma_file, TX_ID, []);

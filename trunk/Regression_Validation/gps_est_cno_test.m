@@ -1,4 +1,4 @@
-function fail = test_gps_est_cno()
+function fail = gps_est_cno_test()
 %
 % Regression and unit test for gps_est_cno.m
 % Note, the heavy lifting of gpslinkbuget is handled by that test.
@@ -20,6 +20,11 @@ function fail = test_gps_est_cno()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format 
 
 % constants
 d2r = pi/180; % degrees to radians
@@ -67,7 +72,7 @@ phys_param.meta = struct('RX_meta',[],...
     'TX_ID',tx_id,'TX_state_source',[],'gen_date',now);
 phys_param.meta.RX_meta.RX_ID              = -99; %user-defined reveiver system identifier
 phys_param.meta.RX_meta.meas_file          = '_synthetic_no_file';
-phys_param.meta.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from test_gps_est_cno.m';
+phys_param.meta.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from gps_est_cno_test.m';
 
 CN0 = gps_est_cno(phys_param, RX_link, TX_link, real_2d, real_2d); % no filters
 
@@ -181,7 +186,7 @@ phys_param.meta = struct('RX_meta',[],...
     'TX_ID',tx_id,'TX_state_source',[],'gen_date',now);
 phys_param.meta.RX_meta.RX_ID              = -99; %user-defined reveiver system identifier
 phys_param.meta.RX_meta.meas_file          = '_synthetic_no_file';
-phys_param.meta.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from test_gps_est_cno.m';
+phys_param.meta.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from gps_est_cno_test.m';
 
 filter = FilterPpEl(45*d2r,'tx');
 
@@ -269,7 +274,7 @@ phys_param.meta = struct('RX_meta',[],...
     'TX_ID',tx_id,'TX_state_source',[],'gen_date',now);
 phys_param.meta.RX_meta.RX_ID              = -99; %user-defined reveiver system identifier
 phys_param.meta.RX_meta.meas_file          = '_synthetic_no_file';
-phys_param.meta.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from test_gps_est_cno.m';
+phys_param.meta.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from gps_est_cno_test.m';
 
 filter = cell(1);
 filter{1} = FilterPpEl(45*d2r,'tx');

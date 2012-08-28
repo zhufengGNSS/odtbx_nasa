@@ -1,4 +1,4 @@
-function fail = test_slerp()
+function fail = slerp_test()
 
 % Regression test for slerp.m
 %
@@ -19,6 +19,11 @@ function fail = test_slerp()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format 
 
 fail = 0;
 

@@ -1,4 +1,4 @@
-function [fail] = test_rinexo2gpsdata()
+function [fail] = rinexo2gpsdata_test()
 % Unit test for the rinexo2gps function.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
@@ -18,7 +18,11 @@ function [fail] = test_rinexo2gpsdata()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
-
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format 
 
 fail = 0;
 fprintf(1,'Testing rinexo2gps...\n');
@@ -205,7 +209,7 @@ CASE = 'Unfiltered struct, write to files';
 try
     fprintf(1,'Test %d, (%s), reading file...\n',TEST,CASE);
     % pretty much guarantees writing to multiple files, dir specified
-    mydir = [pwd fs 'test_rinexo2gpsdataDIR'];
+    mydir = [pwd fs 'rinexo2gpsdata_test_DIR'];
     if ~exist(mydir,'dir')
         fprintf(1,'Test %d, (%s), creating test directory.\n',TEST,CASE);
         mkdir( mydir);

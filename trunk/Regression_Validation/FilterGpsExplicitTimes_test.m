@@ -1,5 +1,5 @@
-function fail = test_FilterGpsTimeWindow()
-% Unit test case for the FilterGpsTimeWindow class.
+function fail = FilterGpsExplicitTimes_test()
+% Unit test case for the FilterGpsExplicitTimes class.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -18,22 +18,23 @@ function fail = test_FilterGpsTimeWindow()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 fail = 0;
 
 %% TEST 1 - constructor
 TESTNUM = 1;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
 CASE= 'no arg';
 try
-    f = FilterGpsTimeWindow;
-    if f.early ~= 0
-        fprintf(1,'Failed test %d: %s - bad early value.\n',TESTNUM,CASE);
-        fail = 1;
-    end
-    if f.late ~= 0
-        fprintf(1,'Failed test %d: %s - bad late value.\n',TESTNUM,CASE);
+    f = FilterGpsExplicitTimes;
+    if f.filter_times ~= 0
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
         fail = 1;
     end
 catch ex %#ok<NASGU>
@@ -44,30 +45,13 @@ clear f;
 
 CASE= 'with arg';
 try
-    f = FilterGpsTimeWindow(1,2);
-    if f.early ~= 1
-        fprintf(1,'Failed test %d: %s - bad early value.\n',TESTNUM,CASE);
+    f = FilterGpsExplicitTimes([1:99]);
+    if any(f.filter_times ~= [1:99])
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
         fail = 1;
     end
-    if f.late ~= 2
-        fprintf(1,'Failed test %d: %s - bad late value.\n',TESTNUM,CASE);
-        fail = 1;
-    end
-catch ex %#ok<NASGU>
-    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
-    fail = 1;
-end
-clear f;
-
-CASE= 'reversed arg';
-try
-    f = FilterGpsTimeWindow(2,1);
-    if f.early ~= 1
-        fprintf(1,'Failed test %d: %s - bad early value.\n',TESTNUM,CASE);
-        fail = 1;
-    end
-    if f.late ~= 2
-        fprintf(1,'Failed test %d: %s - bad late value.\n',TESTNUM,CASE);
+    if any(f.tol ~= 0)
+        fprintf(1,'Failed test %d: %s - bad tol value.\n',TESTNUM,CASE);
         fail = 1;
     end
 catch ex %#ok<NASGU>
@@ -76,43 +60,52 @@ catch ex %#ok<NASGU>
 end
 clear f;
 
-CASE= 'bad arg1';
+CASE= 'bad arg';
 try
-    f = FilterGpsTimeWindow([1:99]');
+    f = FilterGpsExplicitTimes([1:99]');
     fprintf(1,'Failed test %d: %s, expected exception.\n',TESTNUM,CASE);
     fail = 1;
 catch ex %#ok<NASGU>
     % expected
 end
+clear f;
 
-CASE= 'bad arg2';
+CASE= 'with 2 arg';
 try
-    f = FilterGpsTimeWindow([1:2],[1:2]);
-    fprintf(1,'Failed test %d: %s, expected exception.\n',TESTNUM,CASE);
-    fail = 1;
+    f = FilterGpsExplicitTimes([1:99],0.5);
+    if any(f.filter_times ~= [1:99])
+        fprintf(1,'Failed test %d: %s - bad filter_times value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if any(f.tol ~= 0.5)
+        fprintf(1,'Failed test %d: %s - bad tol value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
 catch ex %#ok<NASGU>
-    % expected
-end
-
-CASE= 'bad arg3';
-try
-    f = FilterGpsTimeWindow(2,3,4);
-    fprintf(1,'Failed test %d: %s, expected exception.\n',TESTNUM,CASE);
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
     fail = 1;
-catch ex %#ok<NASGU>
-    % expected
 end
 clear f;
 
 %% TEST 2 - getInd & filter - empty arg
 TESTNUM = 2;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
-f = FilterGpsTimeWindow(1,2);
+f = FilterGpsExplicitTimes(22);
+ftol = FilterGpsExplicitTimes(22,0.1);
 
 CASE= 'getInd(empty arg)';
 try
     res = f.getInd([]);
+    fprintf(1,'Failed test %d: %s, missed expected exception.\n',TESTNUM,CASE);
+    fail = 1;
+catch ex %#ok<NASGU>
+    % expected
+end
+
+CASE= 'getInd(empty arg), tol';
+try
+    res = ftol.getInd([]);
     fprintf(1,'Failed test %d: %s, missed expected exception.\n',TESTNUM,CASE);
     fail = 1;
 catch ex %#ok<NASGU>
@@ -140,24 +133,49 @@ catch ex %#ok<NASGU>
     fail = 1;
 end
 
+CASE= 'filter(empty arg), tol';
+try
+    res = ftol.filter([]);
+    if FilterGpsData.hasData(res)
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+
 clear f;
 
 
 %% TEST 3 - getInd & filter - empty gps data struct
 TESTNUM = 3;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
-f = FilterGpsTimeWindow(1,2);
+f = FilterGpsExplicitTimes(22);
+ftol = FilterGpsExplicitTimes(22,0.01);
 dat = makeGpsData; % empty
 % add metadata
 dat.RX_meta.RX_ID = TESTNUM;
-dat.RX_meta.meas_file = 'test_FilterGpsTimeWindow.m';
+dat.RX_meta.meas_file = 'FilterGpsExplicitTimes.m';
 dat.RX_meta.obs_metadata{1} = '1';
 dat.RX_meta.obs_metadata{2} = '2';
 
 CASE= 'getInd(empty struct)';
 try
     res = f.getInd(dat,1);
+    if ~isempty(res)
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+
+CASE= 'getInd(empty struct), tol';
+try
+    res = ftol.getInd(dat,1);
     if ~isempty(res)
         fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
         fail = 1;
@@ -207,14 +225,15 @@ clear f;
 
 %% TEST 4 - getInd & filter - filter all of one PRN
 TESTNUM = 4;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
-f = FilterGpsTimeWindow( 101,105 );
+f = FilterGpsExplicitTimes( 101:105 );
+ftol = FilterGpsExplicitTimes( 101:105, 0.01 );
 
 dat = makeGpsData; % empty
 % add metadata
 dat.RX_meta.RX_ID = 33;
-dat.RX_meta.meas_file = 'test_FilterGpsTimeWindow.m';
+dat.RX_meta.meas_file = 'FilterGpsExplicitTimes.m';
 dat.RX_meta.obs_metadata{1} = '1';
 dat.RX_meta.obs_metadata{2} = '2';
 
@@ -230,6 +249,18 @@ dat.PRN_data{1}.phase = 0:100;
 CASE= 'getInd(all filtered)';
 try
     res = f.getInd(dat,1);
+    if ~isempty(res)
+        fprintf(1,'Failed test %d: %s - shouldn''t be not empty.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+
+CASE= 'getInd(all filtered), tol';
+try
+    res = ftol.getInd(dat,1);
     if ~isempty(res)
         fprintf(1,'Failed test %d: %s - shouldn''t be not empty.\n',TESTNUM,CASE);
         fail = 1;
@@ -285,16 +316,29 @@ clear f;
 
 %% TEST 5 - getInd & filter - partial filter, one PRN
 TESTNUM = 5;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
 % use the same data as above, change the filter
-f = FilterGpsTimeWindow(1,100);
+f = FilterGpsExplicitTimes(1:100);
+ftol = FilterGpsExplicitTimes(1:100,0.01);
 expind = 2:101; % expected indices
 expdat = 1:100;
 
 CASE= 'getInd(partial filtered)';
 try
     res = f.getInd(dat,1);
+    if res ~= expind
+        fprintf(1,'Failed test %d: %s - output mismatch.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+
+CASE= 'getInd(partial filtered), tol';
+try
+    res = ftol.getInd(dat,1);
     if res ~= expind
         fprintf(1,'Failed test %d: %s - output mismatch.\n',TESTNUM,CASE);
         fail = 1;
@@ -357,16 +401,29 @@ clear f;
 
 %% TEST 6 - getInd & filter - filter none, one PRN
 TESTNUM = 6;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
 % use the same data as above, change the filter
-f = FilterGpsTimeWindow(-5,1300);
+f = FilterGpsExplicitTimes(0:100);
+ftol = FilterGpsExplicitTimes(0:100, 0.01);
 expind = 1:101; % expected indices
 expdat = 0:100;
 
 CASE= 'getInd(filter none)';
 try
     res = f.getInd(dat,1);
+    if res ~= expind
+        fprintf(1,'Failed test %d: %s - output mismatch.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+
+CASE= 'getInd(filter none), tol';
+try
+    res = ftol.getInd(dat,1);
     if res ~= expind
         fprintf(1,'Failed test %d: %s - output mismatch.\n',TESTNUM,CASE);
         fail = 1;
@@ -428,7 +485,7 @@ end
 clear f;
 %% TEST 7 - filter - multiple PRNs
 TESTNUM = 7;
-fprintf(1,'\nExecuting test_FilterGpsTimeWindow test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterGpsExplicitTimes test %d:\n\n',TESTNUM);
 
 % add more data
 % add sample data
@@ -440,12 +497,12 @@ dat.PRN_data{2}.doppler = 0:200;
 dat.PRN_data{2}.phase = 0:200;
 
 % change the filter
-f = FilterGpsTimeWindow(50,1200);
+f = FilterGpsExplicitTimes(50:200);
+ftol = FilterGpsExplicitTimes(50:200, 0.01);
 expind1 = 51:101; % expected indices
 expdat1 = 50:100;
 expind2 = 51:201; % expected indices
 expdat2 = 50:200;
-
 
 
 CASE= 'getInd(filter multiple PRNs)';
@@ -456,6 +513,23 @@ try
         fail = 1;
     end
     res = f.getInd(dat,2);
+    if res ~= expind2
+        fprintf(1,'Failed test %d: %s - output mismatch 2.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+
+CASE= 'getInd(filter multiple PRNs), tol';
+try
+    res = ftol.getInd(dat,1);
+    if res ~= expind1
+        fprintf(1,'Failed test %d: %s - output mismatch 1.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    res = ftol.getInd(dat,2);
     if res ~= expind2
         fprintf(1,'Failed test %d: %s - output mismatch 2.\n',TESTNUM,CASE);
         fail = 1;

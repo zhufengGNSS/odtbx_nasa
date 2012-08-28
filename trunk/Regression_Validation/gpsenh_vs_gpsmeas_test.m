@@ -1,4 +1,4 @@
-function fail = end2end_gpsenh_vs_gpsmeas()
+function fail = gpsenh_vs_gpsmeas_test()
 % An end-to-end comparison test between gpsmeas and the GPS Enhancement
 % Toolset tools: gps_phys_param, gps_est_cno, and gps_gain.
 %
@@ -21,6 +21,11 @@ function fail = end2end_gpsenh_vs_gpsmeas()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format 
 
 fprintf(1,'Starting gpsmeas vs GPS Enhancement tools test...\n');
 fail = 0;

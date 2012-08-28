@@ -1,4 +1,4 @@
-function fail = test_gps_gain()
+function fail = gps_gain_test()
 %
 % Regression and unit test for gps_gain.m
 % Note, the heavy lifting of gpslinkbuget is handled by that test.
@@ -20,6 +20,11 @@ function fail = test_gps_gain()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 % constants
 d2r = pi/180; % degrees to radians
@@ -61,7 +66,7 @@ gps_meas = makeGpsData();
 % note the metadata for traceability
 gps_meas.RX_meta.RX_ID              = -99; %user-defined reveiver system identifier
 gps_meas.RX_meta.meas_file          = '_synthetic_no_file';
-gps_meas.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from test_gps_gain.m';
+gps_meas.RX_meta.obs_metadata{1}    = 'Synthetic measurement data from gps_gain_test.m';
 
 gps_meas.GPS_PRN = 31;
 gps_meas.PRN_data{1}.epoch          = convertTime('GPS','UTC',t);
@@ -84,7 +89,7 @@ tx_gain = gps_gain(gps_meas, phys_param, RX_link, TX_link, real_2d, 1);
 rx_gain = gps_gain(gps_meas, phys_param, RX_link, TX_link, real_2d, 2);
 
 if any(abs(tx_gain-rx_gain)) > GAIN_TOL
-    fprintf(1,'Failed test_gps_gain.m cross-check, test 1.\n');
+    fprintf(1,'Failed gps_gain_test.m cross-check, test 1.\n');
     fail = 1;
 end
 
@@ -175,7 +180,7 @@ end
 phys_fail = phys_param;
 phys_fail.meta.TX_ID.GPS_PRN = 22;
 try
-    fprintf(1,'\n\ntest_gps_gain.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_gain_test.m: The following warning is expected:\n\n');
     gain = gps_gain(gps_meas, phys_fail, RX_link, TX_link, real_2d, 1); 
     if ~isempty(gain)
         fprintf(1,'Failed PRN check - gain returned, test 4.\n');
@@ -201,7 +206,7 @@ end
 gps_fail2 = gps_meas;
 gps_fail2.PRN_data{1}.epoch = gps_fail2.PRN_data{1}.epoch + 0.01;  % biased times, not exact match
 try
-    fprintf(1,'\n\ntest_gps_gain.m: The following warning is expected:\n\n');
+    fprintf(1,'\n\ngps_gain_test.m: The following warning is expected:\n\n');
     gain = gps_gain(gps_fail2, phys_param, RX_link, TX_link, real_2d, 1);
     if ~isempty(gain)
         fprintf(1,'Failed matching time check - gain returned, test 5.\n');

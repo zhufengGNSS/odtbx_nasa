@@ -1,5 +1,5 @@
-function fail = test_FilterPpExplicitTimes()
-% Unit test case for the FilterPpExplicitTimes class.
+function fail = FilterPpEl_test()
+% Unit test case for the FilterPpEl class.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -18,6 +18,11 @@ function fail = test_FilterPpExplicitTimes()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 fail = 0;
 
@@ -25,12 +30,16 @@ d2r = pi/180;
 
 %% TEST 1 - constructor
 TESTNUM = 1;
-fprintf(1,'\nExecuting test_FilterPpExplicitTimes test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterPpEl test %d:\n\n',TESTNUM);
 
 CASE= 'no arg';
 try
-    f = FilterPpExplicitTimes;
-    if ~isempty(f.filter_times)
+    f = FilterPpEl;
+    if f.ang_thresh ~= 0
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if f.angtype ~= 1
         fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
         fail = 1;
     end
@@ -42,8 +51,12 @@ clear f;
 
 CASE= 'with arg 1';
 try
-    f = FilterPpExplicitTimes(99);
-    if f.filter_times ~= 99
+    f = FilterPpEl(99);
+    if f.ang_thresh ~= 99
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if f.angtype ~= 1
         fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
         fail = 1;
     end
@@ -53,11 +66,31 @@ catch ex %#ok<NASGU>
 end
 clear f;
 
+CASE= 'with arg 2';
+try
+    f = FilterPpEl(99, 'tx');
+    if f.ang_thresh ~= 99
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if f.angtype ~= 1
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+clear f;
 
 CASE= 'with arg 3';
 try
-    f = FilterPpExplicitTimes(99:101);
-    if any(f.filter_times ~= 99:101)
+    f = FilterPpEl(99, 'rx');
+    if f.ang_thresh ~= 99
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if f.angtype ~= 2
         fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
         fail = 1;
     end
@@ -67,16 +100,41 @@ catch ex %#ok<NASGU>
 end
 clear f;
 
+CASE= 'with arg 4';
+try
+    f = FilterPpEl(42, 'Rx'); % check case sensitivity
+    if f.ang_thresh ~= 42
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if f.angtype ~= 2
+        fprintf(1,'Failed test %d: %s - bad value.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+clear f;
+
+CASE= 'bad arg';
+try
+    f = FilterPpEl(42, 'junk');
+    fprintf(1,'Failed test %d: %s, missed expected exception.\n',TESTNUM,CASE);
+    fail = 1;
+catch ex %#ok<NASGU>% expected
+end
+clear f;
 
 %% TEST 2 - getInd, filter, filterMeas - empty arg
 TESTNUM = 2;
-fprintf(1,'\nExecuting test_FilterPpExplicitTimes test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterPpEl test %d:\n\n',TESTNUM);
 
-f = FilterPpExplicitTimes(1:100);
+f = FilterPpEl(22);
 
 CASE= 'getInd(empty arg)';
 try
-    res = f.getInd([]); %#ok<NASGU>
+    res = f.getInd([]);
     fprintf(1,'Failed test %d: %s, missed expected exception.\n',TESTNUM,CASE);
     fail = 1;
 catch ex %#ok<NASGU>
@@ -141,27 +199,27 @@ clear f;
 
 %% TEST 3 - getInd, filter & filterMeas - empty phys params data struct
 TESTNUM = 3;
-fprintf(1,'\nExecuting test_FilterPpExplicitTimes test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterPpEl test %d:\n\n',TESTNUM);
 
-f = FilterPpExplicitTimes(-100:-1);
+f = FilterPpEl(22*d2r,'rx');
 
 % physical param data
 dat = makePpData; % empty
 % add metadata
 dat.meta.RX_meta.RX_ID = 33;
-dat.meta.RX_meta.meas_file = 'test_FilterPpExplicitTimes.m';
+dat.meta.RX_meta.meas_file = 'FilterPpEl.m';
 dat.meta.RX_meta.obs_metadata{1} = '1';
 dat.meta.RX_meta.obs_metadata{2} = '2';
-dat.meta.RX_state_source = 'test_FilterPpExplicitTimes.m';
+dat.meta.RX_state_source = 'FilterPpEl.m';
 dat.meta.TX_ID = makeGpsTXID(123, 13, 1); % ID 123, PRN 13, block II
-dat.meta.TX_state_source = 'test_FilterPpExplicitTimes.m';
+dat.meta.TX_state_source = 'FilterPpEl.m';
 dat.meta.gen_date = now;
 
 % GPS DATA
 gdat = makeGpsData; % empty
 % add metadata
 gdat.RX_meta.RX_ID = 33;
-gdat.RX_meta.meas_file = 'test_FilterPpExplicitTimes.m';
+gdat.RX_meta.meas_file = 'FilterPpEl.m';
 gdat.RX_meta.obs_metadata{1} = '1';
 gdat.RX_meta.obs_metadata{2} = '2';
 
@@ -172,8 +230,6 @@ gdat.PRN_data{1}.raw_SNR = 0:200;
 gdat.PRN_data{1}.pseudorange = 0:200;
 gdat.PRN_data{1}.doppler = 0:200;
 gdat.PRN_data{1}.phase = 0:200;
-
-expdat1 = []; % expected gps data results
 
 CASE= 'getInd(empty struct)';
 try
@@ -270,6 +326,8 @@ catch ex %#ok<NASGU>
     fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
     fail = 1;
 end
+
+expdat1 = [];
 
 CASE= 'filterMeas(empty struct)';
 try
@@ -391,13 +449,13 @@ clear f;
 
 %% TEST 4 - getInd, filter, FilterMeas - filter all data
 TESTNUM = 4;
-fprintf(1,'\nExecuting test_FilterPpExplicitTimes test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterPpEl test %d:\n\n',TESTNUM);
 
 % GPS DATA
 gdat = makeGpsData; % empty
 % add metadata
 gdat.RX_meta.RX_ID = 33;
-gdat.RX_meta.meas_file = 'test_FilterPpExplicitTimes.m';
+gdat.RX_meta.meas_file = 'FilterPpEl.m';
 gdat.RX_meta.obs_metadata{1} = '1';
 gdat.RX_meta.obs_metadata{2} = '2';
 
@@ -423,12 +481,12 @@ gdat.PRN_data{2}.phase = 0:200;
 dat = makePpData; % empty
 % add metadata
 dat.meta.RX_meta.RX_ID = 33;
-dat.meta.RX_meta.meas_file = 'test_FilterPpExplicitTimes.m';
+dat.meta.RX_meta.meas_file = 'FilterPpEl.m';
 dat.meta.RX_meta.obs_metadata{1} = '1';
 dat.meta.RX_meta.obs_metadata{2} = '2';
-dat.meta.RX_state_source = 'test_FilterPpExplicitTimes.m';
+dat.meta.RX_state_source = 'FilterPpEl.m';
 dat.meta.TX_ID = makeGpsTXID(123, 4, 1); % ID 123, PRN 4, block II
-dat.meta.TX_state_source = 'test_FilterPpExplicitTimes.m';
+dat.meta.TX_state_source = 'FilterPpEl.m';
 dat.meta.gen_date = now;
 % add data (different length than gps data)
 dat.epoch = (1:180)+epoch_base_utc;
@@ -441,13 +499,13 @@ dat.range_rate = 1:180;
 dat.GPS_yaw = 1:180;
 
 % phys param expected data
-expdatdef = []; %#ok<NASGU>
-expdatang = []; %#ok<NASGU>
+expdatdef = [];
+expdatang = [];
 
 % gps expected data
 expdat1 = [];
 
-f = FilterPpExplicitTimes(dat.epoch - 200); % no times in common with dat.epoch = filter all
+f = FilterPpEl(0*d2r,'rx'); % filters all except exactly 0 (all for this case)
 
 CASE= 'getInd(all filtered)';
 try
@@ -663,22 +721,119 @@ catch ex %#ok<NASGU>
 end
 clear f;
 
-%% TEST 5 - getInd & filter - partial filter
+%% TEST 5 - filterMeas - filter all data, variations
 TESTNUM = 5;
-fprintf(1,'\nExecuting test_FilterPpExplicitTimes test %d:\n\n',TESTNUM);
+fprintf(1,'\nExecuting FilterPpEl test %d:\n\n',TESTNUM);
+
+f = FilterPpEl(0*d2r,'tx'); % filters all but exactly 0, all for this case
+
+CASE= 'filterMeas(all filtered, one arg)';
+try
+    [res, gres] = f.filterMeas(dat);
+        
+    % check metadata
+    if ~isstruct(res) || ~isfield(res,'meta') || ~isfield(res.meta,'RX_meta') || ...
+        ~isfield(res.meta.RX_meta,'RX_ID') || res.meta.RX_meta.RX_ID ~= 33
+        fprintf(1,'Failed test %d: %s - RX_ID not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if res.meta.RX_meta.meas_file ~= dat.meta.RX_meta.meas_file
+        fprintf(1,'Failed test %d: %s - meas_file not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if length(dat.meta.RX_meta.obs_metadata) ~= 2 || ...
+        dat.meta.RX_meta.obs_metadata{1} ~= res.meta.RX_meta.obs_metadata{1} || ...
+        dat.meta.RX_meta.obs_metadata{2} ~= res.meta.RX_meta.obs_metadata{2}
+        fprintf(1,'Failed test %d: %s - obs_metadata not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if res.meta.RX_state_source ~= dat.meta.RX_state_source
+        fprintf(1,'Failed test %d: %s - RX_state_source not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if res.meta.TX_ID.GPS_ID ~= dat.meta.TX_ID.GPS_ID
+        fprintf(1,'Failed test %d: %s - TX_ID.GPS_ID not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if res.meta.TX_ID.GPS_PRN ~= dat.meta.TX_ID.GPS_PRN
+        fprintf(1,'Failed test %d: %s - TX_ID.GPS_PRN not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if res.meta.TX_ID.block_type ~= dat.meta.TX_ID.block_type
+        fprintf(1,'Failed test %d: %s - TX_ID.block_type not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if res.meta.TX_state_source ~= dat.meta.TX_state_source
+        fprintf(1,'Failed test %d: %s - TX_state_source not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res.meta, 'gen_date') || isempty(res.meta.gen_date)
+        fprintf(1,'Failed test %d: %s - gen_date not preserved.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    
+    % ensure empty data
+    if ~isfield(res, 'epoch') || ~isempty(res.epoch)
+        fprintf(1,'Failed test %d: %s - incorrect epoch.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'TX_az') || ~isempty(res.TX_az)
+        fprintf(1,'Failed test %d: %s - incorrect TX_az.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'TX_el') || ~isempty(res.TX_el)
+        fprintf(1,'Failed test %d: %s - incorrect TX_el.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'RX_az') || ~isempty(res.RX_az)
+        fprintf(1,'Failed test %d: %s - incorrect RX_az.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'RX_el') || ~isempty(res.RX_el)
+        fprintf(1,'Failed test %d: %s - incorrect RX_el.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'range') || ~isempty(res.range)
+        fprintf(1,'Failed test %d: %s - incorrect range.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'range_rate') || ~isempty(res.range_rate)
+        fprintf(1,'Failed test %d: %s - incorrect range_rate.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    if ~isfield(res, 'GPS_yaw') || ~isempty(res.GPS_yaw)
+        fprintf(1,'Failed test %d: %s - incorrect GPS_yaw.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+    
+    % check gps data
+    % check metadata
+    if ~isempty(gres)
+        fprintf(1,'Failed test %d: %s - magically-appearing gps data.\n',TESTNUM,CASE);
+        fail = 1;
+    end
+catch ex %#ok<NASGU>
+    fprintf(1,'Failed test %d: %s, unexpected exception.\n',TESTNUM,CASE);
+    fail = 1;
+end
+clear f;
+
+%% TEST 6 - getInd & filter - partial filter
+TESTNUM = 6;
+fprintf(1,'\nExecuting FilterPpEl test %d:\n\n',TESTNUM);
 
 % use the same data as above, change the filter
 
 % phys param expected data
-expdatdef = 90:180;
+expdatdef = 1:90;
 expdatang = (expdatdef)*d2r;
 expdatepoch = (expdatdef)+epoch_base_utc; % UTC
 
 % gps expected data
-expdat1 = 90:180; % note gps times cut down to match phys param times
+expdat1 = [1:90]; % note gps times cut down to match phys param times
 expdat1epoch = (expdat1)+epoch_base_gps; % GPS
 
-f = FilterPpExplicitTimes(expdatepoch); % UTC times for phys meas
+f = FilterPpEl(90*d2r,'tx');
 
 CASE= 'getInd(partial filtered)';
 try

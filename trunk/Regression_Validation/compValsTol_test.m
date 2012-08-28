@@ -1,4 +1,4 @@
-function fail = test_CompValsTol()
+function fail = compValsTol_test()
 % Unit test for compValsTol.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
@@ -18,6 +18,11 @@ function fail = test_CompValsTol()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+%
+%  REVISION HISTORY
+%   Author      		    Date         	Comment
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 fail = 0;
 

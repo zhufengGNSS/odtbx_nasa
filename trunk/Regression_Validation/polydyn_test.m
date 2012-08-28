@@ -1,7 +1,7 @@
-function f = polydyn_regression
-% POLYDYN_REGRESSION Regression test for polydyn.
+function f = polydyn_test
+% POLYDYN_TEST Regression test for polydyn.
 %
-% F = POLYDYN_REGRESSION() runs the regression test
+% F = POLYDYN_TEST() runs the regression test
 %
 % keyword: measurement
 % See also OPNAVMEAS, CAMERA, ATTITUDE, BODY
@@ -27,7 +27,8 @@ function f = polydyn_regression
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
 %   Kenneth Getzandanner    05/24/2012      Original polydyn_example.m
-
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 % Set up polyhedron
 X = [1 -.5 -.5 0 0;

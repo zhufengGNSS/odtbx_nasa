@@ -1,8 +1,8 @@
-function failed = estpar_regression
+function failed = estpar_test
 
 % Particle Filter regression test
 % keyword: estpar regression
-% See also estpar_regression estpar
+% See also estpar
 % 
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -23,9 +23,10 @@ function failed = estpar_regression
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
 % REVISION HISTORY
-%  Author:                  Date:
+%  Author:                  Date:          Comments:
 %  John Gaebler         June 2012
-%
+%  Ravi Mathur             08/27/2012      Rename to conform to new
+%                                          regression test format
 
 failed = 0;
 tol = 1e-9;

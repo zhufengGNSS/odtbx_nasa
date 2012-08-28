@@ -99,6 +99,9 @@ function [y,H,R] = lnrmeas(t,x,options)
 %   Allen Brown         09/22/2009      Updated regression/validation test
 %                                       data to match leap second data for
 %                                       1 Jan 2009.
+%   Ravi Mathur         08/26/2012      Updated regression/validation test
+%                                       data to match leap second data for
+%                                       1 Jul 2012.
 
 %% Determine whether this is an actual call to the program or a test
 
@@ -315,7 +318,7 @@ measOptions = setOdtbxOptions(measOptions,'relay', relay);
 % Load Expected Results
 % NOTE: These results are based on the most recent July 2012 leap second. If a
 % more recent leap second is added, then these results must be updated.
-load('lnrmeas_expected.mat');
+load lnrmeas_expected.mat;
 
 % Display Expected Results
 fprintf('%s\n',char(ones(1,66)*'-'));

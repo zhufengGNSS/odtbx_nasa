@@ -79,17 +79,17 @@ clc
 % if the case passed, and a 1 if the case failed.
 testCases = {
     % Release 5.0
-        'gasdyn_regression'
-        'opt_sched_regression'
-        'initialize_cov_regression'
-        'estpar_regression'
-        'sensmos'
-        'fixzoom'
+        'gasdyn_test'
+        'opt_sched_test'
+        'initialize_cov_test'
+        'estpar_test'
+        'sensmos_test'
+        'fixzoom' % !! Is this here to fix zoom for next tests??
         'gpspseudomeas_test'
-        'clktests'
+        'clk_all_test'
         'nbody_test'
-        'restartRegression(''SRIF'')'
-        'polydyn_regression'
+        'restartrecord_test(''SRIF'')'
+        'polydyn_test'
         'integ_test'
         'integev_test'
     % Release 4.5
@@ -119,7 +119,7 @@ testCases = {
         'HermiteInterpolator_regression_java'
         'xnavmeas(''RegressionTest'')'
         'testMeasPartials_regression'
-        'restartRegression'
+        'restartrecord_test'
         'test_comp_bs_3d_56'
     % Release 3.5
         'gsCoverage(''RegressionTest'')'

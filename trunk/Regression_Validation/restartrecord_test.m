@@ -1,4 +1,4 @@
-function fail = restartRegression(flag)
+function fail = restartrecord_test(flag)
 % RESTARTREGRESSION  Restart Record and Impulsive Burn Regression Test.
 %
 %   [fail] = RESTARTREGRESSION regression test to verify results from the
@@ -33,8 +33,11 @@ function fail = restartRegression(flag)
 %
 % Modification History
 % ---------------------
-% 2011/08/10 K Getzandanner Added an optional flag to check ESTSRIF
-%
+%   Author                  Date            Comments
+%   K Getzandanner          08/10/2011      Added an optional flag to 
+%                                           check ESTSRIF
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 %% Initialize Variables
 

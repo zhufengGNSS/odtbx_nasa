@@ -1,7 +1,7 @@
-function f = initialize_cov_regression
-% INITIALIZE_COV_REGRESSION Regression test for intialize_cov.
+function f = initialize_cov_test
+% INITIALIZE_COV_TEST Regression test for intialize_cov.
 %
-% F = INITIALIZE_COV_REGRESSION runs the regression test
+% F = INITIALIZE_COV_TEST runs the regression test
 %
 % See also INITIALIZE_COV
 %
@@ -26,6 +26,8 @@ function f = initialize_cov_regression
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
 %   Benjamin Asher          08/09/2012      Original
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 
 % Initial conditions

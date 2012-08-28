@@ -1,7 +1,7 @@
-function f = gasdyn_regression
-% GASDYN_REGRESSION Regression test for gasdyn.
+function f = gasdyn_test
+% GASDYN_TEST Regression test for gasdyn.
 %
-% F = GASDYN_REGRESSION runs the regression test
+% F = GASDYN_TEST runs the regression test
 %
 % See also GASDYN
 %
@@ -26,6 +26,8 @@ function f = gasdyn_regression
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
 %   Benjamin Asher          08/09/2012      Original
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 
 % Initial conditions

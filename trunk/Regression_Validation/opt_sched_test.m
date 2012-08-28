@@ -1,7 +1,7 @@
-function f = opt_sched_regression
-% OPT_SCHED_REGRESSION Regression test for opt_sched.
+function f = opt_sched_test
+% OPT_SCHED_TEST Regression test for opt_sched.
 %
-% F = OPT_SCHED_REGRESSION runs the regression test
+% F = OPT_SCHED_TEST runs the regression test
 %
 % See also OPT_SCHED
 %
@@ -26,7 +26,8 @@ function f = opt_sched_regression
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
 %   Benjamin Asher          08/09/2012      Original
-
+%   Ravi Mathur             08/27/2012      Rename to conform to new
+%                                           regression test format
 
 % Initial conditions
 tspan = 0:60:3600;

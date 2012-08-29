@@ -84,7 +84,7 @@ testCases = {
         'initialize_cov_test'
         'estpar_test'
         'sensmos_test'
-        'fixzoom'
+        'fixzoom_test'
         'gpspseudomeas_test'
         'clk_all_test'
         'nbody_test'
@@ -156,11 +156,12 @@ testCases = {
     % Release 2.0
         'gsmeas_test'
         'odtbxOptions_test'
-        'rrdotang(''RegressionTest'')'
+        'rrdotang_test'
+        'kepel_test'
     % JAT_Adapters
         'convertTime_test'
         'createJATWorld_test'
-        'ecef2LLA(''RegressionTest'')'
+        'ecef2LLA_test(''RegressionTest'')'
         'ephemDE405_test'
         'getGroundStationInfo_test'
         'getIndex_test'
@@ -170,19 +171,18 @@ testCases = {
     %    'jatWorldPropagatorRK4_test'
     %    'jatWorldPropagatorRK8_test'
     %    'jatWorldPropagatorRKF78_test'
-        'jatTropoModel(''RegressionTest'')'
+        'jatTropoModel_test(''RegressionTest'')'
         'matlabTimeJDMJD_test'
-        'LLA2ecef(''RegressionTest'')'
-        'jatStaAzEl(''RegressionTest'')'
-        'jatIonoDelayModel(''RegressionTest'')'
-        'jatIonoDelayModel_test' % independent validation check
-        'jatChargedParticleModel(''RegressionTest'')'
+        'LLA2ecef_test(''RegressionTest'')'
+        'jatStaAzEl_test(''RegressionTest'')'
+        'jatIonoDelayModel_test(''RegressionTest'')'
+        'jatIonoDelayModel_test(''ValidationTest'')' % independent validation check
+        'jatChargedParticleModel_test(''RegressionTest'')'
         'getIERSTimes_test'
-        'kepel_test'
-        'jatWorldPropagatorRKF78_regression'
-        'jatRK8_regression'
+        'jatWorldPropagatorRKF78_case2_test'
+        'jatRK8_test'
         'jatRK8_time_io_test'
-        'jatForces_regression'
+        'jatForces_test'
     % Release 1.0
     %     'estbat_001'
     %     'estbat_002'
@@ -193,8 +193,8 @@ testCases = {
     %     'estseq_004'
     %     'estseq_005'
     %     'estseq_006'
-        'estbat' % run internal self-test
-        'estseq' % run internal self-test
+        'estbat_test'
+        'estseq_test'
     };
 
 brokenTests = {}; % cell array of the names and run name of all broken tests

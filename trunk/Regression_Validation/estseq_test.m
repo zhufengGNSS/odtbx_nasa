@@ -1,7 +1,7 @@
-function failed = estsrif_test
+function failed = estseq_test
 %
-% estsrif_test Regression testing and demo for estsrif.m
-% See also estsrif.m
+% estseq_test Regression testing and demo for estseq.m
+% See also estseq.m
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -23,22 +23,22 @@ function failed = estsrif_test
 %
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
-%   Ravi Mathur             08/28/2012      Extract regression test from
-%                                           original estsrif.m
+%   Ravi Mathur             08/29/2012      Extract regression test from
+%                                           original estseq.m
 %
 %
 %
 % Note that the brunt of the regression testing still occurs in
-% estsrif.m. It is deeply embedded and will require considerable effort
-% to extract all of it into estsrif_test.m.
+% estseq.m. It is deeply embedded and will require considerable effort
+% to extract all of it into estseq_test.m.
 
-totaltests = 3;
-disp('estsrif_test: regression testing estsrif...')
+totaltests = 4;
+disp('estseq_test: regression testing estseq...')
 
 % Run all the test cases
 for k = 1:totaltests,
     disp(['Case ',num2str(k),'...'])
-    fail(k,:) = estsrif(k); %#ok<AGROW>
+    fail(k,:) = estseq(k); %#ok<AGROW>
 end
 
 % If system supports parallel processing run all
@@ -59,7 +59,7 @@ end
 if testparallel,
     for k = 1:totaltests,
         disp(['Parallel Case ',num2str(k),'...'])
-        fail(k+totaltests,:) = estsrif(k); %#ok<AGROW>
+        fail(k+totaltests,:) = estseq(k); %#ok<AGROW>
     end
     matlabpool('close');
 end

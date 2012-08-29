@@ -187,6 +187,8 @@ function varargout = estbat(varargin)
 %                            deviation of the truth covariance computed by
 %                            the lincov, up to a maximum set by
 %                            UpdateIterations, which defaults to 10.
+% 2012-08-28 R. Mathur       Extracted regression test
+%
 %% ESTBAT: Batch Estimator
 %
 % ESTBAT is the primary batch estimator for OD Toolbox.  The original
@@ -217,20 +219,23 @@ function varargout = estbat(varargin)
 % This should be a subfunction, or if there is a lot of commonality with
 % estseq's version, a private function.
 %
-% If there are no input arguments, perform a built-in self-test.  If there
-% are no output arguments, then plot the results of the input self-test
-% number as a demo.
+% The full self-test has been extracted to estbat_test.m to conform to
+% the new regression testing framework.
+%
+% If there are no output arguments, then plot the results of a particular
+% input self-test as a demo.
 
-if nargin == 0,
-    selftest = true;
-else
-    selftest = false;
+if(nargin == 0)
+    error('estbat no longer supports zero-input regression testing. Please use estbat_test.');
 end
+
+% testmode specifies which self test to run
 if nargin == 1,
     testmode = varargin{1};
 else
     testmode = false;
 end
+
 if nargin >= 4,
     if all(isfield(varargin{1}, {'tru','est'})),
         dynfun = varargin{1};
@@ -300,48 +305,14 @@ elseif nargin >= 4,
     datarg.tru = [];
     datarg.est = [];
 end
+
 if nargout == 0,
     demomode = true;
 else
     demomode = false;
 end
 
-if selftest,
-    totaltests = 3;
-
-    % Run all the test cases
-    for k = 1:totaltests,
-        disp(['Case ',num2str(k),'...'])
-        fail(k,:) = estbat(k); %#ok<AGROW>
-    end
-    
-    % If system supports parallel processing run all
-    % the test cases again in parallel
-    testparallel = 0;
-    try % See if system supports parallel operation
-        if matlabpool('size') == 0,
-            matlabpool('open');
-            testparallel = 1;
-        else
-            disp('Skipping parallel test.');
-            disp('Self test already running in parallel environment.');
-        end
-    catch %#ok<CTCH>
-        disp('Skipping parallel test.');
-        disp('No support for parallel processing.');
-    end
-    if testparallel,
-        for k = 1:totaltests,
-            disp(['Parallel Case ',num2str(k),'...'])
-            fail(k+totaltests,:) = estbat(k); %#ok<AGROW>
-        end
-        matlabpool('close');
-    end
-    
-    varargout{1} = any(any(fail));
-    varargout{2} = fail;
-    return
-elseif testmode,
+if testmode,
     switch testmode
         case 1
             dynfun.tru = @rwdyn;

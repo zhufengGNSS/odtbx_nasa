@@ -209,7 +209,7 @@ function varargout = estsrif(varargin)
 % computations.
 %
 % This should be a subfunction, or if there is a lot of commonality with
-% estsrif's version, a private function.
+% estbat's version, a private function.
 %
 % The full self-test has been extracted to estsrif_test.m to conform to
 % the new regression testing framework.

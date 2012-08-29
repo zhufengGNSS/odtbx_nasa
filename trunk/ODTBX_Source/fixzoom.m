@@ -1,10 +1,9 @@
-function fail = fixzoom
+function fixzoom
 % This fixes the zoom function so that zero stays in view when vertically
 % zooming.
 h = zoom(gcf);
 set(h,'Motion','vertical','Enable','on','ActionPostCallback',@keepzero,...
     'ActionPreCallback',@saveylims)
-fail = 0;
 
 function saveylims(obj,evd) %#ok<INUSL>
 % This is needed so postcallback can know what to do

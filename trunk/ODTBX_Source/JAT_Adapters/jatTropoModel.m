@@ -29,17 +29,10 @@ function [dRho, dE] = jatTropoModel(rho, elev, lambda, pressure, temp, relHumidi
 %   Montenbruck, Oliver and Gill, Eberhard, Satellite Orbits: Methods, Models
 %   and Applications, Springer-Verlag, 2001, pp. 221-224.
 %
-%  VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%   To perform a validation test, enter 'ValidationTest' as the only input 
-%   argument.  If the data file is not in the path, this will perform as an 
-%   example.
-%
-%  REGRESSION TEST
-%
-%   To perform a regression test, enter 'RegressionTest' as the only input 
-%   argument.  If the data file is not in the path, this will perform as an 
-%   example.
+%   These tests were moved to jatTropoModel_test.m to conform to the new
+%   regression testing framework.
 %
 %   keyword: JAT Adapter, measurement model, atmosphere model
 %   See also JATGPSIONOMODEL
@@ -70,42 +63,25 @@ function [dRho, dE] = jatTropoModel(rho, elev, lambda, pressure, temp, relHumidi
 %   Kevin Berry         12/18/2008      Moved nargin checks out of the
 %                                       getdRhodE function so that the user
 %                                       can still pass in fewer inputs.
+%   Ravi Mathur         08/29/2012      Extracted regression test
 
-if strcmpi(rho,'ValidationTest')
 
-	dRho = jatTropoModel_validation_test();
-
-elseif strcmpi(rho,'RegressionTest')
-
-	dRho = jatTropoModel_regression_test();
-else
-
-    % Set defaults
-    if( nargin < 2 )
-        elev = pi/2;
-    end
-    if( nargin < 3 )
-        lambda = JATConstant('L1wavelength');
-    end
-    if( nargin < 4 )
-        pressure = 938; % hPa
-    end
-    if( nargin < 5 )
-        temp = 286; % deg K
-    end
-    if( nargin < 6 )
-        relHumidity = 0.73;
-    end
-
-    [dRho, dE] = getdRhodE(rho, elev, lambda, pressure, temp, relHumidity );
+% Set defaults
+if( nargin < 2 )
+    elev = pi/2;
 end
-
+if( nargin < 3 )
+    lambda = JATConstant('L1wavelength');
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Main function
-function[dRho, dE] = getdRhodE(rho, elev, lambda, pressure, temp, relHumidity )
+if( nargin < 4 )
+    pressure = 938; % hPa
+end
+if( nargin < 5 )
+    temp = 286; % deg K
+end
+if( nargin < 6 )
+    relHumidity = 0.73;
+end
 
 n = length(rho);
 m = length(elev);
@@ -124,138 +100,3 @@ for i=1:n
 end
 
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function failed = jatTropoModel_validation_test()
-% jatTropoModel_validation_test - jatTropoModel Validation Tests
-% 
-% This function validates the jatTropoModel function against the test case
-% contained in TropModel.java.
-%
-
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/04/2008	 	Original
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-failed = 0;
-tol = 1e-10;
-
-c = 299792458.0;
-L1_freq = 1575.42E+06;
-lambda = c / L1_freq;
-els = [1.0, 3.0, 5.0, 7.0, 10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 70.0, 90.0]*pi/180;
-p = 938.0;
-T = 286.0;
-fh = 0.73;
-rho = 1000000.0;
-
-[dRho, dE] = getdRhodE(rho, els, lambda, p, T, fh );
-
-disp(['Elevation (deg) ',...
-      ' Range Err (m)  ',...
-      'El Err (arcsec) '])
-
-disp(['----------------',...
-      '----------------',...
-      '----------------'])
-disp([els'*180/pi,dRho',dE'])
-
-
-if exist('jatTropoModelJatOutputs6_08.txt') == 2
-	disp(' ')
-	disp('Performing Validation...')
-	disp(' ')
-
-	% Load the JAT Tropo Model outputs
-	load jatTropoModelJatOutputs6_08.txt
-
-	format short e
-
-	Diff = jatTropoModelJatOutputs6_08(:,2:3) - [dRho',dE']
-
-	format short g
-
-	if any(any( abs(Diff) > tol )) |  any(any(isnan(Diff)))
-		failed = 1;
-	end
-
-else
-	failed = 1;
-end
-
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function failed = jatTropoModel_regression_test()
-% jatTropoModel_regression_test - jatTropoModel Validation Tests
-% 
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/05/2008	 	Original
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-failed = 0;
-tol = 1e-10;
-
-c = 299792458.0;
-L1_freq = 1575.42E+06;
-lambda = c / L1_freq;
-els = [1.0, 3.0, 5.0, 7.0, 10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 70.0, 90.0]*pi/180;
-p = 938.0;
-T = 286.0;
-fh = 0.73;
-rho = 1000000.0;
-
-[dRho, dE] = getdRhodE(rho, els, lambda, p, T, fh );
-
-disp(['Elevation (deg) ',...
-      ' Range Err (m)  ',...
-      'El Err (arcsec) '])
-
-disp(['----------------',...
-      '----------------',...
-      '----------------'])
-disp([els'*180/pi,dRho',dE'])
-
-
-if exist('jatTropoModelRegressionData6_08.mat') == 2
-	disp(' ')
-	disp('Performing Regression Test...')
-	disp(' ')
-
-	% Load the JAT Tropo Model outputs
-	load jatTropoModelRegressionData6_08
-
-	format short e
-
-	Diff = PreviousValues - [dRho',dE']
-
-	format short g
-
-	if any(any( abs(Diff) > tol )) |  any(any(isnan(Diff)))
-		failed = 1;
-	end
-
-else
-	failed = 1;
-end
-
-
-end
-
-
-

@@ -25,17 +25,10 @@ function Delay = jatChargedParticleModel(Ephem)
 %  Spacecraft," Ph.D. dissertation, The University of Texas at Austin, May 1995,
 %  pp. 27-30.
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, replace the satPos variable with 
-%  'ValidationTest' as the input argument.  If the data file is not in the path
-%  this will perform as an example.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, replace the Ephem structure with 
-%  'RegressionTest' as the input argument.  If the data file is not in the path
-%  this will perform as an example
+%   These tests were moved to jatChargedParticleModel_test.m to conform to
+%   the new regression testing framework.
 %
 %  keywords: JAT Adapter, delay
 %
@@ -63,30 +56,7 @@ function Delay = jatChargedParticleModel(Ephem)
 %  Keith Speckman       06/09/2008   	Original
 %  Kevin Berry          06/22/2009      Corrected the help to specify the
 %                                       input time scale of UTC  
-
-
-% Determine whether this is an actual call to the program or a test
-
-if strcmpi(Ephem,'ValidationTest')
-
-	Delay = jatChargedParticleModel_validation_test();
-
-elseif strcmpi(Ephem,'RegressionTest')
-
-	Delay = jatChargedParticleModel_regression_test();
-
-else
-
-	Delay = getDelay(Ephem);
-
-end
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Main function
-function Delay = getDelay(Ephem)
+%   Ravi Mathur         08/29/2012      Extracted regression test
 
 % Determine size of output
 N = size(Ephem.satPos,2);
@@ -122,107 +92,3 @@ for n = 1:N
 end
 
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% jalChargedParticleModel_validation_test - Validation Tests
-%
-% tests against output from directly from java as well as testing multiple satellites
-
-function failed = jatChargedParticleModel_validation_test()
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/09/2008	 	Original
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-% Case 1 - test against Jat
-Ephem.satPos = [2.056020937918350   1.411064433075980   0.160945891394200]'*1e7;
-Ephem.Epoch = datenum('June 9, 2008');
-Ephem.SignalFreq = 1.6e9;
-
-% from JAT's ChargedParticleModel.main() output: 0.0016458877075534145 % (m)
-Delay = getDelay(Ephem);
-
-tol = 1e-10;
-failed = 0;
-
-Diff = Delay - 0.0016458877075534145 %#ok<NOPRT>
-
-if any( abs(Diff) > tol ) || any(isnan(Diff))
-    failed = 1;
-end
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% jalChargedParticleModel_regression_test - jatChargedParticlModel Regression Tests
-%
-% tests output against previous values
-
-function failed = jatChargedParticleModel_regression_test()
-
-%   REVISION HISTORY
-%   Author      		Date         	Comment
-%               	   (MM/DD/YYYY)
-%   Keith Speckman         06/09/2008	 	Original
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-% Case 1 - test against Jat
-Ephem.satPos = [2.056020937918350   1.411064433075980   0.160945891394200]'*1e7;
-Ephem.Epoch = datenum('June 9, 2008');
-Ephem.SignalFreq = 1.6e9;
-
-% from JAT's ChargedParticleModel.main() output: 0.0016458877075534145 (m)
-Delay(1) = getDelay(Ephem); 
-
-% Case 2 - test multiple satellites, multiple epochs and frequencies
-Ephem.satPos = [[2.056020937918350   1.411064433075980   0.160945891394200]'*1e7,...
-               2*[2.056020937918350   1.411064433075980   0.160945891394200]'*1e7];
-Ephem.Epoch = [datenum('June 9, 2008'),datenum('June 10, 2008')];
-Ephem.SignalFreq = [1.6e9,1.8e9];
-
-Delay(2:3) = getDelay(Ephem);
-
-% Case 2 - test multiple satellites, single epoch and frequency
-Ephem.satPos = [[2.056020937918350   1.411064433075980   0.160945891394200]'*1e7,...
-               2*[2.056020937918350   1.411064433075980   0.160945891394200]'*1e7];
-Ephem.Epoch = datenum('June 9, 2008');
-Ephem.SignalFreq = 1.6e9;
-
-Delay(4:5) = getDelay(Ephem) %#ok<NOPRT>
-
-% uncomment to correct regression data:
-%PreviousDelay = Delay;
-%save jatCPM_RegressionData6_08 PreviousDelay
-
-tol = 1e-10;
-failed = 0;
-if exist('jatCPM_RegressionData11_10.mat') == 2
-	disp(' ')
-	disp('Performing Regression Test...')
-	disp(' ')
-
-	% Load regression values
-	load jatCPM_RegressionData11_10
-
-	Diff = Delay - PreviousDelay %#ok<NOPRT>
-
-	if any( abs(Diff) > tol ) || any(isnan(Diff))
-		failed = 1;
-	end
-else
-	failed = 1;
-end
-
-
-end
-

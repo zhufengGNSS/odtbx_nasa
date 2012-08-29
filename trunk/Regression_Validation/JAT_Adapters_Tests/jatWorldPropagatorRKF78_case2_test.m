@@ -37,6 +37,8 @@ function [f,failed]=jatWorldPropagatorRKF78_regression
 %                                       and when. Added print of when test 
 %                                       data was generated.
 %                                       Added pass/fail printout.
+%   Ravi Mathur         08/29/2012      Renamed to conform to new
+%                                       regression testing format
 
 failed = zeros(2,1);
 load DataFiles/jatWorldPropagatorRKF78_regression_data

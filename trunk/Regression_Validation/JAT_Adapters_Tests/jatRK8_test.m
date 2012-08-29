@@ -1,6 +1,6 @@
 
 %
-% jatRK8_regression
+% jatRK8_test
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -27,7 +27,7 @@
 %
 
 % Begin function.
-function [failed] = jatRK8_regression
+function [failed] = jatRK8_test
 
     % Default to 'pass'.
     failed = 0;

@@ -27,7 +27,7 @@
 %
 
 % Begin function.
-function [failed] = jatForces_regression
+function [failed] = jatForces_test
 
     failed = 0;
 
@@ -140,63 +140,63 @@ function [failed] = jatForces_regression
     
     % deriv check based on the same initial state and time:
     if(max(max(abs(R_km(1,:) - R_m(1,:)))) > 1e-15)
-        warning('jatForces_regression: km and m results mismatch.');
+        warning('jatForces_test: km and m results mismatch.');
         failed = 1;
     end
     
     % deriv check over the entire two trajectories
     if(max(max(abs(R_km - R_m))) > 3e-5)
-        warning('jatForces_regression: km and m results mismatch.');
+        warning('jatForces_test: km and m results mismatch.');
         failed = 1;
     end
     
     if(max(max(abs(R_m_store - R_m))) > 1e-8)
-        warning('jatForces_regression: meters state results do not match stored data.');
+        warning('jatForces_test: meters state results do not match stored data.');
         failed = 1;
     end
     
     if(max(abs(t_m_store - t_m)) > 1e-15)
-        warning('jatForces_regression: meters time results do not match stored data.');
+        warning('jatForces_test: meters time results do not match stored data.');
         failed = 1;
     end
     
     if(max(max(abs(R_km_store - R_km))) > 2e-9)
-        warning('jatForces_regression: km state results do not match stored data.');
+        warning('jatForces_test: km state results do not match stored data.');
         failed = 1;
     end
     
     if(max(abs(t_km_store - t_km)) > 1e-15)
-        warning('jatForces_regression: km time results do not match stored data.');
+        warning('jatForces_test: km time results do not match stored data.');
         failed = 1;
     end
     
     if(max(abs(Rdot_m_store - Rdot_m)) > 1e-15)
-        warning('jatForces_regression: meters derivs results do not match stored data.');
+        warning('jatForces_test: meters derivs results do not match stored data.');
         failed = 1;
     end
     
     if(max(abs(Rdot_km_store - Rdot_km)) > 1e-15)
-        warning('jatForces_regression: km derivs results do not match stored data.');
+        warning('jatForces_test: km derivs results do not match stored data.');
         failed = 1;
     end
     
     if(max(max(abs(A_m_store - A_m))) > 1e-15)
-        warning('jatForces_regression: meters STM results do not match stored data.');
+        warning('jatForces_test: meters STM results do not match stored data.');
         failed = 1;
     end
     
     if(max(max(abs(Q_m_store - Q_m))) > 1e-24)
-        warning('jatForces_regression: meters Q matrix results do not match stored data.');
+        warning('jatForces_test: meters Q matrix results do not match stored data.');
         failed = 1;
     end
     
     if(max(max(abs(A_km_store - A_km))) > 1e-15)
-        warning('jatForces_regression: km STM results do not match stored data.');
+        warning('jatForces_test: km STM results do not match stored data.');
         failed = 1;
     end
     
     if(max(max(abs(Q_km_store - Q_km))) > 1e-24)
-        warning('jatForces_regression: km Q matrix results do not match stored data.');
+        warning('jatForces_test: km Q matrix results do not match stored data.');
         failed = 1;
     end
     

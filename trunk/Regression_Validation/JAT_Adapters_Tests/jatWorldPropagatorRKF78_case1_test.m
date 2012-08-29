@@ -1,4 +1,4 @@
-function failed = jatWorldPropagatorRKF78_test()
+function failed = jatWorldPropagatorRKF78_case1_test()
 % Regression Test Case
 % Function(s) jatWorldPropagatorRKF78, jatForces, createJatWorld
 %
@@ -19,6 +19,12 @@ function failed = jatWorldPropagatorRKF78_test()
 % You should have received a copy of the NASA Open Source Agreement along
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+%  REVISION HISTORY
+%   Author      		Date         	Comment
+%
+%   Ravi Mathur         08/29/2012      This test fails, and needs to be
+%                                       fixed or removed pending CCB.
 
 failed      = 0;
 tol         = 1e-6;

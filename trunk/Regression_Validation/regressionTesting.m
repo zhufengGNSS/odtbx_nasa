@@ -3,8 +3,8 @@ function regressionTesting(varargin)
 % REGRESSIONTESTING - ODTBX Regression Test Driver
 %
 % This script runs a pre-defined set of test cases on the ODTBX codebase.
-% The tests can be external or built-in tests.  The results (pass, fail,
-% or broken) are collected and written to a hard-coded log file.  
+% The results (pass, fail, or broken) are collected and written to a 
+% hard-coded log file.  
 %
 % Additional information can be appended to these results, if desired.
 %
@@ -67,122 +67,144 @@ function regressionTesting(varargin)
 %                                            added HermiteInterpolator_regression_java test
 % Modified 15 Oct 2010 Allen Brown - Reorganized by release (again)
 % Modified Mar-Apr 2011 Allen Brown - Added Release 4.5 tests.
+% Modified 29 Aug 2012 Ravi Mathur - Overhaul regression testing framework.
+%                                    See Mantis 416/432 for more info.
 
 % Regression Test Cases are described in the headers of the individual test case files.
 
 close all
 clc
 
-% Cell array list of test case ODTBX MATLAB function names and any 
-% required function arguments.  They are run with one output argument,
-% as in "failed = eval(testCases{i})".  Each is required to return 0
-% if the case passed, and a 1 if the case failed.
+% As of release 5.0 (ODTBX 2012a), a new regression testing framework
+% has been adopted. Each regression test MUST have a suffix of "_test",
+% and must return 0 if it passed or 1 if it failed.
+%
+% Example: To add a regression test with the call
+%   
+%   failed = foo_test('Regression')
+% 
+% add the name and argument list as two cells in the testCases array. i.e.,
+%
+%   testCases = {
+%     ...
+%     'foo', '''Regression'''
+%     ...
+%   };
+%
+% Note the exclusion of the trailing "_test" from the name; it is
+% automatically added to enforce the regression test naming convention.
+% For empty function arguments, the second cell should be '' (empty string).
+%
+% The test function should be contained in foo_test.m inside the 
+% Regression_Validation subdirectory. Multiple versions of a test can be
+% handled by varying the test name, e.g. foo_1_test, foo_2_test, etc.
+
 testCases = {
     % Release 5.0
-        'gasdyn_test'
-        'opt_sched_test'
-        'initialize_cov_test'
-        'estpar_test'
-        'sensmos_test'
-        'fixzoom_test'
-        'gpspseudomeas_test'
-        'clk_all_test'
-        'nbody_test'
-        'restartrecord_test(''SRIF'')'
-        'polydyn_test'
-        'integ_test'
-        'integev_test'
+        'gasdyn', ''
+        'opt_sched', ''
+        'initialize_cov', ''
+        'estpar', ''
+        'sensmos', ''
+        'fixzoom', ''
+        'gpspseudomeas', ''
+        'clk_all', ''
+        'nbody', ''
+        'restartrecord', '''SRIF'''
+        'polydyn', ''
+        'integ', ''
+        'integev', ''
     % Release 4.5
-        'compValsTol_test'
-        'FilterGpsCnoThresh_test'
-        'FilterGpsExplicitTimes_test'
-        'FilterGpsTimeWindow_test'
-        'FilterGpsPrn_test'
-        'FilterGpsBlock_test'
-        'FilterGpsMulti_test'
-        'FilterPpEl_test'
-        'FilterPpExplicitTimes_test'
-        'FilterEstCnoThresh_test'
-        'gpslinkbudget_test'
-        'gps_est_cno_test'
-        'gps_gain_test'
-        'slerp_test'
-        'gps_phys_params_test'
-        'RinexOReader_test'
-        'rinexo2gpsdata_test'
-        'gpsenh_vs_gpsmeas_test'
-        'fgprop_test'
-        'opnavmeas_test'
-        'opnavmeas_test(''CCD'')'
+        'compValsTol', ''
+        'FilterGpsCnoThresh', ''
+        'FilterGpsExplicitTimes', ''
+        'FilterGpsTimeWindow', ''
+        'FilterGpsPrn', ''
+        'FilterGpsBlock', ''
+        'FilterGpsMulti', ''
+        'FilterPpEl', ''
+        'FilterPpExplicitTimes', ''
+        'FilterEstCnoThresh', ''
+        'gpslinkbudget', ''
+        'gps_est_cno', ''
+        'gps_gain', ''
+        'slerp', ''
+        'gps_phys_params', ''
+        'RinexOReader', ''
+        'rinexo2gpsdata', ''
+        'gpsenh_vs_gpsmeas', ''
+        'fgprop', ''
+        'opnavmeas', ''
+        'opnavmeas', '''CCD'''
     % Release 4.0
-        'HermiteInterpolator_test'
-        'HermiteInterpolator_java_test'
-        'xnavmeas_test'
-        'testMeasPartials_test'
-        'restartrecord_test'
-        'comp_bs_3d_test'
+        'HermiteInterpolator', ''
+        'HermiteInterpolator_java', ''
+        'xnavmeas', ''
+        'testMeasPartials', ''
+        'restartrecord', ''
+        'comp_bs_3d', ''
     % Release 3.5
-        'gsCoverage_test'
-        'estsrif_test'
+        'gsCoverage', ''
+        'estsrif', ''
     % Release 3.0
-        'LOSRange_test'
-        'LOSRangeRate_test'
-        'LOSDoppler_test'
-        'lightTimeCorrection_test'
-        'rrdotlt_test'
-        'srpAccel_test(''RegressionTest'')'
-        'ttdelay_test(''RegressionTest'')'
-        'stationData_test(''RegressionTest'')'
-        'staEarthTide_test(''RegressionTest'')'
-        'EarthOrbitPlot_test'
-        'relativityLightDelay_test(''RegressionTest'')'
-        'tdrssmeas_test'
-        'lnrmeas_test(''RegressionTest'')'
-        'kepprop2b_test'
-        'ddormeas_test'
-        'kep2cart_test'
-        'dataCache_test'
-        'estspf_test'
-        'varpiles_test'
-        'covmake_test'
-        'gpsmeas_testdriver_test'
-        'estbat_no_proc_noise_test'
-        'estval_test'
-        'editflag_test'
+        'LOSRange', ''
+        'LOSRangeRate', ''
+        'LOSDoppler', ''
+        'lightTimeCorrection', ''
+        'rrdotlt', ''
+        'srpAccel', '''RegressionTest'''
+        'ttdelay', '''RegressionTest'''
+        'stationData', '''RegressionTest'''
+        'staEarthTide', '''RegressionTest'''
+        'EarthOrbitPlot', ''
+        'relativityLightDelay', '''RegressionTest'''
+        'tdrssmeas', ''
+        'lnrmeas', '''RegressionTest'''
+        'kepprop2b', ''
+        'ddormeas', ''
+        'kep2cart', ''
+        'dataCache', ''
+        'estspf', ''
+        'varpiles', ''
+        'covmake', ''
+        'gpsmeas_testdriver', ''
+        'estbat_no_proc_noise', ''
+        'estval', ''
+        'editflag', ''
   %      'plot_ominusc'
-  %      'montecarloseed_test'
-        'updatevectorized_test'
-        'estbat_tspan_test'
+  %      'montecarloseed', ''
+        'updatevectorized', ''
+        'estbat_tspan', ''
     % Release 2.0
-        'gsmeas_test'
-        'odtbxOptions_test'
-        'rrdotang_test'
-        'kepel_test'
+        'gsmeas', ''
+        'odtbxOptions', ''
+        'rrdotang', ''
+        'kepel', ''
     % JAT_Adapters
-        'convertTime_test'
-        'createJATWorld_test'
-        'ecef2LLA_test(''RegressionTest'')'
-        'ephemDE405_test'
-        'getGroundStationInfo_test'
-        'getIndex_test'
-        'JATConstant_test'
-        'jatDCM_test'
-        'jatHCW_test'
-    %    'jatWorldPropagatorRK4_test'
-    %    'jatWorldPropagatorRK8_test'
-    %    'jatWorldPropagatorRKF78_test'
-        'jatTropoModel_test(''RegressionTest'')'
-        'matlabTimeJDMJD_test'
-        'LLA2ecef_test(''RegressionTest'')'
-        'jatStaAzEl_test(''RegressionTest'')'
-        'jatIonoDelayModel_test(''RegressionTest'')'
-        'jatIonoDelayModel_test(''ValidationTest'')' % independent validation check
-        'jatChargedParticleModel_test(''RegressionTest'')'
-        'getIERSTimes_test'
-        'jatWorldPropagatorRKF78_case2_test'
-        'jatRK8_test'
-        'jatRK8_time_io_test'
-        'jatForces_test'
+        'convertTime', ''
+        'createJATWorld', ''
+        'ecef2LLA', '''RegressionTest'''
+        'ephemDE405', ''
+        'getGroundStationInfo', ''
+        'getIndex', ''
+        'JATConstant', ''
+        'jatDCM', ''
+        'jatHCW', ''
+    %    'jatWorldPropagatorRK4', '''
+    %    'jatWorldPropagatorRK8', '''
+    %    'jatWorldPropagatorRKF78', '''
+        'jatTropoModel', '''RegressionTest'''
+        'matlabTimeJDMJD', ''
+        'LLA2ecef', '''RegressionTest'''
+        'jatStaAzEl', '''RegressionTest'''
+        'jatIonoDelayModel', '''RegressionTest'''
+        'jatIonoDelayModel', '''RegressionTest''' % independent validation check
+        'jatChargedParticleModel', '''RegressionTest'''
+        'getIERSTimes', ''
+        'jatWorldPropagatorRKF78_case2', ''
+        'jatRK8', ''
+        'jatRK8_time_io', ''
+        'jatForces', ''
     % Release 1.0
     %     'estbat_001'
     %     'estbat_002'
@@ -193,8 +215,8 @@ testCases = {
     %     'estseq_004'
     %     'estseq_005'
     %     'estseq_006'
-        'estbat_test'
-        'estseq_test'
+        'estbat', ''
+        'estseq', ''
     };
 
 brokenTests = {}; % cell array of the names and run name of all broken tests
@@ -362,37 +384,45 @@ results = 0;
 passedTests = {};
 failedTests = {};
 brokenTests = {};
+numTests = length(testCases);
 
-for i=1:length(testCases)
+for i=1:numTests
     
-    try
-        disp(sprintf('\nRunning %s.m %s...',testCases{i},localrunName));
-        failed = eval(testCases{i});
-        disp(sprintf('Done!\n'));
+    try        
+        % Run regression test (with arguments if necessary)
+        if isempty(testCases{i,2})
+            fprintf('\nRunning test %i of %i: %s_test() %s...\n',i,numTests,testCases{i,1},localrunName);
+            failed = eval([testCases{i,1}, '_test()']);
+        else
+            fprintf('\nRunning test %i of %i: %s_test(%s) %s...\n',i, numTests,testCases{i,1},testCases{i,2},localrunName);
+            failed = eval([testCases{i,1}, '_test(', testCases{i,2}, ')']);
+        end
+        
+        disp('Done!');
 
         % check that the test results conform to the interface
         if length(failed) > 1
             error('%s %s returned an incorrect result to the regression harness: length()=%d',...
-                testCases{i},localrunName,length(failed));
+                testCases{i,1},localrunName,length(failed));
         end
 
         if ~((failed == 1) || (failed == 0))
             error('%s %s returned an incorrect result to the regression harness: failed=%d',...
-                testCases{i},localrunName,failed);
+                testCases{i,1},localrunName,failed);
         end
         
         results = results + failed;
         if (failed);
             failedTests{end+1} = strcat(testCases{i},localrunName);
-            disp(sprintf('Failed!\n'));
+            disp('Failed!');
         else
             passedTests{end+1} = strcat(testCases{i},localrunName);
-            disp(sprintf('Passed!\n'));
+            disp('Passed!');
         end
 
     catch
         results = results + 1;
-        brokenTests{end+1,1} = strcat(testCases{i},localrunName);
+        brokenTests{end+1,1} = strcat(testCases{i,1},localrunName);
         brokenTests{end,2} = lasterror;
     end
     

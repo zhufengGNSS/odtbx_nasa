@@ -1,7 +1,8 @@
 function [c_shad] = getBodyShadow(Epoch,satPos,ShadowBodies,aunit)
-% getBodyShadow Determine whether any of the specified celestial bodies is 
-% shadowing the spacecraft. This function was extracted from srpAccel.m
-% in order to make it available to the regression/validation tests.
+% Determine whether any of the specified celestial bodies is shadowing the spacecraft.
+
+% getBodyShadow This function was extracted from srpAccel.m in order to 
+% make it available to the regression/validation tests.
 %
 % See also: srpAccel.m
 %

@@ -1,3 +1,5 @@
+% Demo showing how to compute observability and perform batch least squares estimation.
+
 %% Pancake Demo
 %  This demo shows how to compute observability and perform batch least
 %  squares estimation with ODTBX. A planar two-body orbit is propagated 

@@ -1,3 +1,5 @@
+% Demo showing the estimation of relative position in a chaser-target situation.
+
 %% Chaser-Target Demo
 % This demo shows the estimation of relative position in a chaser-target
 % situation, using measurements and gps on the chaser.

@@ -1,6 +1,6 @@
 function [y H R] = dualIADat(t,x,options)
 % dualIADat Data file for chaser_target_demo example.
-%
+
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
 %  more details.)

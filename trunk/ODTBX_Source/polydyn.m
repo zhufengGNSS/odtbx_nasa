@@ -1,6 +1,8 @@
 function [xdot A Q] = polydyn(t,x,options)
-% POLYDYN  Force model for exterior gravitation of a polyhedron.  Based on
-% the algorithm presented in "Exterior Gravitation of a Polyhedron Derived
+% Force model for exterior gravitation of a polyhedron.
+
+% POLYDYN
+% Based on the algorithm presented in "Exterior Gravitation of a Polyhedron Derived
 % and Compared with Harmonic and Mascon Gravitation Representations of
 % Asteroid 4769 Castalia," R. Werner & D. Scheeres, 1996.
 %

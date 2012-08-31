@@ -1,4 +1,6 @@
 function editratio_test
+    % Specify the initial reference state.
+    
     % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
     %  distributed under the NASA Open Source Agreement.  See file source for
     %  more details.)
@@ -17,7 +19,6 @@ function editratio_test
     % with this program (in a file named License.txt); if not, write to the 
     % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
-    % Specify the initial reference state.
     %
     % sma  = 12345.6  km
     % ecc  =     0.46

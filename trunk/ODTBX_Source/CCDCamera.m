@@ -1,4 +1,6 @@
 classdef CCDCamera < Camera
+    % Extends Camera to include CCD pixel mapping and distortion effects.
+    
     %CCDCAMERA Class extends the Camera onboard imaging device model to
     %include CCD pixel mapping and distortion effects.
     %

@@ -1,3 +1,5 @@
+% Demo showing how to compute observability using estbat.
+
 %% Batch (3 Ground Stations) Demo
 % This demo shows how to compute observability using the ODTBX function
 % estbat. Three ground stations are used to observe the spacecraft, which

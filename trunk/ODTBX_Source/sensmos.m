@@ -1,4 +1,6 @@
 function varargout = sensmos(t,Sig_sa)
+% Sensitivity Mosaic Plot: A Checkerboard plot of the sensitivity matrix.
+
 % SENSMOS(T,SIG_SA) plots a "sensitivity mosaic," which is a checkerboard
 % plot of the sensitivity matrix, SIG_SA.  The sensitivity is plotted at
 % the final time in the vector T.  A slider allows the user to scroll to

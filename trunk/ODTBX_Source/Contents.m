@@ -5,13 +5,19 @@
 %   alm_pos_az_el            - Calculates GPS SV antenna azimuth and elevation for a given receiver state.
 %   Attitude                 - Class to store spacecraft attitude information
 %   Body                     - Class representing a simple solar system body (i.e. planet, asteroid, comet, etc.)
-%   calc_JulianCenturies2000 - Compute the time in Julian Centuries since the ephemeris epoch of 2000
 %   calc_obliquity           - Compute Earth obliquity of the ecliptic
+%   calc_JulianCenturies2000 - Compute the time in Julian Centuries since the ephemeris epoch of 2000
+%   cameradyn                - Models dynamics for camera calibration parameters
 %   Camera                   - Class to model an onboard imaging device used for optical navigation
+%   CCDCamera                - Extends Camera to include CCD pixel mapping and distortion effects.
 %   chi2cdf_odtbx            - ODTBX version of chi2cdf
 %   chi2inv_odtbx            - ODTBX version of chi2inv
 %   chi2pdf_odtbx            - ODTBX version of chi2pdf
 %   chkestopts               - Check some of the estimator options for consistency
+%   clkdyn2                  - A 2-state clock error dynamics model.
+%   clkdyn3                  - A 3-state clock error dynamics model.
+%   clkprop2                 - A 2-state clock error propagator.
+%   clkprop3                 - A 3-state clock error propagagor.
 %   compValsTol              - Compares values using a tolerance.
 %   comp_bs_3d               - Computes unit vectors describing antenna boresite 
 %   copyGpsMetaData          - Copies the metadata from a GPS data structure into a blank GPS data structure.
@@ -28,11 +34,13 @@
 %   editmeas                 - Measurement editing - scalar or vector
 %   errellip                 - 2-D and 3-D Error Ellipse plotter.
 %   estbat                   - Batch Estimator.
+%   estpar                   - Particle Filter Estimator.
 %   estseq                   - Sequential Estimator.
 %   estspf                   - Sigma-Point Filter. 
 %   estsrif                  - Square-Root Information Filter (SRIF)
 %   estval                   - Evaluation of estimator outputs (plotting).
 %   fgprop                   - Lagrangian two-body propagation.
+%   fixzoom                  - Fixes the zoom function so that zero stays in view when vertically zooming.
 %   FilterEstCnoThresh       - Filters GPS data structs against an estimated C/No threshold.
 %   FilterGpsBlock           - A FilterGpsData class for filtering GPS measurement data by GPS block
 %   FilterGpsCnoThresh       - A FilterGpsData class for filtering GPS measurement data via a C/No
@@ -44,11 +52,14 @@
 %   FilterPpData             - An abstract class for filtering GPS physical parameter data from gps_phys_params.
 %   FilterPpEl               - A FilterPpData class for filtering GPS physical parameter data on antenna
 %   FilterPpExplicitTimes    - A FilterPpData class for filtering GPS physical parameter by time.
+%   gasdyn                   - Simulates comet outgassing forces
 %   getgpsmeas               - Computes physical parameters required for GPS based measurements 
+%   getBodyShadow            - Determine whether any of the specified celestial bodies is shadowing the spacecraft.
 %   getOdtbxOptions          - Get Adaptor OPTIONS parameters.
 %   getPulsarData            - Retrieves pulsar data for use by XNAVMEAS
 %   gpslinkbudget            - Calculates the GPS transmitter-receiver link budget.
 %   gpsmeas                  - Makes GPS based measurements using dynamic C/No tracking threshold
+%   gpspseudomeas            - Creates GPS pseudo-measurements (one-way measurements) biased by onboard clock errors.
 %   gps_est_cno              - Calculates the estimated carrier to noise ratio from physical parameters and link budget data.
 %   gps_gain                 - Calculates antenna gains from GPS physical parameters, CN0, and link budget data.
 %   gps_phys_params          - Creates GPS physical parameter data sets from GPS measurements.
@@ -56,14 +67,17 @@
 %   gsmeas                   - Makes ground station based measurements.
 %   HermiteInterpolator      - Interpolates based on modified divided difference.
 %   impulsiveBurn            - Impulsive Maneuver (for RESTARTRECORD).
+%   initialize_cov           - Calculates an initial covariance matrix.
+%   initialize_nbody         - Initializes and validates inputs for NBODYPM
 %   integ                    - Integration of state, and possibly STM and process noise.
+%   integev                  - Integration of state, and possibly STM, etc. w/event handling.
 %   kalmup                   - Kalman update with sigma-edit.
 %   kep2cart                 - Convert Keplerian orbital elements to cartesian states.
 %   kepanom                  - Solves for one angle of anomaly given another using Kepler's Equation
 %   kepel                    - Compute Keplerian orbital elements from Cartesian states.
 %   kepprop2b                - Propagates Keplerian elements using 2-body dymanics
 %   lightTimeCorrection      - Calculates light time corrections including optional environmental delays
-%   lincov_kf                - Linear covariance analysis for Kalman Filter
+%   lincov_kf                - Linear covariance analysis for Kalman Filter.
 %   lnrmeas                  - Makes Lunar Relay based measurements.
 %   LOSDoppler               - Line of sight instantaneous doppler between two objects
 %   LOSRange                 - Line of sight range measurement between two objects
@@ -72,10 +86,12 @@
 %   makeGpsData              - Creates a blank GPS data structure for holding raw GPS measurements.
 %   makeGpsTXID              - Creates a blank data structure for describing a GPS transmitter.
 %   makePpData               - Creates a blank data structure for holding GPS physical parameters.
+%   nbodypm                  - N-Body Point Mass dynamics equations.
 %   observ                   - Observability grammian, and possibly mapped innovations.
 %   odtbxOptions             - Returns a valid ODTBX options structure of the input type 
 %   ominusc                  - Innovations, meas. partials, and possibly innovation covariance.
 %   opnavmeas                - Simulates measurements from optical landmark tracking.
+%   opt_sched                - Calculates the sensitivities of a measurement schedule.
 %   plot_est_cno             - Plots the estimated Carrier to Noise ratio from gps_est_cno vs time.
 %   plot_gps_cno             - Plots the raw GPS signal to noise ratio vs time.
 %   plot_gps_gain_2d         - Plots the gain from gps_gain vs azimuth and elevation angles (2D plots).
@@ -85,6 +101,7 @@
 %   plot_gps_pp_rrdot        - Plots the range and range rate physical parameters from gps_phys_params vs time.
 %   plot_gps_prange          - Plots the raw GPS pseudorange vs time.
 %   plot_ominusc             - Plots the observed measurement minus the computed
+%   polydyn                  - Force model for exterior gravitation of a polyhedron.
 %   q2dcm                    - Converts from a quaternion [vector;scalar] to a direction cosine matrix
 %   read_spephem             - Read in SP Ephemeris formatted ASCII text file
 %   read_stkephem            - Read in STK Ephemeris (formatted ASCII text file)
@@ -96,6 +113,7 @@
 %   rrdotang                 - Calculate range, range rate, doppler, angles between two objects.
 %   rrdotlt                  - Calls rrdotang with the light time correction
 %   scrunch                  - "Vectorize" a square symmetric matrix.
+%   sensmos                  - Sensitivity Mosaic Plot: A Checkerboard plot of the sensitivity matrix.
 %   setOdtbxOptions          - Create/alter OPTIONS structure.
 %   sigextract               - Extract standard deviations from "scrunched" covariances.
 %   slerp                    - Interpolates between two quaterntions (uniform angular velocity, fixed axis).
@@ -112,3 +130,4 @@
 %   varpiles                 - Variance Sandpiles.
 %   xmat                     - Cross-product matrix for arrays of vectors.
 %   xnavmeas                 - Calculates spacecraft to distant RSO range difference & range difference rate measurements. 
+

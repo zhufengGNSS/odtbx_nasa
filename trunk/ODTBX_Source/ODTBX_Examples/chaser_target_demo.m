@@ -234,3 +234,5 @@ end
 titlestr = 'Relative Position Variance Sandpile [km^2]';
 title(titlestr)
 xlabel('Elapsed Time [s]')
+
+echo off

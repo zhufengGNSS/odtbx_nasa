@@ -256,8 +256,10 @@ if exist('jatBytecodePath','var') && ~isempty(jatBytecodePath)
 end
 
 % Set Matlab paths for GMAT
-addpath(fullfile(gmatPath,'bin'));
-addpath(fullfile(gmatPath,'matlab','libCInterface'));
+if exist(gmatPath)
+    addpath(fullfile(gmatPath,'bin'));
+    addpath(fullfile(gmatPath,'matlab','libCInterface'));
+end
 
 if(startuptype == 1)
     % Recursively generate a path string containing the ODTBX_Data directory

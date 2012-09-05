@@ -1,3 +1,31 @@
+function failed = nbodypm_test()
+% NBODYPM_TEST  Regression test for nbodypm function.
+% See also: nbodypm.m
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+% Modification History
+% ---------------------
+% Author                  Date         	Comment
+% Kevin Berry          08/14/2012    Created.
+% Ravi Mathur          09/05/2012    Created from nbodypm_validation.m
+
 cspice_kclear; %Unloads the kernels
 
 %% Load the default kernels
@@ -18,12 +46,12 @@ x0 = [-14816.738456485748
 tspan = 0:10:86400*30;
 
 %% Test Run #1, Earth Centered with r2bp
-disp('r2bp')
+disp('Test r2bp...')
 tic
 [~,x1a] = integ(@r2bp,tspan,x0,[],mu_cb);
 toc
 
-disp('nbodypm')
+disp('Test nbodypm...')
 CentralBody = 'Earth';
 PointMasses = [];
 nbodyopt = odtbxOptions('force');
@@ -42,7 +70,7 @@ title('Comparison of nbodypm with r2pb Earth Centered');
 xlabel('Time (days)');ylabel('RSS errors (Km)');
 
 %% Test Run #2, Earth Centered with jatForces_km
-disp('jatForces_km')
+disp('Test jatForces_km...')
 
 eOpts = odtbxOptions('estimator');
 eOpts = setOdtbxOptions(eOpts,'OdeSolver',@ode113,'OdeSolvOpts',...
@@ -80,7 +108,7 @@ title('Comparison of nbodypm with jatForces Earth Centered');
 xlabel('Time (days)');ylabel('RSS errors (Km)');
 
 %% Test Run #3, Earth Centered with STK
-disp('STK')
+disp('Test STK...')
 
 [~,x3a] = read_stkephem('NbodyCheck1.e');
 
@@ -123,7 +151,7 @@ x0 = [-43440452.721443251
 tspan = 0:10:86400*30;
 
 %% Test Run #4, Sun Centered with r2bp
-disp('r2bp')
+disp('Test r2bp...')
 tic
 [~,x4a] = integ(@r2bp,tspan,x0,[],mu_cb);
 toc
@@ -147,7 +175,7 @@ title('Comparison of nbodypm with r2pb Sun Centered');
 xlabel('Time (days)');ylabel('RSS errors (Km)');
 
 %% Test Run #5, Sun Centered with STK
-disp('STK')
+disp('Test STK...')
 
 [~,x5a] = read_stkephem('NbodyCheck2.e');
 
@@ -194,7 +222,7 @@ x0 = kep2cart(kep1,mu_cb);
 tspan = 0:10:86400*30;
 
 %% Test Run #6, Jupiter Centered with r2bp
-disp('r2bp')
+disp('Test r2bp...')
 tic
 [~,x6a] = integ(@r2bp,tspan,x0,[],mu_cb);
 toc
@@ -216,3 +244,10 @@ figure
 plot(tspan./86400,sqrt(sum((x6b(1:3,:)-x6a(1:3,:)).^2)),'b');
 title('Comparison of nbodypm with r2pb Jupiter Centered');
 xlabel('Time (days)');ylabel('RSS errors (Km)');
+
+% Never fails explicitely; may fail if an intermediate call hard exits
+% This should be modified in the future after determining a good way
+% to compute whether each intermediate test fails or not.
+failed = 0;
+
+end

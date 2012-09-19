@@ -22,7 +22,7 @@ function varargout = meas_sched_mock_kenny(varargin)
 
 % Edit the above text to modify the response to help meas_sched_mock_kenny
 
-% Last Modified by GUIDE v2.5 17-Sep-2012 16:04:13
+% Last Modified by GUIDE v2.5 18-Sep-2012 11:05:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,11 +60,14 @@ guidata(hObject, handles);
 
 % Link all the axes
 linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4], 'y')
-linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5], 'x')
+linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.meas_total], 'x')
 
 % Set the size of the axes (will replace with dates)
 set(handles.axes1,'XLim',[0 10])
 set(handles.axes1,'YLim',[0 1])
+
+% Set default add/remove measurements state to "add"
+assignin('base', 'meas_add_remove', 0);
 
 % UIWAIT makes meas_sched_mock_kenny wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -94,27 +97,13 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % set(visa1, 'parent', handles.axes1);
 % set(visa2, 'parent', handles.axes1);
 % 
-% % Measurements
-% measa1 = rectangle('Position',[1.5,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measa2 = rectangle('Position',[2.5,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measa3 = rectangle('Position',[5.5,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measa4 = rectangle('Position',[6.5,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% set(measa1, 'parent', handles.axes1);
-% set(measa2, 'parent', handles.axes1);
-% set(measa3, 'parent', handles.axes1);
-% set(measa4, 'parent', handles.axes1);
-% 
+
 % % Axes2
 % % Visibility
 % visb1 = rectangle('Position',[3,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
 % set(visb1, 'parent', handles.axes2);
 % 
-% % Measurements
-% measb1 = rectangle('Position',[3.25,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measb2 = rectangle('Position',[4.5,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% set(measb1, 'parent', handles.axes2);
-% set(measb2, 'parent', handles.axes2);
-% 
+
 % % Axes3
 % % Visibility
 % visc1 = rectangle('Position',[.5,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
@@ -123,28 +112,11 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % set(visc1, 'parent', handles.axes3);
 % set(visc2, 'parent', handles.axes3);
 % set(visc3, 'parent', handles.axes3);
-% 
-% % Measurements
-% measc1 = rectangle('Position',[1,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measc2 = rectangle('Position',[2,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measc3 = rectangle('Position',[3.75,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measc4 = rectangle('Position',[5.25,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% measc5 = rectangle('Position',[8.25,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% set(measc1, 'parent', handles.axes3);
-% set(measc2, 'parent', handles.axes3);
-% set(measc3, 'parent', handles.axes3);
-% set(measc4, 'parent', handles.axes3);
-% set(measc5, 'parent', handles.axes3);
-% 
-% 
+ 
 % % Axes4
 % % Visibility
 % visd1 = rectangle('Position',[2,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
 % set(visd1, 'parent', handles.axes4);
-% 
-% % Measurements
-% measd1 = rectangle('Position',[3,0,.5,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w')
-% set(measd1, 'parent', handles.axes4);
 
 
 % --------------------------------------------------------------------
@@ -208,19 +180,41 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-persistent coords;
+schedule_measurements(hObject, eventdata, handles);
 
-mousepos = get(handles.axes1, 'currentpoint')
-% screenpos = get(handles.axes1, 'position')
-if isempty(coords)
-    coords(1,1:2) = mousepos(1,1:2);
-else
-    coords(2,1:2) = mousepos(1,1:2);
-    create_a_box(coords, handles.axes1);
-    clear coords
+function schedule_measurements(hObject, eventdata, handles)
+persistent add_coords;
+persistent boxes;
+if (isempty(boxes))
+    boxes = struct('type', [], 'x', [0, 0], 'handle', [], 'status', []);
 end
 
-function create_a_box(coords, axes_handle)
+mousepos = get(handles.axes1, 'currentpoint');
+% screenpos = get(handles.axes1, 'position')
+meas_add_remove = evalin('base', 'meas_add_remove');
+
+if (meas_add_remove == 0) % Add boxes to axes
+    if isempty(add_coords) % First mouse click
+        add_coords(1,1:2) = mousepos(1,1:2);
+    else % Second mouse click
+        add_coords(2,1:2) = mousepos(1,1:2);
+        boxes = create_a_box(add_coords, handles.axes1, boxes);
+        clear add_coords;
+    end
+elseif (meas_add_remove == 1) % Remove boxes from axes
+    clear add_cords;
+    remove_coords(1,1) = mousepos(1,1);
+    boxes = remove_a_box(remove_coords, handles.axes1, boxes);
+else
+    clear add_cords;
+    
+end
+
+% Debugging
+assignin('base', 'boxes', boxes(:));
+
+
+function [boxes] = create_a_box(coords, axes_handles, boxes)
 
 if (coords(2,1) < coords(1,1)) % Rectangles can only have positive deltas
     coords_temp = coords(1,1);
@@ -232,5 +226,55 @@ x = coords(1,1);
 dx = coords(2,1) - coords(1,1);
 % dy = coords(2,2) - coords(1,2);
 
-meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','w');
-set(meas, 'parent', axes_handle);
+% Plot a box
+meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
+set(meas, 'parent', axes_handles);
+
+% Save a box in memory
+boxes(end+1) = struct('type', 'measurement', 'x', [coords(1,1) coords(2,1)], 'handle', meas, 'status', 'active');
+
+
+
+function [boxes] = remove_a_box(coords, axes_handles, boxes)
+
+for i = 1:length(boxes)
+    if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
+        boxes(i).status = 'deleted';
+        set(boxes(i).handle, 'visible', 'off');
+        set(boxes(i).handle, 'parent', axes_handles);
+    end
+end
+
+
+
+% --- Executes on button press in pushbutton_addmeas.
+function pushbutton_addmeas_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_addmeas (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+add_weight = get(hObject, 'FontWeight');
+if (strcmp(add_weight, 'normal'))
+    set(hObject, 'FontWeight', 'bold');
+    set(handles.pushbutton_removemeas, 'FontWeight', 'normal');
+    assignin('base', 'meas_add_remove', 0); % Global variable to determine what mode the gui is in
+else
+    set(hObject, 'FontWeight', 'normal');
+    assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
+    
+end
+
+
+% --- Executes on button press in pushbutton_removemeas.
+function pushbutton_removemeas_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_removemeas (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+remove_weight = get(hObject, 'FontWeight');
+if (strcmp(remove_weight, 'normal'))
+    set(hObject, 'FontWeight', 'bold');
+    set(handles.pushbutton_addmeas, 'FontWeight', 'normal');
+    assignin('base', 'meas_add_remove', 1); % Global variable to determine what mode the gui is in
+else
+    set(hObject, 'FontWeight', 'normal');
+    assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
+end

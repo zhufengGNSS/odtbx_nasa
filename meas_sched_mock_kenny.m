@@ -22,7 +22,7 @@ function varargout = meas_sched_mock_kenny(varargin)
 
 % Edit the above text to modify the response to help meas_sched_mock_kenny
 
-% Last Modified by GUIDE v2.5 18-Sep-2012 11:05:07
+% Last Modified by GUIDE v2.5 20-Sep-2012 13:11:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -141,15 +141,15 @@ function help_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function about_Callback(hObject, eventdata, handles)
-% hObject    handle to about (see GCBO)
+function gs_modify_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_modify (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
 % --------------------------------------------------------------------
-function ground_station_Callback(hObject, eventdata, handles)
-% hObject    handle to ground_station (see GCBO)
+function about_Callback(hObject, eventdata, handles)
+% hObject    handle to about (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -175,6 +175,51 @@ function quit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
+% --- Executes on slider movement.
+function slider1_Callback(hObject, eventdata, handles)
+% hObject    handle to slider1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function slider1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes when selected object is changed in meas_schedule_mode.
+function meas_schedule_mode_SelectionChangeFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in meas_schedule_mode 
+% eventdata  structure with the following fields (see UIBUTTONGROUP)
+%	EventName: string 'SelectionChanged' (read only)
+%	OldValue: handle of the previously selected object or empty if none was selected
+%	NewValue: handle of the currently selected object
+% handles    structure with handles and user data (see GUIDATA)
+
+mode = get(eventdata.NewValue, 'String');
+if (strcmp(mode, 'Add'))
+    assignin('base', 'meas_add_remove', 0); % Global variable to determine what mode the gui is in
+elseif (strcmp(mode, 'Remove'))
+    assignin('base', 'meas_add_remove', 1); % Global variable to determine what mode the gui is in
+else
+    assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
+end
+
+
+
+
+% Functions for creating boxes when the axes are clicked on
+
 % --- Executes on mouse press over axes background.
 function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes1 (see GCBO)
@@ -182,29 +227,182 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 schedule_measurements(hObject, eventdata, handles);
 
+
+% --- Executes on mouse press over axes background.
+function axes2_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes3_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes4_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes6_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes7_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes8_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes9_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes10_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes11_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes12_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes13_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes14_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes15_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes16_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes16 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes17_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes18_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes18 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes19_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes19 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes20_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes21_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes21 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
 function schedule_measurements(hObject, eventdata, handles)
 persistent add_coords;
 persistent boxes;
 if (isempty(boxes))
-    boxes = struct('type', [], 'x', [0, 0], 'handle', [], 'status', []);
+    boxes = struct('ground_station', [], 'type', [], 'x', [0, 0], 'handle', [], 'status', []);
 end
 
-mousepos = get(handles.axes1, 'currentpoint');
+mousepos = get(hObject, 'currentpoint');
 % screenpos = get(handles.axes1, 'position')
-meas_add_remove = evalin('base', 'meas_add_remove');
 
+meas_add_remove = evalin('base', 'meas_add_remove');
 if (meas_add_remove == 0) % Add boxes to axes
     if isempty(add_coords) % First mouse click
         add_coords(1,1:2) = mousepos(1,1:2);
     else % Second mouse click
         add_coords(2,1:2) = mousepos(1,1:2);
-        boxes = create_a_box(add_coords, handles.axes1, boxes);
+        boxes = create_a_box(add_coords, hObject, boxes);
         clear add_coords;
     end
 elseif (meas_add_remove == 1) % Remove boxes from axes
     clear add_cords;
     remove_coords(1,1) = mousepos(1,1);
-    boxes = remove_a_box(remove_coords, handles.axes1, boxes);
+    boxes = remove_a_box(remove_coords, hObject, boxes);
 else
     clear add_cords;
     
@@ -214,7 +412,7 @@ end
 assignin('base', 'boxes', boxes(:));
 
 
-function [boxes] = create_a_box(coords, axes_handles, boxes)
+function [boxes] = create_a_box(coords, axes_handle, boxes)
 
 if (coords(2,1) < coords(1,1)) % Rectangles can only have positive deltas
     coords_temp = coords(1,1);
@@ -228,11 +426,10 @@ dx = coords(2,1) - coords(1,1);
 
 % Plot a box
 meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
-set(meas, 'parent', axes_handles);
+set(meas, 'parent', axes_handle);
 
 % Save a box in memory
-boxes(end+1) = struct('type', 'measurement', 'x', [coords(1,1) coords(2,1)], 'handle', meas, 'status', 'active');
-
+boxes(end+1) = struct('ground_station', get(axes_handle, 'Tag'), 'type', 'measurement', 'x', [coords(1,1) coords(2,1)], 'handle', meas, 'status', 'active');
 
 
 function [boxes] = remove_a_box(coords, axes_handles, boxes)
@@ -243,38 +440,4 @@ for i = 1:length(boxes)
         set(boxes(i).handle, 'visible', 'off');
         set(boxes(i).handle, 'parent', axes_handles);
     end
-end
-
-
-
-% --- Executes on button press in pushbutton_addmeas.
-function pushbutton_addmeas_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_addmeas (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-add_weight = get(hObject, 'FontWeight');
-if (strcmp(add_weight, 'normal'))
-    set(hObject, 'FontWeight', 'bold');
-    set(handles.pushbutton_removemeas, 'FontWeight', 'normal');
-    assignin('base', 'meas_add_remove', 0); % Global variable to determine what mode the gui is in
-else
-    set(hObject, 'FontWeight', 'normal');
-    assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
-    
-end
-
-
-% --- Executes on button press in pushbutton_removemeas.
-function pushbutton_removemeas_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_removemeas (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-remove_weight = get(hObject, 'FontWeight');
-if (strcmp(remove_weight, 'normal'))
-    set(hObject, 'FontWeight', 'bold');
-    set(handles.pushbutton_addmeas, 'FontWeight', 'normal');
-    assignin('base', 'meas_add_remove', 1); % Global variable to determine what mode the gui is in
-else
-    set(hObject, 'FontWeight', 'normal');
-    assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
 end

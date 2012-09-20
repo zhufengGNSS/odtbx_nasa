@@ -59,8 +59,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Link all the axes
-linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4], 'y')
-linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.meas_total], 'x')
+linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes6...
+    handles.axes7, handles.axes8, handles.axes9, handles.axes10, handles.axes11, ...
+    handles.axes12, handles.axes13, handles.axes14, handles.axes15, handles.axes16, ...
+    handles.axes17, handles.axes18, handles.axes19, handles.axes20, handles.axes21, ...
+    handles.meas_total], 'xy')
+% linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.meas_total], 'x')
 
 % Set the size of the axes (will replace with dates)
 set(handles.axes1,'XLim',[0 10])
@@ -384,7 +388,12 @@ function schedule_measurements(hObject, eventdata, handles)
 persistent add_coords;
 persistent boxes;
 if (isempty(boxes))
-    boxes = struct('ground_station', [], 'type', [], 'x', [0, 0], 'handle', [], 'status', []);
+    boxes = struct('ground_station', [], ...
+        'type', [], ...
+        'x', [0, 0], ...
+        'handle', [], ...
+        'total_handle', [], ...
+        'status', []);
 end
 
 mousepos = get(hObject, 'currentpoint');
@@ -396,13 +405,13 @@ if (meas_add_remove == 0) % Add boxes to axes
         add_coords(1,1:2) = mousepos(1,1:2);
     else % Second mouse click
         add_coords(2,1:2) = mousepos(1,1:2);
-        boxes = create_a_box(add_coords, hObject, boxes);
+        boxes = create_a_box(add_coords, [hObject, handles.meas_total], boxes); 
         clear add_coords;
     end
 elseif (meas_add_remove == 1) % Remove boxes from axes
     clear add_cords;
     remove_coords(1,1) = mousepos(1,1);
-    boxes = remove_a_box(remove_coords, hObject, boxes);
+    boxes = remove_a_box(remove_coords, [hObject, handles.meas_total], boxes);
 else
     clear add_cords;
     
@@ -412,7 +421,7 @@ end
 assignin('base', 'boxes', boxes(:));
 
 
-function [boxes] = create_a_box(coords, axes_handle, boxes)
+function [boxes] = create_a_box(coords, axes_handles, boxes)
 
 if (coords(2,1) < coords(1,1)) % Rectangles can only have positive deltas
     coords_temp = coords(1,1);
@@ -424,12 +433,21 @@ x = coords(1,1);
 dx = coords(2,1) - coords(1,1);
 % dy = coords(2,2) - coords(1,2);
 
-% Plot a box
+% Plot a box on parent axes
 meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
-set(meas, 'parent', axes_handle);
+set(meas, 'parent', axes_handles(1));
+
+% Plot a box on total axes
+meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
+set(meas, 'parent', axes_handles(2));
 
 % Save a box in memory
-boxes(end+1) = struct('ground_station', get(axes_handle, 'Tag'), 'type', 'measurement', 'x', [coords(1,1) coords(2,1)], 'handle', meas, 'status', 'active');
+boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
+    'type', 'measurement', ...
+    'x', [coords(1,1) coords(2,1)], ...
+    'handle', meas, ...
+    'total_handle', meas_on_total, ...
+    'status', 'active');
 
 
 function [boxes] = remove_a_box(coords, axes_handles, boxes)
@@ -437,7 +455,11 @@ function [boxes] = remove_a_box(coords, axes_handles, boxes)
 for i = 1:length(boxes)
     if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
         boxes(i).status = 'deleted';
+        % Hide it on the axes
         set(boxes(i).handle, 'visible', 'off');
-        set(boxes(i).handle, 'parent', axes_handles);
+        set(boxes(i).handle, 'parent', axes_handles(1));
+        % Hide it on the total
+        set(boxes(i).total_handle, 'visible', 'off');
+        set(boxes(i).total_handle, 'parent', axes_handles(2));
     end
 end

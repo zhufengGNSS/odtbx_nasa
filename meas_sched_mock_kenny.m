@@ -22,7 +22,7 @@ function varargout = meas_sched_mock_kenny(varargin)
 
 % Edit the above text to modify the response to help meas_sched_mock_kenny
 
-% Last Modified by GUIDE v2.5 20-Sep-2012 13:11:20
+% Last Modified by GUIDE v2.5 20-Sep-2012 15:00:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,7 +51,8 @@ function meas_sched_mock_kenny_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to meas_sched_mock_kenny (see VARARGIN)
-
+global boxes
+clear global boxes
 % Choose default command line output for meas_sched_mock_kenny
 handles.output = hObject;
 
@@ -59,10 +60,10 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Link all the axes
-linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes6...
-    handles.axes7, handles.axes8, handles.axes9, handles.axes10, handles.axes11, ...
-    handles.axes12, handles.axes13, handles.axes14, handles.axes15, handles.axes16, ...
-    handles.axes17, handles.axes18, handles.axes19, handles.axes20, handles.axes21, ...
+linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5...
+    handles.axes6, handles.axes7, handles.axes8, handles.axes9, handles.axes10, ...
+    handles.axes11, handles.axes12, handles.axes13, handles.axes14, handles.axes15, ...
+    handles.axes16, handles.axes17, handles.axes18, handles.axes19, handles.axes20, ...
     handles.meas_total], 'xy')
 % linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.meas_total], 'x')
 
@@ -201,6 +202,9 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
 end
 
 
+
+% Functions for creating boxes when the axes are clicked on
+
 % --- Executes when selected object is changed in meas_schedule_mode.
 function meas_schedule_mode_SelectionChangeFcn(hObject, eventdata, handles)
 % hObject    handle to the selected object in meas_schedule_mode 
@@ -219,10 +223,6 @@ else
     assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
 end
 
-
-
-
-% Functions for creating boxes when the axes are clicked on
 
 % --- Executes on mouse press over axes background.
 function axes1_ButtonDownFcn(hObject, eventdata, handles)
@@ -251,6 +251,14 @@ schedule_measurements(hObject, eventdata, handles);
 % --- Executes on mouse press over axes background.
 function axes4_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+schedule_measurements(hObject, eventdata, handles);
+
+
+% --- Executes on mouse press over axes background.
+function axes5_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 schedule_measurements(hObject, eventdata, handles);
@@ -376,17 +384,9 @@ function axes20_ButtonDownFcn(hObject, eventdata, handles)
 schedule_measurements(hObject, eventdata, handles);
 
 
-% --- Executes on mouse press over axes background.
-function axes21_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to axes21 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-schedule_measurements(hObject, eventdata, handles);
-
-
 function schedule_measurements(hObject, eventdata, handles)
 persistent add_coords;
-persistent boxes;
+global boxes;
 if (isempty(boxes))
     boxes = struct('ground_station', [], ...
         'type', [], ...
@@ -395,6 +395,12 @@ if (isempty(boxes))
         'total_handle', [], ...
         'status', []);
 end
+
+% for i = 1:length(boxes)
+%     i
+%     boxes(i).ground_station
+% end
+
 
 mousepos = get(hObject, 'currentpoint');
 % screenpos = get(handles.axes1, 'position')
@@ -414,7 +420,6 @@ elseif (meas_add_remove == 1) % Remove boxes from axes
     boxes = remove_a_box(remove_coords, [hObject, handles.meas_total], boxes);
 else
     clear add_cords;
-    
 end
 
 % Debugging
@@ -439,9 +444,11 @@ set(meas, 'parent', axes_handles(1));
 
 % Plot a box on total axes
 meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
-set(meas, 'parent', axes_handles(2));
+set(meas_on_total, 'parent', axes_handles(2));
 
 % Save a box in memory
+% for i = 1:boxes(end+1)
+
 boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
     'type', 'measurement', ...
     'x', [coords(1,1) coords(2,1)], ...
@@ -452,14 +459,20 @@ boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
 
 function [boxes] = remove_a_box(coords, axes_handles, boxes)
 
-for i = 1:length(boxes)
-    if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
-        boxes(i).status = 'deleted';
-        % Hide it on the axes
-        set(boxes(i).handle, 'visible', 'off');
-        set(boxes(i).handle, 'parent', axes_handles(1));
-        % Hide it on the total
-        set(boxes(i).total_handle, 'visible', 'off');
-        set(boxes(i).total_handle, 'parent', axes_handles(2));
+i = 1;
+while (i <= length(boxes)) % While loop, *not* for loop
+    if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
+        if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
+
+            % Delete boxes
+            delete(boxes(i).handle);
+            delete(boxes(i).total_handle);
+            
+            % Delete the record
+            boxes(i) = [];
+        end
     end
+    i = i + 1;
 end
+
+

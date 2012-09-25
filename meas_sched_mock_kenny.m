@@ -64,27 +64,15 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Scroll bar code
-% List of handles for everything that needs to move
-% handles.slide_handles = [handles.axes1, handles.gs_label1, handles.axes2, handles.gs_label2, ...
-%     handles.axes3, handles.gs_label3, handles.axes4, handles.gs_label4, ...
-%     handles.axes5, handles.gs_label5, handles.axes6, handles.gs_label6, ...
-%     handles.axes7, handles.gs_label7, handles.axes8, handles.gs_label8, ...
-%     handles.axes9, handles.gs_label9, handles.axes10, handles.gs_label10, ...
-%     handles.axes11, handles.gs_label11, handles.axes12, handles.gs_label12, ...
-%     handles.axes13, handles.gs_label13, handles.axes14, handles.gs_label14, ...
-%     handles.axes15, handles.gs_label15, handles.axes16, handles.gs_label16, ...
-%     handles.axes17, handles.gs_label17, handles.axes18, handles.gs_label18, ...
-%     handles.axes19, handles.gs_label19, handles.axes20, handles.gs_label20, ...
-%     handles.ground_stations];
-
-
-% Add in child uipanel and have it slide with all it's children instead.
-% handles.slide_handles = get(handles.ground_stations, 'Children')
-
-handles.slide_handles = get(handles.ground_stations, 'Children')
-
-
-% set(handles.slide_handles, 'Parent', handles.ground_stations);
+handles.slide_handles = get(handles.ground_stations, 'Children');
+% Work around for uicontrols not clipping correctly
+handles.slide_labels = [handles.gs_label1, handles.gs_label2, ...
+    handles.gs_label3, handles.gs_label4, handles.gs_label5, ...
+    handles.gs_label6, handles.gs_label7, handles.gs_label8, ...
+    handles.gs_label9, handles.gs_label10, handles.gs_label11, ...
+    handles.gs_label12, handles.gs_label13, handles.gs_label14, ...
+    handles.gs_label15, handles.gs_label16, handles.gs_label17, ...
+    handles.gs_label18, handles.gs_label19, handles.gs_label20];
 
 % Get original positions of objects
 handles.slide_pos = get(handles.slide_handles, 'position');
@@ -92,8 +80,8 @@ handles.slide_pos = get(handles.slide_handles, 'position');
 % Update handle structure
 guidata(hObject, handles);
 
-% Slider test
-set(handles.slide_handles, 'visible', 'on');
+% % Slider test
+% set(handles.slide_handles, 'visible', 'on');
 
 
 % Make the axes uniform
@@ -107,6 +95,15 @@ linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.ax
 % Set the size of the axes (will replace with dates)
 set(handles.axes1,'XLim',[0 10]);
 set(handles.axes1,'YLim',[0 1]);
+
+% Axes labels
+% set(handles.gs_label_plot, 'XLim',[0 1]);
+% set(handles.gs_label_plot, 'YLim',[0 1]);
+% annote = annotation('textbox', [0 0 1 1], ...
+%     'String', '[ X ]', ...
+%     'HorizontalAlignment', 'center', ...
+%     'Color', 'k');
+% set(annote, 'Parent', handles.gs_label_plot);
 
 % Set default add/remove measurements state to "add"
 % assignin('base', 'meas_add_remove', 0);
@@ -220,11 +217,22 @@ function slider1_Callback(hObject, eventdata, handles)
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 % slide_max = get(hObject, 'Max')
 % slide_min = get(hObject, 'Min')
-slide_val = get(hObject, 'Value')
+slide_val = get(hObject, 'Value');
 pos = cellfun(@(y) {[0 36 0 0]+y-[0 get(handles.slider1,'value') 0 0]}, handles.slide_pos);
-handles.slide_pos
 set(handles.slide_handles, {'position'}, pos);
 
+% Workaround to make uicontrols disappear
+panel_pos = get(handles.ground_stations, 'position')
+
+for i = 1:length(handles.slide_labels)
+    button_pos = get(handles.slide_labels(i), 'position')
+    if (((button_pos(2) + button_pos(4)) < panel_pos(4)) && (button_pos(2) > 0))
+        set(handles.slide_labels(i), 'Visible', 'on');
+    else
+        set(handles.slide_labels(i), 'Visible', 'off');
+    end
+end
+    
 
 % --- Executes during object creation, after setting all properties.
 function slider1_CreateFcn(hObject, eventdata, handles)

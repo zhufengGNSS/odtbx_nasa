@@ -22,7 +22,7 @@ function varargout = meas_sched_mock_kenny(varargin)
 
 % Edit the above text to modify the response to help meas_sched_mock_kenny
 
-% Last Modified by GUIDE v2.5 20-Sep-2012 15:00:26
+% Last Modified by GUIDE v2.5 21-Sep-2012 14:23:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,28 +51,65 @@ function meas_sched_mock_kenny_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to meas_sched_mock_kenny (see VARARGIN)
-global boxes
-clear global boxes
+global boxes;
+clear global boxes; % Get rid of data from previous runs
+
+global meas_add_remove;
+clear global meas_add_remove;
+
 % Choose default command line output for meas_sched_mock_kenny
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
+% Scroll bar code
+% List of handles for everything that needs to move
+% handles.slide_handles = [handles.axes1, handles.gs_label1, handles.axes2, handles.gs_label2, ...
+%     handles.axes3, handles.gs_label3, handles.axes4, handles.gs_label4, ...
+%     handles.axes5, handles.gs_label5, handles.axes6, handles.gs_label6, ...
+%     handles.axes7, handles.gs_label7, handles.axes8, handles.gs_label8, ...
+%     handles.axes9, handles.gs_label9, handles.axes10, handles.gs_label10, ...
+%     handles.axes11, handles.gs_label11, handles.axes12, handles.gs_label12, ...
+%     handles.axes13, handles.gs_label13, handles.axes14, handles.gs_label14, ...
+%     handles.axes15, handles.gs_label15, handles.axes16, handles.gs_label16, ...
+%     handles.axes17, handles.gs_label17, handles.axes18, handles.gs_label18, ...
+%     handles.axes19, handles.gs_label19, handles.axes20, handles.gs_label20, ...
+%     handles.ground_stations];
+
+
+% Add in child uipanel and have it slide with all it's children instead.
+% handles.slide_handles = get(handles.ground_stations, 'Children')
+
+handles.slide_handles = get(handles.ground_stations, 'Children')
+
+
+% set(handles.slide_handles, 'Parent', handles.ground_stations);
+
+% Get original positions of objects
+handles.slide_pos = get(handles.slide_handles, 'position');
+
+% Update handle structure
+guidata(hObject, handles);
+
+% Slider test
+set(handles.slide_handles, 'visible', 'on');
+
+
+% Make the axes uniform
 % Link all the axes
 linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5...
     handles.axes6, handles.axes7, handles.axes8, handles.axes9, handles.axes10, ...
     handles.axes11, handles.axes12, handles.axes13, handles.axes14, handles.axes15, ...
     handles.axes16, handles.axes17, handles.axes18, handles.axes19, handles.axes20, ...
-    handles.meas_total], 'xy')
-% linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.meas_total], 'x')
+    handles.meas_total], 'xy');
 
 % Set the size of the axes (will replace with dates)
-set(handles.axes1,'XLim',[0 10])
-set(handles.axes1,'YLim',[0 1])
+set(handles.axes1,'XLim',[0 10]);
+set(handles.axes1,'YLim',[0 1]);
 
 % Set default add/remove measurements state to "add"
-assignin('base', 'meas_add_remove', 0);
+% assignin('base', 'meas_add_remove', 0);
 
 % UIWAIT makes meas_sched_mock_kenny wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -146,13 +183,6 @@ function help_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function gs_modify_Callback(hObject, eventdata, handles)
-% hObject    handle to gs_modify (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
 function about_Callback(hObject, eventdata, handles)
 % hObject    handle to about (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -188,6 +218,12 @@ function slider1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+% slide_max = get(hObject, 'Max')
+% slide_min = get(hObject, 'Min')
+slide_val = get(hObject, 'Value')
+pos = cellfun(@(y) {[0 36 0 0]+y-[0 get(handles.slider1,'value') 0 0]}, handles.slide_pos);
+handles.slide_pos
+set(handles.slide_handles, {'position'}, pos);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -200,6 +236,9 @@ function slider1_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+set(hObject, 'Max',45);
+set(hObject, 'Min', -45);
+set(hObject, 'Value', get(hObject, 'Max'));
 
 
 
@@ -213,14 +252,15 @@ function meas_schedule_mode_SelectionChangeFcn(hObject, eventdata, handles)
 %	OldValue: handle of the previously selected object or empty if none was selected
 %	NewValue: handle of the currently selected object
 % handles    structure with handles and user data (see GUIDATA)
+global meas_add_remove;
 
 mode = get(eventdata.NewValue, 'String');
 if (strcmp(mode, 'Add'))
-    assignin('base', 'meas_add_remove', 0); % Global variable to determine what mode the gui is in
+    meas_add_remove = 0; % Global variable to determine what mode the gui is in
 elseif (strcmp(mode, 'Remove'))
-    assignin('base', 'meas_add_remove', 1); % Global variable to determine what mode the gui is in
+    meas_add_remove = 1; % Global variable to determine what mode the gui is in
 else
-    assignin('base', 'meas_add_remove', -1); % Global variable to determine what mode the gui is in
+    meas_add_remove = -1; % Global variable to determine what mode the gui is in
 end
 
 
@@ -385,27 +425,22 @@ schedule_measurements(hObject, eventdata, handles);
 
 
 function schedule_measurements(hObject, eventdata, handles)
+
 persistent add_coords;
+global meas_add_remove;
 global boxes;
+
 if (isempty(boxes))
     boxes = struct('ground_station', [], ...
         'type', [], ...
         'x', [0, 0], ...
         'handle', [], ...
-        'total_handle', [], ...
-        'status', []);
+        'total_handle', []);
 end
-
-% for i = 1:length(boxes)
-%     i
-%     boxes(i).ground_station
-% end
-
 
 mousepos = get(hObject, 'currentpoint');
 % screenpos = get(handles.axes1, 'position')
 
-meas_add_remove = evalin('base', 'meas_add_remove');
 if (meas_add_remove == 0) % Add boxes to axes
     if isempty(add_coords) % First mouse click
         add_coords(1,1:2) = mousepos(1,1:2);
@@ -453,14 +488,13 @@ boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
     'type', 'measurement', ...
     'x', [coords(1,1) coords(2,1)], ...
     'handle', meas, ...
-    'total_handle', meas_on_total, ...
-    'status', 'active');
+    'total_handle', meas_on_total);
 
 
 function [boxes] = remove_a_box(coords, axes_handles, boxes)
 
 i = 1;
-while (i <= length(boxes)) % While loop, *not* for loop
+while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
     if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
         if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
 
@@ -474,5 +508,3 @@ while (i <= length(boxes)) % While loop, *not* for loop
     end
     i = i + 1;
 end
-
-

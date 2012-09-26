@@ -80,9 +80,13 @@ handles.slide_pos = get(handles.slide_handles, 'position');
 % Update handle structure
 guidata(hObject, handles);
 
-% % Slider test
-% set(handles.slide_handles, 'visible', 'on');
-
+% Initially, we only want the first six label buttons visible (work around
+% for uicontrols not clipping correctly)
+set(handles.slide_labels, 'Visible', 'off');
+initial_slide_labels = [handles.gs_label1, handles.gs_label2, ...
+    handles.gs_label3, handles.gs_label4, handles.gs_label5, ...
+    handles.gs_label6];
+set(initial_slide_labels, 'Visible', 'on');
 
 % Make the axes uniform
 % Link all the axes
@@ -96,20 +100,11 @@ linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.ax
 set(handles.axes1,'XLim',[0 10]);
 set(handles.axes1,'YLim',[0 1]);
 
-% Axes labels
-% set(handles.gs_label_plot, 'XLim',[0 1]);
-% set(handles.gs_label_plot, 'YLim',[0 1]);
-% annote = annotation('textbox', [0 0 1 1], ...
-%     'String', '[ X ]', ...
-%     'HorizontalAlignment', 'center', ...
-%     'Color', 'k');
-% set(annote, 'Parent', handles.gs_label_plot);
-
 % Set default add/remove measurements state to "add"
-% assignin('base', 'meas_add_remove', 0);
+
 
 % UIWAIT makes meas_sched_mock_kenny wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.

@@ -213,7 +213,7 @@ function slider1_Callback(hObject, eventdata, handles)
 % slide_max = get(hObject, 'Max')
 % slide_min = get(hObject, 'Min')
 slide_val = get(hObject, 'Value');
-pos = cellfun(@(y) {[0 36 0 0]+y-[0 get(handles.slider1,'value') 0 0]}, handles.slide_pos);
+pos = cellfun(@(y) {[0 45 0 0]+y-[0 get(handles.slider1,'value') 0 0]}, handles.slide_pos);
 set(handles.slide_handles, {'position'}, pos);
 
 % Workaround to make uicontrols disappear
@@ -240,7 +240,7 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 set(hObject, 'Max',45);
-set(hObject, 'Min', -45);
+set(hObject, 'Min', -40);
 set(hObject, 'Value', get(hObject, 'Max'));
 
 

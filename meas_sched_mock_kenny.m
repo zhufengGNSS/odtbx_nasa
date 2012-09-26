@@ -101,7 +101,7 @@ set(handles.axes1,'XLim',[0 10]);
 set(handles.axes1,'YLim',[0 1]);
 
 % Set default add/remove measurements state to "add"
-
+set(handles.meas_schedule_mode, 'SelectedObject', handles.Add);
 
 % UIWAIT makes meas_sched_mock_kenny wait for user response (see UIRESUME)
 uiwait(handles.figure1);

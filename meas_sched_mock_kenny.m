@@ -22,7 +22,7 @@ function varargout = meas_sched_mock_kenny(varargin)
 
 % Edit the above text to modify the response to help meas_sched_mock_kenny
 
-% Last Modified by GUIDE v2.5 21-Sep-2012 14:23:21
+% Last Modified by GUIDE v2.5 28-Sep-2012 09:22:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,6 +56,10 @@ clear global boxes; % Get rid of data from previous runs
 
 global meas_add_remove;
 clear global meas_add_remove;
+meas_add_remove = 0;
+set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
+% get(handles.meas_schedule_mode, 'SelectedObject')
+% meas_add_remove
 
 % Choose default command line output for meas_sched_mock_kenny
 handles.output = hObject;
@@ -115,7 +119,7 @@ function varargout = meas_sched_mock_kenny_OutputFcn(hObject, eventdata, handles
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+% varargout{1} = handles.output;
 
 
 % --- Executes on button press in pushbutton1.
@@ -265,6 +269,8 @@ elseif (strcmp(mode, 'Remove'))
 else
     meas_add_remove = -1; % Global variable to determine what mode the gui is in
 end
+% get(handles.meas_schedule_mode, 'SelectedObject')
+meas_add_remove
 
 
 % --- Executes on mouse press over axes background.
@@ -432,6 +438,11 @@ function schedule_measurements(hObject, eventdata, handles)
 persistent add_coords;
 global meas_add_remove;
 global boxes;
+
+if (isempty(meas_add_remove))
+    meas_add_remove = 0;
+end
+% meas_add_remove
 
 if (isempty(boxes))
     boxes = struct('ground_station', [], ...

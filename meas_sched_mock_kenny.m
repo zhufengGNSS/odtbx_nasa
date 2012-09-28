@@ -270,7 +270,7 @@ else
     meas_add_remove = -1; % Global variable to determine what mode the gui is in
 end
 % get(handles.meas_schedule_mode, 'SelectedObject')
-meas_add_remove
+meas_add_remove;
 
 
 % --- Executes on mouse press over axes background.
@@ -488,11 +488,11 @@ dx = coords(2,1) - coords(1,1);
 % dy = coords(2,2) - coords(1,2);
 
 % Plot a box on parent axes
-meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
+meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
 set(meas, 'parent', axes_handles(1));
 
 % Plot a box on total axes
-meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','w');
+meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','g');
 set(meas_on_total, 'parent', axes_handles(2));
 
 % Save a box in memory

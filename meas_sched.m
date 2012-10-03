@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
 % Edit the above text to modify the response to help meas_sched
 
-% Last Modified by GUIDE v2.5 28-Sep-2012 13:10:01
+% Last Modified by GUIDE v2.5 28-Sep-2012 19:42:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -492,7 +492,7 @@ meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceC
 set(meas, 'parent', axes_handles(1));
 
 % Plot a box on total axes
-meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor','g');
+meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
 set(meas_on_total, 'parent', axes_handles(2));
 
 % Save a box in memory
@@ -522,3 +522,11 @@ while (i <= length(boxes)) % While loop, *not* for loop (we need length recalcul
     end
     i = i + 1;
 end
+
+
+% --- Executes on button press in gs_label1.
+function gs_label1_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+gs_info('meas_sched', handles.figure1);

@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
 % Edit the above text to modify the response to help meas_sched
 
-% Last Modified by GUIDE v2.5 28-Sep-2012 19:42:06
+% Last Modified by GUIDE v2.5 04-Oct-2012 13:33:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,9 +64,6 @@ set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
 % Choose default command line output for meas_sched
 handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
-
 % Scroll bar code
 handles.slide_handles = get(handles.ground_stations, 'Children');
 % Work around for uicontrols not clipping correctly
@@ -80,6 +77,9 @@ handles.slide_labels = [handles.gs_label1, handles.gs_label2, ...
 
 % Get original positions of objects
 handles.slide_pos = get(handles.slide_handles, 'position');
+
+% Handle to the current gs_label button
+handles.gs_label_current = handles.gs_label1;
 
 % Update handle structure
 guidata(hObject, handles);
@@ -529,4 +529,216 @@ function gs_label1_Callback(hObject, eventdata, handles)
 % hObject    handle to gs_label1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label1;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label2.
+function gs_label2_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label2;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label3.
+function gs_label3_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label3;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label4.
+function gs_label4_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label4;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label5.
+function gs_label5_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label5;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label6.
+function gs_label6_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label6;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label7.
+function gs_label7_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label7;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label8.
+function gs_label8_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label8;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label9.
+function gs_label9_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label9;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label10.
+function gs_label10_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label10;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label11.
+function gs_label11_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label11;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label12.
+function gs_label12_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label12;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label13.
+function gs_label13_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label13;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label14.
+function gs_label14_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label14;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label15.
+function gs_label15_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label15;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label16.
+function gs_label16_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label16 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label16;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label17.
+function gs_label17_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label17;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label18.
+function gs_label18_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label18 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label18;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label19.
+function gs_label19_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label19 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label19;
+% Update handle structure
+guidata(hObject, handles);
+gs_info('meas_sched', handles.figure1);
+
+
+% --- Executes on button press in gs_label20.
+function gs_label20_Callback(hObject, eventdata, handles)
+% hObject    handle to gs_label20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.gs_label_current = handles.gs_label20;
+% Update handle structure
+guidata(hObject, handles);
 gs_info('meas_sched', handles.figure1);

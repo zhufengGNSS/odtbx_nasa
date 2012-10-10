@@ -106,7 +106,7 @@ startDate = datenum('07-03-2012');
 endDate = datenum('07-27-2012');
 % Create xdata to correspond to the number of 
 % units between the start and end dates:
-xData = linspace(startDate,endDate,7);
+xData = linspace(startDate,endDate,10);
 % Set the number of XTicks to the number of points
 % in xData:
 set(handles.axes_handles,'XTick',xData)

@@ -221,10 +221,10 @@ pos = cellfun(@(y) {[0 45 0 0]+y-[0 get(handles.slider1,'value') 0 0]}, handles.
 set(handles.slide_handles, {'position'}, pos);
 
 % Workaround to make uicontrols disappear
-panel_pos = get(handles.ground_stations, 'position')
+panel_pos = get(handles.ground_stations, 'position');
 
 for i = 1:length(handles.slide_labels)
-    button_pos = get(handles.slide_labels(i), 'position')
+    button_pos = get(handles.slide_labels(i), 'position');
     if (((button_pos(2) + button_pos(4)) < panel_pos(4)) && (button_pos(2) > 0))
         set(handles.slide_labels(i), 'Visible', 'on');
     else

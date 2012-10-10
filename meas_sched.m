@@ -81,9 +81,6 @@ handles.slide_pos = get(handles.slide_handles, 'position');
 % Handle to the current gs_label button
 handles.gs_label_current = handles.gs_label1;
 
-% Update handle structure
-guidata(hObject, handles);
-
 % Initially, we only want the first six label buttons visible (work around
 % for uicontrols not clipping correctly)
 set(handles.slide_labels, 'Visible', 'off');
@@ -94,15 +91,29 @@ set(initial_slide_labels, 'Visible', 'on');
 
 % Make the axes uniform
 % Link all the axes
-linkaxes([handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5...
+handles.axes_handles = [handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5...
     handles.axes6, handles.axes7, handles.axes8, handles.axes9, handles.axes10, ...
     handles.axes11, handles.axes12, handles.axes13, handles.axes14, handles.axes15, ...
     handles.axes16, handles.axes17, handles.axes18, handles.axes19, handles.axes20, ...
-    handles.meas_total], 'xy');
+    handles.meas_total];
+linkaxes(handles.axes_handles, 'xy');
 
 % Set the size of the axes (will replace with dates)
-set(handles.axes1,'XLim',[0 10]);
 set(handles.axes1,'YLim',[0 1]);
+% Select a starting date:
+startDate = datenum('07-03-2012');
+% Select an ending date:
+endDate = datenum('07-27-2012');
+% Create xdata to correspond to the number of 
+% units between the start and end dates:
+xData = linspace(startDate,endDate,7);
+% Set the number of XTicks to the number of points
+% in xData:
+set(handles.axes_handles,'XTick',xData)
+datetick('x', 'mm/dd/yy', 'keepticks');
+
+% Update handle structure
+guidata(hObject, handles);
 
 % Set default add/remove measurements state to "add"
 set(handles.meas_schedule_mode, 'SelectedObject', handles.Add);

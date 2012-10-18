@@ -22,7 +22,7 @@ function varargout = time_info(varargin)
 
 % Edit the above text to modify the response to help time_info
 
-% Last Modified by GUIDE v2.5 10-Oct-2012 11:09:11
+% Last Modified by GUIDE v2.5 11-Oct-2012 22:42:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,8 +58,76 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+dontOpen = false;
+mainGuiInput = find(strcmp(varargin, 'meas_sched'));
+if (isempty(mainGuiInput)) ...
+    || (length(varargin) <= mainGuiInput) ...
+    || (~ishandle(varargin{mainGuiInput+1}))
+    dontOpen = true;
+else
+    % Remember the handle, and adjust our position
+    handles.meas_sched_Main = varargin{mainGuiInput+1};
+    
+    % Obtain handles using GUIDATA with the caller's handle 
+    mainHandles = guidata(handles.meas_sched_Main);
+    
+    % Pull in the information from the main GUI
+    xData = get(mainHandles.meas_total, 'Xtick');
+    axes_date_begin = xData(1);
+    axes_date_final = xData(end);
+    
+    set(handles.date_begin, 'String', datestr(axes_date_begin, 'mm/dd/yyyy HH:MM:SS'));
+    set(handles.date_final, 'String', datestr(axes_date_final, 'mm/dd/yyyy HH:MM:SS'));
+    set(handles.num_increments, 'String', length(xData));
+
+    % Determine the position of the dialog - centered on the callback figure
+    % if available, else, centered on the screen
+    FigPos=get(0,'DefaultFigurePosition');
+    OldUnits = get(hObject, 'Units');
+    set(hObject, 'Units', 'pixels');
+    OldPos = get(hObject,'Position');
+    FigWidth = OldPos(3);
+    FigHeight = OldPos(4);
+    if isempty(gcbf)
+        ScreenUnits=get(0,'Units');
+        set(0,'Units','pixels');
+        ScreenSize=get(0,'ScreenSize');
+        set(0,'Units',ScreenUnits);
+
+        FigPos(1)=1/2*(ScreenSize(3)-FigWidth);
+        FigPos(2)=2/3*(ScreenSize(4)-FigHeight);
+    else
+        GCBFOldUnits = get(gcbf,'Units');
+        set(gcbf,'Units','pixels');
+        GCBFPos = get(gcbf,'Position');
+        set(gcbf,'Units',GCBFOldUnits);
+        FigPos(1:2) = [(GCBFPos(1) + GCBFPos(3) / 2) - FigWidth / 2, ...
+                       (GCBFPos(2) + GCBFPos(4) / 2) - FigHeight / 2];
+    end
+    FigPos(3:4)=[FigWidth FigHeight];
+    set(hObject, 'Position', FigPos);
+    set(hObject, 'Units', OldUnits);
+
+    % Make the GUI modal
+    set(handles.figure1,'WindowStyle','modal')
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+if dontOpen
+   disp('-----------------------------------------------------');
+   disp('Improper input arguments. Pass a property value pair') 
+   disp('whose name is "changeme_main" and value is the handle')
+   disp('to the changeme_main figure, e.g:');
+   disp('   x = changeme_main()');
+   disp('   changeme_dialog(''changeme_main'', x)');
+   disp('-----------------------------------------------------');
+else    
 % UIWAIT makes time_info wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+    uiwait(handles.figure1);
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -72,20 +140,23 @@ function varargout = time_info_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+% The figure can be deleted now
+delete(handles.figure1);
 
 
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+
+function date_begin_Callback(hObject, eventdata, handles)
+% hObject    handle to date_begin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+% Hints: get(hObject,'String') returns contents of date_begin as text
+%        str2double(get(hObject,'String')) returns contents of date_begin as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function date_begin_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to date_begin (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -97,18 +168,18 @@ end
 
 
 
-function edit2_Callback(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function date_final_Callback(hObject, eventdata, handles)
+% hObject    handle to date_final (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit2 as text
-%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+% Hints: get(hObject,'String') returns contents of date_final as text
+%        str2double(get(hObject,'String')) returns contents of date_final as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function date_final_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to date_final (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -120,18 +191,18 @@ end
 
 
 
-function edit3_Callback(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function num_increments_Callback(hObject, eventdata, handles)
+% hObject    handle to num_increments (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit3 as text
-%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+% Hints: get(hObject,'String') returns contents of num_increments as text
+%        str2double(get(hObject,'String')) returns contents of num_increments as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function num_increments_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to num_increments (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -139,4 +210,72 @@ function edit3_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in cancel_button.
+function cancel_button_Callback(hObject, eventdata, handles)
+% hObject    handle to cancel_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.output = get(hObject,'String');
+
+% Update handles structure
+guidata(hObject, handles);
+
+% Use UIRESUME instead of delete because the OutputFcn needs
+% to get the updated handles structure.
+uiresume(handles.figure1);
+
+
+% --- Executes on button press in ok_button.
+function ok_button_Callback(hObject, eventdata, handles)
+% hObject    handle to ok_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Bring in the changed values
+new_date_begin = datenum(get(handles.date_begin, 'String'));
+new_date_final = datenum(get(handles.date_final, 'String'));
+new_num_increments = str2num(get(handles.num_increments, 'String'));
+
+main = handles.meas_sched_Main;
+% Obtain handles using GUIDATA with the caller's handle 
+if(ishandle(main))
+    mainHandles = guidata(main);
+    
+    % Calculate the new time range
+    % Calculate the new time range
+    xData = linspace(new_date_begin,new_date_final,new_num_increments);
+    
+    set(mainHandles.axes_handles,'XLim',[new_date_begin new_date_final]);
+    % Set the number of XTicks to the number of points in xData:
+    set(mainHandles.meas_total,'XTick',xData)
+    datetick('x', 'mm/dd/yy', 'keepticks');
+end
+
+handles.output = get(hObject,'String');
+
+% Update handles structure
+guidata(hObject, handles);
+
+% Use UIRESUME instead of delete because the OutputFcn needs
+% to get the updated handles structure.
+uiresume(handles.figure1);
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+if isequal(get(hObject, 'waitstatus'), 'waiting')
+    % The GUI is still in UIWAIT, us UIRESUME
+    uiresume(hObject);
+else
+    % The GUI is no longer waiting, just close it
+    delete(hObject);
 end

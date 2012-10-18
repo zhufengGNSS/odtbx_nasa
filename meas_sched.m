@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
 % Edit the above text to modify the response to help meas_sched
 
-% Last Modified by GUIDE v2.5 04-Oct-2012 13:33:04
+% Last Modified by GUIDE v2.5 10-Oct-2012 13:49:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -99,18 +99,21 @@ handles.axes_handles = [handles.axes1, handles.axes2, handles.axes3, handles.axe
 linkaxes(handles.axes_handles, 'xy');
 
 % Set the size of the axes (will replace with dates)
-set(handles.axes1,'YLim',[0 1]);
+set(handles.axes_handles,'YLim',[0 1]);
 % Select a starting date:
 startDate = datenum('07-03-2012');
 % Select an ending date:
 endDate = datenum('07-27-2012');
 % Create xdata to correspond to the number of 
 % units between the start and end dates:
-xData = linspace(startDate,endDate,10);
+set(handles.axes_handles, 'XLim', [startDate endDate])
+xData = linspace(startDate,endDate,7);
 % Set the number of XTicks to the number of points
 % in xData:
 set(handles.axes_handles,'XTick',xData)
-datetick('x', 'mm/dd/yy', 'keepticks');
+datetick('x', 'mm/dd/yy')
+% datetick('x', 'mm/dd/yy', 'keepticks');
+% datetick('x', 'mm/dd/yy', 'keeplimits');
 
 % Update handle structure
 guidata(hObject, handles);
@@ -138,34 +141,6 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% % Axes1
-% % Visibility
-% visa1 = rectangle('Position',[1,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% visa2 = rectangle('Position',[5,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% set(visa1, 'parent', handles.axes1);
-% set(visa2, 'parent', handles.axes1);
-% 
-
-% % Axes2
-% % Visibility
-% visb1 = rectangle('Position',[3,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% set(visb1, 'parent', handles.axes2);
-% 
-
-% % Axes3
-% % Visibility
-% visc1 = rectangle('Position',[.5,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% visc2 = rectangle('Position',[3.5,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% visc3 = rectangle('Position',[7,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% set(visc1, 'parent', handles.axes3);
-% set(visc2, 'parent', handles.axes3);
-% set(visc3, 'parent', handles.axes3);
- 
-% % Axes4
-% % Visibility
-% visd1 = rectangle('Position',[2,0,2.5,1], 'EdgeColor','r','LineWidth', 5,'FaceColor','w')
-% set(visd1, 'parent', handles.axes4);
 
 
 % --------------------------------------------------------------------
@@ -215,6 +190,14 @@ function quit_Callback(hObject, eventdata, handles)
 % hObject    handle to quit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function time_Callback(hObject, eventdata, handles)
+% hObject    handle to time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+change_time(hObject, eventdata, handles);
 
 
 % --- Executes on slider movement.
@@ -507,8 +490,6 @@ meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,
 set(meas_on_total, 'parent', axes_handles(2));
 
 % Save a box in memory
-% for i = 1:boxes(end+1)
-
 boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
     'type', 'measurement', ...
     'x', [coords(1,1) coords(2,1)], ...
@@ -533,6 +514,65 @@ while (i <= length(boxes)) % While loop, *not* for loop (we need length recalcul
     end
     i = i + 1;
 end
+
+
+function redraw_boxes()
+% This function just redraws the boxes, it does not change their entry in
+% memory
+
+global boxes;
+
+i = 2; % The first box is a decoy structure box
+while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+    
+    % Find the parent handles (so we know where to redraw the boxes)
+    axes_handle = get(boxes(i).handle, 'parent');
+    axes_total_handle = get(boxes(i).total_handle, 'parent');
+    
+    % Erase the old boxes by their handles
+    delete(boxes(i).handle);
+    delete(boxes(i).total_handle);
+    
+    % Get box data
+    x = boxes(i).x(1);
+    dx = boxes(i).x(2) - boxes(i).x(1);
+    
+    % Plot a box on parent axes
+    meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
+    set(meas, 'parent', axes_handle);
+
+    % Plot a box on total axes
+    meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
+    set(meas_on_total, 'parent', axes_total_handle);
+    
+    % Save the new rectangles to the data structure
+    boxes(i).handle = meas;
+    boxes(i).total_handle = meas_on_total;
+    
+    i = i + 1;
+end
+
+
+% --- Executes on mouse press over axes background.
+function meas_total_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to meas_total (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+change_time(hObject, eventdata, handles);
+
+
+function change_time(hObject, eventdata, handles)
+% hObject    handle to time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Calls GUI to get new information for time
+% This function also adjusts the axes scaling (but not the boxes
+% themselves)
+time_info('meas_sched', handles.figure1);
+
+% Redraw all the boxes on the potentially new axes scale
+redraw_boxes();
 
 
 % --- Executes on button press in gs_label1.

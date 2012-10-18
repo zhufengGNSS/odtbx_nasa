@@ -189,7 +189,6 @@ if(ishandle(main))
     set(change_gs_button, 'String', text);
 end
 
-
 handles.output = get(hObject,'String');
 
 % Update handles structure

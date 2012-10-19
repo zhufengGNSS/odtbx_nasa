@@ -236,8 +236,8 @@ function ok_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Bring in the changed values
-new_date_begin = datenum(get(handles.date_begin, 'String'));
-new_date_final = datenum(get(handles.date_final, 'String'));
+new_date_begin = floor(datenum(get(handles.date_begin, 'String')));
+new_date_final = ceil(datenum(get(handles.date_final, 'String')));
 new_num_increments = str2num(get(handles.num_increments, 'String'));
 
 main = handles.meas_sched_Main;
@@ -246,13 +246,13 @@ if(ishandle(main))
     mainHandles = guidata(main);
     
     % Calculate the new time range
-    % Calculate the new time range
     xData = linspace(new_date_begin,new_date_final,new_num_increments);
     
-    set(mainHandles.axes_handles,'XLim',[new_date_begin new_date_final]);
+    % Set the new limits on all of the axes
+    set(mainHandles.axes_handles,'XLim',[xData(1) xData(end)]);
+    
     % Set the number of XTicks to the number of points in xData:
-    set(mainHandles.meas_total,'XTick',xData)
-    datetick('x', 'mm/dd/yy', 'keepticks');
+    set(mainHandles.axes_handles,'XTick',xData)
 end
 
 handles.output = get(hObject,'String');

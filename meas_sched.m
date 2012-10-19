@@ -108,12 +108,9 @@ endDate = datenum('07-27-2012');
 % units between the start and end dates:
 set(handles.axes_handles, 'XLim', [startDate endDate])
 xData = linspace(startDate,endDate,7);
-% Set the number of XTicks to the number of points
-% in xData:
+% Set the number of XTicks to the number of points in xData:
 set(handles.axes_handles,'XTick',xData)
-datetick('x', 'mm/dd/yy')
-% datetick('x', 'mm/dd/yy', 'keepticks');
-% datetick('x', 'mm/dd/yy', 'keeplimits');
+datetick('x', 'mm/dd/yy', 'keepticks');
 
 % Update handle structure
 guidata(hObject, handles);
@@ -570,7 +567,7 @@ function change_time(hObject, eventdata, handles)
 % This function also adjusts the axes scaling (but not the boxes
 % themselves)
 time_info('meas_sched', handles.figure1);
-
+datetick('x', 'mm/dd/yy', 'keepticks');
 % Redraw all the boxes on the potentially new axes scale
 redraw_boxes();
 

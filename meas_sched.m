@@ -56,7 +56,7 @@ clear global boxes; % Get rid of data from previous runs
 
 global meas_add_remove;
 clear global meas_add_remove;
-meas_add_remove = 0;
+meas_add_remove = 1;
 set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
 % get(handles.meas_schedule_mode, 'SelectedObject')
 % meas_add_remove
@@ -254,14 +254,16 @@ global meas_add_remove;
 
 mode = get(eventdata.NewValue, 'String');
 if (strcmp(mode, 'Add'))
-    meas_add_remove = 0; % Global variable to determine what mode the gui is in
-elseif (strcmp(mode, 'Remove'))
     meas_add_remove = 1; % Global variable to determine what mode the gui is in
-else
+elseif (strcmp(mode, 'Remove'))
     meas_add_remove = -1; % Global variable to determine what mode the gui is in
+elseif (strcmp(mode, 'Pattern Add'))
+    meas_add_remove = 2; % Global variable to determine what mode the gui is in
+elseif (strcmp(mode, 'Edit'))
+    meas_add_remove = 0; % Global variable to determine what mode the gui is in
 end
 % get(handles.meas_schedule_mode, 'SelectedObject')
-meas_add_remove;
+% meas_add_remove;
 
 
 % --- Executes on mouse press over axes background.
@@ -431,7 +433,7 @@ global meas_add_remove;
 global boxes;
 
 if (isempty(meas_add_remove))
-    meas_add_remove = 0;
+    meas_add_remove = 1;
 end
 % meas_add_remove
 
@@ -446,7 +448,7 @@ end
 mousepos = get(hObject, 'currentpoint');
 % screenpos = get(handles.axes1, 'position')
 
-if (meas_add_remove == 0) % Add boxes to axes
+if (meas_add_remove == 1) % Add boxes to axes
     if isempty(add_coords) % First mouse click
         add_coords(1,1:2) = mousepos(1,1:2);
     else % Second mouse click
@@ -454,12 +456,27 @@ if (meas_add_remove == 0) % Add boxes to axes
         boxes = create_a_box(add_coords, [hObject, handles.meas_total], boxes); 
         clear add_coords;
     end
-elseif (meas_add_remove == 1) % Remove boxes from axes
+elseif (meas_add_remove == -1) % Remove boxes from axes
     clear add_cords;
     remove_coords(1,1) = mousepos(1,1);
     boxes = remove_a_box(remove_coords, [hObject, handles.meas_total], boxes);
+elseif (meas_add_remove == 2) % Add boxes in a pattern
+    
+    % This is a temporary filler
+    
+    if isempty(add_coords) % First mouse click
+        add_coords(1,1:2) = mousepos(1,1:2);
+    else % Second mouse click
+        add_coords(2,1:2) = mousepos(1,1:2);
+        boxes = create_a_box(add_coords, [hObject, handles.meas_total], boxes); 
+        clear add_coords;
+    end
+elseif (meas_add_remove == 0) % Edit box information
+    clear add_coords;
+    
 else
-    clear add_cords;
+    clear add_coords;
+    edit_coords(1,1) = mousepos(1,1);
 end
 
 % Debugging

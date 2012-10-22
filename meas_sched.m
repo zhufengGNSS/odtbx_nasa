@@ -461,14 +461,11 @@ elseif (meas_add_remove == -1) % Remove boxes from axes
     remove_coords(1,1) = mousepos(1,1);
     remove_a_box(remove_coords, [hObject, handles.meas_total]);
 elseif (meas_add_remove == 2) % Add boxes in a pattern
-    
-    % This is a temporary filler
-    
     if isempty(add_coords) % First mouse click
         add_coords(1,1:2) = mousepos(1,1:2);
     else % Second mouse click
         add_coords(2,1:2) = mousepos(1,1:2);
-        create_a_box(add_coords, [hObject, handles.meas_total]); 
+        create_many_much_boxen(add_coords, [hObject, handles.meas_total]); 
         clear add_coords;
     end
 elseif (meas_add_remove == 0) % Edit box information

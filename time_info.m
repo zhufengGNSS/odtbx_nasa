@@ -55,9 +55,6 @@ function time_info_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for time_info
 handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
-
 dontOpen = false;
 mainGuiInput = find(strcmp(varargin, 'meas_sched'));
 if (isempty(mainGuiInput)) ...

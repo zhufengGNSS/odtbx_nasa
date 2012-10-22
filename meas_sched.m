@@ -453,13 +453,13 @@ if (meas_add_remove == 1) % Add boxes to axes
         add_coords(1,1:2) = mousepos(1,1:2);
     else % Second mouse click
         add_coords(2,1:2) = mousepos(1,1:2);
-        boxes = create_a_box(add_coords, [hObject, handles.meas_total], boxes); 
+        create_a_box(add_coords, [hObject, handles.meas_total]); 
         clear add_coords;
     end
 elseif (meas_add_remove == -1) % Remove boxes from axes
     clear add_cords;
     remove_coords(1,1) = mousepos(1,1);
-    boxes = remove_a_box(remove_coords, [hObject, handles.meas_total], boxes);
+    remove_a_box(remove_coords, [hObject, handles.meas_total]);
 elseif (meas_add_remove == 2) % Add boxes in a pattern
     
     % This is a temporary filler
@@ -468,22 +468,24 @@ elseif (meas_add_remove == 2) % Add boxes in a pattern
         add_coords(1,1:2) = mousepos(1,1:2);
     else % Second mouse click
         add_coords(2,1:2) = mousepos(1,1:2);
-        boxes = create_a_box(add_coords, [hObject, handles.meas_total], boxes); 
+        create_a_box(add_coords, [hObject, handles.meas_total]); 
         clear add_coords;
     end
 elseif (meas_add_remove == 0) % Edit box information
     clear add_coords;
-    
+    edit_coords(1,1) = mousepos(1,1);
+    edit_a_box(edit_coords, [hObject, handles.meas_total], handles);
 else
     clear add_coords;
-    edit_coords(1,1) = mousepos(1,1);
+    
 end
 
 % Debugging
 assignin('base', 'boxes', boxes(:));
 
 
-function [boxes] = create_a_box(coords, axes_handles, boxes)
+function create_a_box(coords, axes_handles)
+global boxes;
 
 if (coords(2,1) < coords(1,1)) % Rectangles can only have positive deltas
     coords_temp = coords(1,1);
@@ -511,7 +513,8 @@ boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
     'total_handle', meas_on_total);
 
 
-function [boxes] = remove_a_box(coords, axes_handles, boxes)
+function remove_a_box(coords, axes_handles)
+global boxes;
 
 i = 1;
 while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
@@ -524,6 +527,34 @@ while (i <= length(boxes)) % While loop, *not* for loop (we need length recalcul
             
             % Delete the record
             boxes(i) = [];
+        end
+    end
+    i = i + 1;
+end
+
+
+function edit_a_box(coords, axes_handles, handles)
+global boxes;
+
+i = 1;
+while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+    if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
+        if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
+
+            % Open edit window
+            [returned_handle, edited_times(1), edited_times(2)] = ...
+                meas_edit('meas_sched', handles.figure1, ...
+                'meas_times', [boxes(i).x(1), boxes(i).x(2)]);
+
+            if (~strcmp(returned_handle, 'Cancel'))
+                % Assign new values into boxes
+                boxes(i).x(1) = edited_times(1);
+                boxes(i).x(2) = edited_times(2);
+
+                % Redraw all the boxes
+                redraw_boxes();
+            
+            end
         end
     end
     i = i + 1;

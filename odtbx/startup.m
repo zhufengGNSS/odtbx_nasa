@@ -67,29 +67,28 @@
 % to exist near each other.  They must be absolute paths, and don't include
 % the trailing slash.
 %
-% The path to the ODTBX folder (the directory above ODTBX_Source, e.g. the
-% working copy or export of 
-% https://odtbx.svn.sourceforge.net/svnroot/odtbx/trunk):
-%odtbxPath = 'C:\Users\abrown\Projects\ODTBX\matlab\trunk'; 
+% The path to the ODTBX folder (the directory containing ODTBX_Source)
+% e.g., the clone of ssh://git.code.sf.net/p/odtbx/git
+%Win: odtbxPath = 'C:\Users\ravidavi\Development\odtbx-git\odtbx';
+%Mac: odtbxPath = '/Users/ravidavi/Development/odtbx-git/odtbx';
 %
 % The path to a specific MICE folder (the top-level folder of a MICE 
 % distribution, usually named "mice", and it contains directories like:
-% data, doc, include, lib, src, etc., e.g. the working copy or export of
-% https://odtbx.svn.sourceforge.net/svnroot/odtbx/vendor/<<your_arch>>/mice):
-%odtbxMicePath = 'C:\Users\abrown\Projects\ODTBX\matlab\vendor\WinMice_32\mice';
+% data, doc, include, lib, src, etc.
+%Win: odtbxMicePath = 'C:\Users\ravidavi\Development\odtbx-git\vendor\WinMice_64\mice';
+%Mac: odtbxMicePath = '/Users/ravidavi/Development/odtbx-git/vendor/MacIntelMice_64/mice;
 %
 % The path to the JAT folder that contains the source and data files
-% (the directory above jat/, e.g. the working copy or export of 
-% https://odtbx.svn.sourceforge.net/svnroot/odtbx/vendor/Jat or
-% https://gs-fftb-collab.gsfc.nasa.gov/svn/jat/trunk).  Some developers
-% may choose to build their bytecode in these folders as well.
-%jatSrcPath =  'C:\Users\abrown\Projects\ODTBX\jat\branches\ODTBX';
+% (the directory above jat/)
+% Some developers may choose to build their bytecode in these folders as well.
+%Win: jatSrcPath =  'C:\Users\ravidavi\Development\odtbx-git\vendor\Jat';
+%Mac: jatSrcPath =  '/Users/ravidavi/Development/odtbx-git/vendor/Jat';
 %
 % The path to the top-level GMAT folder (the top-level folder of a GMAT
 % distribution, usually named "gmat", and it contains directories like:
-% bin, data, plugins, etc., e.g. the working copy or export of
-% https://odtbx.svn.sourceforge.net/svnroot/odtbx/vendor/<<your_arch>>/GMAT
-%gmatPath = 'C:\Users\jjparker\Documents\Software\GMAT\Nightly';
+% bin, data, plugins, etc.
+%Win: gmatPath = 'C:\Users\ravidavi\Development\odtbx-git\vendor\GMAT_Linux64\GMAT;
+%Mac: gmatPath = '/Users/ravidavi/Development/odtbx-git/GMAT_Linux64/GMAT;
 %
 % (Optional) The path to the JAT folder that contains the Java bytecode
 % (*.class files).  Most developers won't need this if they want to place
@@ -188,7 +187,7 @@ end
 %   maven
 %       target
 %           classes (bytecode, data files must be here too for JAT's assumptions)
-% mice (from the subversion repo /vendor/LinuxMice_64/mice)
+% mice (from the git repo /vendor/LinuxMice_64/mice)
 %   doc
 %   src
 %   lib
@@ -263,11 +262,11 @@ end
 
 if(startuptype == 1)
     % Recursively generate a path string containing the ODTBX_Data directory
-    % and everything (unfortunately including .svn directories!) below it.
+    % and everything below it.
     p = genpath([basePath filesep 'ODTBX_Data']);
 else
     % Recursively generate a path string containing the ODTBX_Data directory
-    % and everything (unfortunately including .svn directories!) below it.
+    % and everything below it.
     p = genpath([odtbxPath filesep 'ODTBX_Data']);
 end
 
@@ -286,7 +285,7 @@ if ~isempty(p)
         end
         
         % The test: any path that contains a file separator with a leading
-        % '.', as in .../.svn/..., in it should be ignored (a.k.a the
+        % '.', as in .../.git/..., in it should be ignored (a.k.a the
         % standard UNIX convention).
         if isempty(strfind(p2check,[filesep '.']))
             % no "/." or "\.", etc. found so it is good:

@@ -1,5 +1,7 @@
+# This file contains filetypes that should be ignored by Git. See gitignore documentation. #
+
 # OS generated files #
-######################
+#####
 .DS_Store
 .DS_Store?
 ._*
@@ -8,3 +10,14 @@
 Icon?
 ehthumbs.db
 Thumbs.db
+
+# Java class files #
+#####
+*.class
+
+# Editor temp files #
+#####
+*.out
+*.o
+*.swp
+*~

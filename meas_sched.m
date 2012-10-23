@@ -482,42 +482,43 @@ function schedule_measurements(hObject, eventdata, handles)
     mousepos = get(hObject, 'currentpoint');
     % screenpos = get(handles.axes1, 'position')
 
-    if (meas_add_remove == 1) % Add boxes to axes
-        if isempty(add_coords) % First mouse click
-            add_coords(1) = mousepos(1,1);
-            
-        else % Second mouse click
-            add_coords(2) = mousepos(1,1);
-            create_a_box(add_coords, [hObject, handles.meas_total]); 
-            [boxes(end).handle, boxes(end).total_handle] = ...
-                draw_a_box(add_coords, [hObject, handles.meas_total]);
+    switch meas_add_remove
+        case 1 % Add boxes to axes
+            if isempty(add_coords) % First mouse click
+                add_coords(1) = mousepos(1,1);
+
+            else % Second mouse click
+                add_coords(2) = mousepos(1,1);
+                create_a_box(add_coords, [hObject, handles.meas_total]); 
+                [boxes(end).handle, boxes(end).total_handle] = ...
+                    draw_a_box(add_coords, [hObject, handles.meas_total]);
+                clear add_coords;
+
+            end
+
+        case -1 % Remove boxes from axes
+            clear add_cords;
+            remove_coords(1) = mousepos(1,1);
+            remove_a_box(remove_coords, [hObject, handles.meas_total]);
+
+        case 2 % Add boxes in a pattern
+            if isempty(add_coords) % First mouse click
+                add_coords(1) = mousepos(1,1);
+
+            else % Second mouse click
+                add_coords(2) = mousepos(1,1);
+                create_many_much_boxen(add_coords, [hObject, handles.meas_total], handles); 
+                clear add_coords;
+
+            end
+
+        case 0 % Edit box information
             clear add_coords;
-            
-        end
+            edit_coords(1) = mousepos(1,1);
+            edit_a_box(edit_coords, [hObject, handles.meas_total], handles);
 
-    elseif (meas_add_remove == -1) % Remove boxes from axes
-        clear add_cords;
-        remove_coords(1) = mousepos(1,1);
-        remove_a_box(remove_coords, [hObject, handles.meas_total]);
-
-    elseif (meas_add_remove == 2) % Add boxes in a pattern
-        if isempty(add_coords) % First mouse click
-            add_coords(1) = mousepos(1,1);
-            
-        else % Second mouse click
-            add_coords(2) = mousepos(1,1);
-            create_many_much_boxen(add_coords, [hObject, handles.meas_total], handles); 
+        otherwise 
             clear add_coords;
-            
-        end
-
-    elseif (meas_add_remove == 0) % Edit box information
-        clear add_coords;
-        edit_coords(1) = mousepos(1,1);
-        edit_a_box(edit_coords, [hObject, handles.meas_total], handles);
-
-    else
-        clear add_coords;
 
     end
 
@@ -627,9 +628,19 @@ end
 
 
 function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
-    x = coords(1);
-    dx = coords(2) - coords(1);
-
+    % Prevent boxes from showing up out of chart bounds
+    visible_time = get(axes_handles(1), 'XLim');
+    if (visible_time(2) < coords(2))
+        x = coords(1);
+        dx = visible_time(2) - coords(1);
+    elseif (visible_time(1) > coords(1))
+        x = visible_time(1);
+        dx = coords(2) - visible_time(1);
+    else
+        x = coords(1);
+        dx = coords(2) - coords(1);
+    end
+    
     % Plot a box on parent axes
     meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 3);%,'FaceColor',[175/255 1 175/255]);
     set(meas, 'parent', axes_handles(1));

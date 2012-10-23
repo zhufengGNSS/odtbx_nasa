@@ -74,6 +74,9 @@ else
     
     set(handles.date_begin_string, 'String', datestr(handles.time_in(1), 'mm/dd/yyyy HH:MM:SS'));
     set(handles.date_final_string, 'String', datestr(handles.time_in(2), 'mm/dd/yyyy HH:MM:SS'));
+    
+    visible_time = get(mainHandles.meas_total, 'XLim');
+    set(handles.repeat_until_string, 'String', datestr(visible_time(2), 'mm/dd/yyyy HH:MM:SS'));
 
     % Determine the position of the dialog - centered on the callback figure
     % if available, else, centered on the screen

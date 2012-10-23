@@ -484,30 +484,30 @@ function schedule_measurements(hObject, eventdata, handles)
 
     if (meas_add_remove == 1) % Add boxes to axes
         if isempty(add_coords) % First mouse click
-            add_coords(1,1:2) = mousepos(1,1:2);
+            add_coords(1) = mousepos(1,1);
         else % Second mouse click
-            add_coords(2,1:2) = mousepos(1,1:2);
+            add_coords(2) = mousepos(1,1);
             create_a_box(add_coords, [hObject, handles.meas_total]); 
             clear add_coords;
         end
 
     elseif (meas_add_remove == -1) % Remove boxes from axes
         clear add_cords;
-        remove_coords(1,1) = mousepos(1,1);
+        remove_coords(1) = mousepos(1,1);
         remove_a_box(remove_coords, [hObject, handles.meas_total]);
 
     elseif (meas_add_remove == 2) % Add boxes in a pattern
         if isempty(add_coords) % First mouse click
-            add_coords(1,1:2) = mousepos(1,1:2);
+            add_coords(1) = mousepos(1,1);
         else % Second mouse click
-            add_coords(2,1:2) = mousepos(1,1:2);
+            add_coords(2) = mousepos(1,1);
             create_many_much_boxen(add_coords, [hObject, handles.meas_total], handles); 
             clear add_coords;
         end
 
     elseif (meas_add_remove == 0) % Edit box information
         clear add_coords;
-        edit_coords(1,1) = mousepos(1,1);
+        edit_coords(1) = mousepos(1,1);
         edit_a_box(edit_coords, [hObject, handles.meas_total], handles);
 
     else
@@ -523,29 +523,18 @@ end
 function create_a_box(coords, axes_handles)
     global boxes;
 
-    if (coords(2,1) < coords(1,1)) % Rectangles can only have positive deltas
-        coords_temp = coords(1,1);
-        coords(1,1) = coords(2,1);
-        coords(2,1) = coords_temp;
+    if (coords(2) < coords(1)) % Rectangles can only have positive deltas
+        coords_temp = coords(1);
+        coords(1) = coords(2);
+        coords(2) = coords_temp;
     end
 
-    x = coords(1,1);
-    % y = coords(1,2);
-    dx = coords(2,1) - coords(1,1);
-    % dy = coords(2,2) - coords(1,2);
-
-    % Plot a box on parent axes
-    meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
-    set(meas, 'parent', axes_handles(1));
-
-    % Plot a box on total axes
-    meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
-    set(meas_on_total, 'parent', axes_handles(2));
+    [meas, meas_on_total] = draw_a_box(coords, axes_handles);
 
     % Save a box in memory
     boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
         'type', 'measurement', ...
-        'x', [coords(1,1) coords(2,1)], ...
+        'x', [coords(1), coords(2)], ...
         'handle', meas, ...
         'total_handle', meas_on_total);
 end
@@ -557,7 +546,7 @@ function remove_a_box(coords, axes_handles)
     i = 1;
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
         if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
-            if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
+            if ((boxes(i).x(1) <= coords(1)) && (coords(1) <= boxes(i).x(2)))
 
                 % Delete boxes
                 delete(boxes(i).handle);
@@ -578,7 +567,7 @@ function edit_a_box(coords, axes_handles, handles)
     i = 1;
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
         if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
-            if ((boxes(i).x(1) <= coords(1,1)) && (coords(1,1) <= boxes(i).x(2)))
+            if ((boxes(i).x(1) <= coords(1)) && (coords(1) <= boxes(i).x(2)))
 
                 % Open edit window
                 [returned_handle, edited_times(1), edited_times(2)] = ...
@@ -638,6 +627,20 @@ function create_many_much_boxen(coords, axes_handles, handles)
 end
 
 
+function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
+    x = coords(1);
+    dx = coords(2) - coords(1);
+
+    % Plot a box on parent axes
+    meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
+    set(meas, 'parent', axes_handles(1));
+
+    % Plot a box on total axes
+    meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
+    set(meas_on_total, 'parent', axes_handles(2));
+end
+
+
 function redraw_boxes()
     % This function just redraws the boxes, it does not change their entry in
     % memory
@@ -655,17 +658,18 @@ function redraw_boxes()
         delete(boxes(i).handle);
         delete(boxes(i).total_handle);
 
-        % Get box data
-        x = boxes(i).x(1);
-        dx = boxes(i).x(2) - boxes(i).x(1);
-
-        % Plot a box on parent axes
-        meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
-        set(meas, 'parent', axes_handle);
-
-        % Plot a box on total axes
-        meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
-        set(meas_on_total, 'parent', axes_total_handle);
+        [meas, meas_on_total] = draw_a_box(boxes(i).x, [axes_handle, axes_total_handle]);
+%         % Get box data
+%         x = boxes(i).x(1);
+%         dx = boxes(i).x(2) - boxes(i).x(1);
+% 
+%         % Plot a box on parent axes
+%         meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
+%         set(meas, 'parent', axes_handle);
+% 
+%         % Plot a box on total axes
+%         meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
+%         set(meas_on_total, 'parent', axes_total_handle);
 
         % Save the new rectangles to the data structure
         boxes(i).handle = meas;

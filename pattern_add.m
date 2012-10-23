@@ -22,7 +22,7 @@ function varargout = pattern_add(varargin)
 
 % Edit the above text to modify the response to help pattern_add
 
-% Last Modified by GUIDE v2.5 22-Oct-2012 17:24:51
+% Last Modified by GUIDE v2.5 23-Oct-2012 11:37:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,8 +72,8 @@ else
     % Obtain handles using GUIDATA with the caller's handle 
     mainHandles = guidata(handles.meas_sched_Main);
     
-    set(handles.date_begin, 'String', datestr(handles.time_in(1), 'mm/dd/yyyy HH:MM:SS'));
-    set(handles.date_final, 'String', datestr(handles.time_in(2), 'mm/dd/yyyy HH:MM:SS'));
+    set(handles.date_begin_string, 'String', datestr(handles.time_in(1), 'mm/dd/yyyy HH:MM:SS'));
+    set(handles.date_final_string, 'String', datestr(handles.time_in(2), 'mm/dd/yyyy HH:MM:SS'));
 
     % Determine the position of the dialog - centered on the callback figure
     % if available, else, centered on the screen
@@ -135,26 +135,28 @@ function varargout = pattern_add_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-varargout{2} = datenum(get(handles.date_begin, 'String'));
-varargout{3} = datenum(get(handles.date_final, 'String'));
+varargout{2} = handles.date_begin_string;
+varargout{3} = handles.date_final_string;
+varargout{4} = handles.repeat_freq;
+varargout{5} = handles.repeat_until;
 
 % The figure can be deleted now
 delete(handles.figure1);
 
 
 
-function date_begin_Callback(hObject, eventdata, handles)
-% hObject    handle to date_begin (see GCBO)
+function date_begin_string_Callback(hObject, eventdata, handles)
+% hObject    handle to date_begin_string (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of date_begin as text
-%        str2double(get(hObject,'String')) returns contents of date_begin as a double
+% Hints: get(hObject,'String') returns contents of date_begin_string as text
+%        str2double(get(hObject,'String')) returns contents of date_begin_string as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function date_begin_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to date_begin (see GCBO)
+function date_begin_string_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to date_begin_string (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -166,18 +168,18 @@ end
 
 
 
-function date_final_Callback(hObject, eventdata, handles)
-% hObject    handle to date_final (see GCBO)
+function date_final_string_Callback(hObject, eventdata, handles)
+% hObject    handle to date_final_string (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of date_final as text
-%        str2double(get(hObject,'String')) returns contents of date_final as a double
+% Hints: get(hObject,'String') returns contents of date_final_string as text
+%        str2double(get(hObject,'String')) returns contents of date_final_string as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function date_final_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to date_final (see GCBO)
+function date_final_string_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to date_final_string (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -195,6 +197,10 @@ function cancel_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles.output = get(hObject,'String');
+handles.date_begin_string = 0;
+handles.date_final_string = 0;
+handles.repeat_freq = 0;
+handles.repeat_until = 0;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -211,11 +217,25 @@ function ok_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Bring in the changed values
-new_date_begin = datenum(get(handles.date_begin, 'String'));
-new_date_final = datenum(get(handles.date_final, 'String'));
+handles.date_begin_string = datenum(get(handles.date_begin_string, 'String'));
+handles.date_final_string = datenum(get(handles.date_final_string, 'String'));
 
-% handles.output = get(hObject,'String');
-% handles.output = [new_date_begin, new_date_final]
+repeat_every = str2num(get(handles.repeat_every_string, 'String'));
+
+time_unit = get(handles.units, 'Value');
+switch time_unit
+    case 1 % Minutes
+        time_multiplier = 1/24*1/60;
+    case 2 % Hours
+        time_multiplier = 1/24;
+    case 3 % Days
+        time_multiplier = 1;
+    case 4 % Weeks
+        time_multiplier = 7;
+end
+
+handles.repeat_freq = repeat_every * time_multiplier;
+handles.repeat_until = datenum(get(handles.repeat_until_string, 'String'));
 
 % Update handles structure
 guidata(hObject, handles);
@@ -238,4 +258,73 @@ if isequal(get(hObject, 'waitstatus'), 'waiting')
 else
     % The GUI is no longer waiting, just close it
     delete(hObject);
+end
+
+
+
+function repeat_every_string_Callback(hObject, eventdata, handles)
+% hObject    handle to repeat_every_string (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of repeat_every_string as text
+%        str2double(get(hObject,'String')) returns contents of repeat_every_string as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function repeat_every_string_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to repeat_every_string (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in units.
+function units_Callback(hObject, eventdata, handles)
+% hObject    handle to units (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns units contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from units
+
+
+% --- Executes during object creation, after setting all properties.
+function units_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to units (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function repeat_until_string_Callback(hObject, eventdata, handles)
+% hObject    handle to repeat_until_string (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of repeat_until_string as text
+%        str2double(get(hObject,'String')) returns contents of repeat_until_string as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function repeat_until_string_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to repeat_until_string (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

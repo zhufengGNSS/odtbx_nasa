@@ -604,31 +604,37 @@ end
 function create_many_much_boxen(coords, axes_handles, handles)
     global boxes;
 
-    if (coords(2,1) < coords(1,1)) % Rectangles can only have positive deltas
-        coords_temp = coords(1,1);
-        coords(1,1) = coords(2,1);
-        coords(2,1) = coords_temp;
+    % Use the click input to create an original box
+    create_a_box(coords, axes_handles);
+    
+    % Bring up GUI to edit he first measurement and set repeat
+    [returned_handle, edited_times(1), edited_times(2), repeat_freq, repeat_until] = ...
+                    pattern_add('meas_sched', handles.figure1, ...
+                    'meas_times', [boxes(end).x(1), boxes(end).x(2)]);
+     
+    if (~strcmp(returned_handle, 'Cancel'))
+        % Adjust the original box
+        boxes(end).x(1) = edited_times(1);
+        boxes(end).x(2) = edited_times(2);
+        duration = boxes(end).x(2) - boxes(end).x(1);
+
+        % Add in the repeated boxes
+        for new_start = edited_times(1):repeat_freq:repeat_until
+            series_coords(1,1) = new_start;
+            series_coords(2,1) = new_start + duration;
+            
+            create_a_box(series_coords, axes_handles);
+        
+        end
+        
+        % Redraw all the boxes
+        redraw_boxes();
+    else
+        % If they cancel out, delete the original box they made
+        remove_a_box(coords, axes_handles)
     end
-
-    x = coords(1,1);
-    % y = coords(1,2);
-    dx = coords(2,1) - coords(1,1);
-    % dy = coords(2,2) - coords(1,2);
-
-    % Plot a box on parent axes
-    meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5);%,'FaceColor',[175/255 1 175/255]);
-    set(meas, 'parent', axes_handles(1));
-
-    % Plot a box on total axes
-    meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
-    set(meas_on_total, 'parent', axes_handles(2));
-
-    % Save a box in memory
-    boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
-        'type', 'measurement', ...
-        'x', [coords(1,1) coords(2,1)], ...
-        'handle', meas, ...
-        'total_handle', meas_on_total);
+                
+    
 end
 
 

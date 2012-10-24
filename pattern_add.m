@@ -254,6 +254,14 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+handles.output = 'Cancel';
+handles.date_begin_string = 0;
+handles.date_final_string = 0;
+handles.repeat_freq = 0;
+handles.repeat_until = 0;
+
+guidata(hObject, handles)
+
 % Hint: delete(hObject) closes the figure
 if isequal(get(hObject, 'waitstatus'), 'waiting')
     % The GUI is still in UIWAIT, us UIRESUME

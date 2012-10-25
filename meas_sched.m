@@ -99,6 +99,9 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
         handles.axes16, handles.axes17, handles.axes18, handles.axes19, handles.axes20, ...
         handles.meas_total];
     linkaxes(handles.axes_handles, 'xy');
+    
+    % Give the axes a default name
+    set(handles.axes_handles, 'UserData', ['Unspecified']);
 
     % Set the size of the axes (will replace with dates)
     set(handles.axes_handles,'YLim',[0 1]);
@@ -541,7 +544,7 @@ function create_a_box(coords, axes_handles)
 %     [meas, meas_on_total] = draw_a_box(coords, axes_handles);
 
     % Save a box in memory
-    boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
+    boxes(end+1) = struct('ground_station', get(axes_handles(1), 'UserData'), ...
         'type', 'measurement', ...
         'x', [coords(1), coords(2)], ...
         'handle', [], ...
@@ -624,8 +627,6 @@ function create_many_much_boxen(coords, axes_handles, handles)
         % If they cancel out, delete the original box they made
         remove_a_box(coords, axes_handles)
     end
-                
-    
 end
 
 
@@ -681,6 +682,26 @@ function redraw_boxes()
 end
 
 
+function change_gs(axes_handle, new_gs_name)
+    % This function changes the ground station of a box
+    global boxes;
+    
+    % Change axes_handle ground station
+    set(axes_handle, 'UserData', [new_gs_name]);
+    
+    i = 2; % The first box is a decoy structure box
+    while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+        % If it's on the correct axes
+        if (axes_handle == get(boxes(i).handle, 'Parent'))
+            % Change boxes(i).ground_station
+            boxes(i).ground_station = get(axes_handle, 'UserData');
+        end
+        i = i + 1;
+    end
+    
+end
+
+
 % --- Executes on mouse press over axes background.
 function meas_total_ButtonDownFcn(hObject, eventdata, handles)
     % hObject    handle to meas_total (see GCBO)
@@ -713,7 +734,12 @@ function gs_label1_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label1;
     % Update handle structure
     guidata(hObject, handles);
+   
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes1, get(hObject, 'String'));
 end
 
 
@@ -725,7 +751,12 @@ function gs_label2_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label2;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes2, get(hObject, 'String'));
 end
 
 
@@ -737,7 +768,12 @@ function gs_label3_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label3;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes3, get(hObject, 'String'));
 end
 
 
@@ -749,7 +785,12 @@ function gs_label4_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label4;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes4, get(hObject, 'String'));
 end
 
 
@@ -761,7 +802,12 @@ function gs_label5_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label5;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes5, get(hObject, 'String'));
 end
 
 
@@ -773,7 +819,12 @@ function gs_label6_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label6;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes6, get(hObject, 'String'));
 end
 
 
@@ -785,7 +836,12 @@ function gs_label7_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label7;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes7, get(hObject, 'String'));
 end
 
 
@@ -797,7 +853,12 @@ function gs_label8_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label8;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes8, get(hObject, 'String'));
 end
 
 
@@ -809,7 +870,12 @@ function gs_label9_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label9;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes9, get(hObject, 'String'));
 end
 
 
@@ -821,7 +887,12 @@ function gs_label10_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label10;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes10, get(hObject, 'String'));
 end
 
 
@@ -833,7 +904,12 @@ function gs_label11_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label11;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes11, get(hObject, 'String'));
 end
 
 
@@ -845,7 +921,12 @@ function gs_label12_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label12;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes12, get(hObject, 'String'));
 end
 
 
@@ -857,7 +938,12 @@ function gs_label13_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label13;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes13, get(hObject, 'String'));
 end
 
 
@@ -869,7 +955,12 @@ function gs_label14_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label14;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes14, get(hObject, 'String'));
 end
 
 
@@ -881,7 +972,12 @@ function gs_label15_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label15;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes15, get(hObject, 'String'));
 end
 
 
@@ -893,7 +989,12 @@ function gs_label16_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label16;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes16, get(hObject, 'String'));
 end
 
 
@@ -905,7 +1006,12 @@ function gs_label17_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label17;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes17, get(hObject, 'String'));
 end
 
 
@@ -917,7 +1023,12 @@ function gs_label18_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label18;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes18, get(hObject, 'String'));
 end
 
 
@@ -929,7 +1040,12 @@ function gs_label19_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label19;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes19, get(hObject, 'String'));
 end
 
 
@@ -941,7 +1057,12 @@ function gs_label20_Callback(hObject, eventdata, handles)
     handles.gs_label_current = handles.gs_label20;
     % Update handle structure
     guidata(hObject, handles);
+       
+    % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
+    
+    % Change the boxes structures to reflect new changes
+    change_gs(handles.axes20, get(hObject, 'String'));
 end
 
 
@@ -971,5 +1092,5 @@ i = 2; % The first box is a decoy structure box
                     datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
         i = i + 1;
     end
-close(fid);
+% close(fid);
 end

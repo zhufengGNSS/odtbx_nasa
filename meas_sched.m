@@ -969,7 +969,7 @@ i = 2; % The first box is a decoy structure box
                     boxes(i).ground_station, boxes(i).type, ...
                     datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
                     datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
-                i = i + 1;
+        i = i + 1;
     end
 close(fid);
 end

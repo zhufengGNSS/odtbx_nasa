@@ -142,6 +142,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
     % hObject    handle to pushbutton1 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    export_schedule();
 end
 
 
@@ -190,6 +191,7 @@ function export_Callback(hObject, eventdata, handles)
     % hObject    handle to export (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    export_schedule();
 end
 
 
@@ -940,4 +942,34 @@ function gs_label20_Callback(hObject, eventdata, handles)
     % Update handle structure
     guidata(hObject, handles);
     gs_info('meas_sched', handles.figure1);
+end
+
+
+function export_schedule()
+% Write all of the measurements to a file
+global boxes;
+
+[name, path] = uiputfile('*.csv','Export To','measurement_schedule.csv');
+filename = strcat(path, name);
+fid = fopen(filename, 'w');
+
+% boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
+%     'type', 'measurement', ...
+%     'x', [coords(1), coords(2)], ...
+%     'handle', [], ...
+%     'total_handle', []);
+
+% Print a header
+fprintf(fid, 'Measurement Schedule\n\n');
+fprintf(fid, 'Ground Station, Event Type, Start Date/Time, Finish Date/Time,\n');
+
+i = 2; % The first box is a decoy structure box
+    while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+        fprintf(fid, '%s, %s, %s, %s\n', ...
+                    boxes(i).ground_station, boxes(i).type, ...
+                    datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
+                    datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
+                i = i + 1;
+    end
+close(fid);
 end

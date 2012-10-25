@@ -1067,30 +1067,31 @@ end
 
 
 function export_schedule()
-% Write all of the measurements to a file
-global boxes;
+    % Write all of the measurements to a file
+    global boxes;
 
-[name, path] = uiputfile('*.csv','Export To','measurement_schedule.csv');
-filename = strcat(path, name);
-fid = fopen(filename, 'w');
+    [name, path] = uiputfile('*.csv','Export To','measurement_schedule.csv');
+    filename = strcat(path, name);
+    fid = fopen(filename, 'w');
 
-% boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
-%     'type', 'measurement', ...
-%     'x', [coords(1), coords(2)], ...
-%     'handle', [], ...
-%     'total_handle', []);
+    % boxes(end+1) = struct('ground_station', get(axes_handles(1), 'Tag'), ...
+    %     'type', 'measurement', ...
+    %     'x', [coords(1), coords(2)], ...
+    %     'handle', [], ...
+    %     'total_handle', []);
+    if (fid ~= -1) % Make sure the file opens correctly
+        % Print a header
+        fprintf(fid, 'Measurement Schedule\n\n');
+        fprintf(fid, 'Ground Station, Event Type, Start Date/Time, Finish Date/Time,\n');
 
-% Print a header
-fprintf(fid, 'Measurement Schedule\n\n');
-fprintf(fid, 'Ground Station, Event Type, Start Date/Time, Finish Date/Time,\n');
-
-i = 2; % The first box is a decoy structure box
-    while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
-        fprintf(fid, '%s, %s, %s, %s\n', ...
-                    boxes(i).ground_station, boxes(i).type, ...
-                    datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
-                    datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
-        i = i + 1;
+        i = 2; % The first box is a decoy structure box
+            while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+                fprintf(fid, '%s, %s, %s, %s\n', ...
+                            boxes(i).ground_station, boxes(i).type, ...
+                            datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
+                            datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
+                i = i + 1;
+            end
+        % close(fid);
     end
-% close(fid);
 end

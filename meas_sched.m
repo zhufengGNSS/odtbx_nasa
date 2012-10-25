@@ -203,6 +203,9 @@ function quit_Callback(hObject, eventdata, handles)
     % hObject    handle to quit (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % The figure can be deleted now
+    delete(handles.figure1);
 end
 
 

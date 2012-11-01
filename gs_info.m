@@ -22,7 +22,7 @@ function varargout = gs_info(varargin)
 
 % Edit the above text to modify the response to help gs_info
 
-% Last Modified by GUIDE v2.5 01-Nov-2012 13:04:41
+% Last Modified by GUIDE v2.5 01-Nov-2012 17:07:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,6 +42,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
+end
 
 
 % --- Executes just before gs_info is made visible.
@@ -112,15 +113,13 @@ guidata(hObject, handles);
 
 if dontOpen
    disp('-----------------------------------------------------');
-   disp('Improper input arguments. Pass a property value pair') 
-   disp('whose name is "changeme_main" and value is the handle')
-   disp('to the changeme_main figure, e.g:');
-   disp('   x = changeme_main()');
-   disp('   changeme_dialog(''changeme_main'', x)');
+   disp('Improper input arguments: gs_info.m ') 
    disp('-----------------------------------------------------');
 else    
 % UIWAIT makes gs_info wait for user response (see UIRESUME)
     uiwait(handles.figure1);
+end
+
 end
 
 
@@ -136,6 +135,8 @@ varargout{1} = handles.output;
 
 % The figure can be deleted now
 delete(handles.figure1);
+end
+
 
 
 function gs_name_Callback(hObject, eventdata, handles)
@@ -145,6 +146,7 @@ function gs_name_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of gs_name as text
 %        str2double(get(hObject,'String')) returns contents of gs_name as a double
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -157,6 +159,8 @@ function gs_name_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
 end
 
 
@@ -173,6 +177,9 @@ guidata(hObject, handles);
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
 uiresume(handles.figure1);
+end
+
+
 
 % --- Executes on button press in ok_button.
 function ok_button_Callback(hObject, eventdata, handles)
@@ -197,33 +204,7 @@ guidata(hObject, handles);
 % Use UIRESUME instead of delete because the OutputFcn needs
 % to get the updated handles structure.
 uiresume(handles.figure1);
-
-
-% --- Executes on button press in check_range.
-function check_range_Callback(hObject, eventdata, handles)
-% hObject    handle to check_range (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of check_range
-
-
-% --- Executes on button press in check_ea.
-function check_ea_Callback(hObject, eventdata, handles)
-% hObject    handle to check_ea (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of check_ea
-
-
-% --- Executes on button press in check_visibility.
-function check_visibility_Callback(hObject, eventdata, handles)
-% hObject    handle to check_visibility (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of check_visibility
+end
 
 
 % --- Executes when user attempts to close figure1.
@@ -241,6 +222,7 @@ else
     delete(hObject);
 end
 
+end
 
 
 function gs_pos_x_Callback(hObject, eventdata, handles)
@@ -250,6 +232,8 @@ function gs_pos_x_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of gs_pos_x as text
 %        str2double(get(hObject,'String')) returns contents of gs_pos_x as a double
+
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -264,6 +248,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+end
+
 
 
 function gs_pos_y_Callback(hObject, eventdata, handles)
@@ -273,6 +259,8 @@ function gs_pos_y_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of gs_pos_y as text
 %        str2double(get(hObject,'String')) returns contents of gs_pos_y as a double
+
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -287,6 +275,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+end
+
 
 
 function gs_pos_z_Callback(hObject, eventdata, handles)
@@ -296,6 +286,8 @@ function gs_pos_z_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of gs_pos_z as text
 %        str2double(get(hObject,'String')) returns contents of gs_pos_z as a double
+
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -310,6 +302,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+end
+
 
 % --- Executes on selection change in gs_name_list.
 function gs_name_list_Callback(hObject, eventdata, handles)
@@ -319,6 +313,9 @@ function gs_name_list_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns gs_name_list contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from gs_name_list
+
+end
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -331,4 +328,49 @@ function gs_name_list_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+end
+
+
+% --- Executes on button press in find_gs_button.
+function find_gs_button_Callback(hObject, eventdata, handles)
+% hObject    handle to find_gs_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%Test epoch - DELETE THIS VALUE
+epoch = datenum('Jan 1 2006');
+
+% Take the value and find the corresponding ECEF coordinates
+gsList = createGroundStationList();
+gsID = { char(get(handles.gs_name_list, 'String')) };
+gsECEF = zeros(3,1);
+
+
+try
+    gsECEF(:,1) = getGroundStationInfo(gsList,gsID{1},'ecefPosition',epoch);
+catch exception
+    % Warn people if their ground station wasn't in the list
+    errordlg(exception.message, 'Not Found!');
+end
+
+% Display the name in the name box
+set(handles.gs_name, 'String', gsID{1});
+
+% Display the coordinates in the ECEF boxes
+set(handles.gs_pos_x, 'String', gsECEF(1,1));
+set(handles.gs_pos_y, 'String', gsECEF(2,1));
+set(handles.gs_pos_z, 'String', gsECEF(3,1));
+
+% Only the values in the bottom box get passed on
+
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function find_gs_button_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to find_gs_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
 end

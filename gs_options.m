@@ -1,35 +1,35 @@
-function varargout = gs_info(varargin)
-% GS_INFO MATLAB code for gs_info.fig
-%      GS_INFO, by itself, creates a new GS_INFO or raises the existing
+function varargout = gs_options(varargin)
+% GS_OPTIONS MATLAB code for gs_options.fig
+%      GS_OPTIONS, by itself, creates a new GS_OPTIONS or raises the existing
 %      singleton*.
 %
-%      H = GS_INFO returns the handle to a new GS_INFO or the handle to
+%      H = GS_OPTIONS returns the handle to a new GS_OPTIONS or the handle to
 %      the existing singleton*.
 %
-%      GS_INFO('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in GS_INFO.M with the given input arguments.
+%      GS_OPTIONS('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in GS_OPTIONS.M with the given input arguments.
 %
-%      GS_INFO('Property','Value',...) creates a new GS_INFO or raises the
+%      GS_OPTIONS('Property','Value',...) creates a new GS_OPTIONS or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before gs_info_OpeningFcn gets called.  An
+%      applied to the GUI before gs_options_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to gs_info_OpeningFcn via varargin.
+%      stop.  All inputs are passed to gs_options_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help gs_info
+% Edit the above text to modify the response to help gs_options
 
-% Last Modified by GUIDE v2.5 01-Nov-2012 13:04:41
+% Last Modified by GUIDE v2.5 31-Oct-2012 18:31:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @gs_info_OpeningFcn, ...
-                   'gui_OutputFcn',  @gs_info_OutputFcn, ...
+                   'gui_OpeningFcn', @gs_options_OpeningFcn, ...
+                   'gui_OutputFcn',  @gs_options_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,15 +44,15 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before gs_info is made visible.
-function gs_info_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before gs_options is made visible.
+function gs_options_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to gs_info (see VARARGIN)
+% varargin   command line arguments to gs_options (see VARARGIN)
 
-% Choose default command line output for gs_info
+% Choose default command line output for gs_options
 handles.output = hObject;
 
 % Update handles structure
@@ -70,9 +70,6 @@ else
     
     % Obtain handles using GUIDATA with the caller's handle 
     mainHandles = guidata(handles.meas_sched_Main);
-    % Set the edit text to the String of the main GUI's button
-    set(handles.gs_name, 'String', ...
-        get(mainHandles.gs_label_current, 'String'));
 
     % Determine the position of the dialog - centered on the callback figure
     % if available, else, centered on the screen
@@ -112,20 +109,16 @@ guidata(hObject, handles);
 
 if dontOpen
    disp('-----------------------------------------------------');
-   disp('Improper input arguments. Pass a property value pair') 
-   disp('whose name is "changeme_main" and value is the handle')
-   disp('to the changeme_main figure, e.g:');
-   disp('   x = changeme_main()');
-   disp('   changeme_dialog(''changeme_main'', x)');
+   disp('Improper input arguments: gs_options.m');
    disp('-----------------------------------------------------');
 else    
-% UIWAIT makes gs_info wait for user response (see UIRESUME)
+% UIWAIT makes gs_options wait for user response (see UIRESUME)
     uiwait(handles.figure1);
 end
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = gs_info_OutputFcn(hObject, eventdata, handles) 
+function varargout = gs_options_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -180,15 +173,6 @@ function ok_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-text = get(handles.gs_name, 'String');
-main = handles.meas_sched_Main;
-% Obtain handles using GUIDATA with the caller's handle 
-if(ishandle(main))
-    mainHandles = guidata(main);
-    change_gs_button = mainHandles.gs_label_current;
-    set(change_gs_button, 'String', text);
-end
-
 handles.output = get(hObject,'String');
 
 % Update handles structure
@@ -199,13 +183,13 @@ guidata(hObject, handles);
 uiresume(handles.figure1);
 
 
-% --- Executes on button press in check_range.
-function check_range_Callback(hObject, eventdata, handles)
-% hObject    handle to check_range (see GCBO)
+% --- Executes on button press in range.
+function range_Callback(hObject, eventdata, handles)
+% hObject    handle to range (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of check_range
+% Hint: get(hObject,'Value') returns toggle state of range
 
 
 % --- Executes on button press in check_ea.
@@ -243,18 +227,28 @@ end
 
 
 
-function gs_pos_x_Callback(hObject, eventdata, handles)
-% hObject    handle to gs_pos_x (see GCBO)
+function elevationconstraint_Callback(hObject, eventdata, handles)
+% hObject    handle to elevationconstraint (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of gs_pos_x as text
-%        str2double(get(hObject,'String')) returns contents of gs_pos_x as a double
+% Hints: get(hObject,'String') returns contents of elevationconstraint as text
+%        str2double(get(hObject,'String')) returns contents of elevationconstraint as a double
+
+
+
+function epoch_Callback(hObject, eventdata, handles)
+% hObject    handle to epoch (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of epoch as text
+%        str2double(get(hObject,'String')) returns contents of epoch as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function gs_pos_x_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to gs_pos_x (see GCBO)
+function epoch_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to epoch (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -266,18 +260,68 @@ end
 
 
 
-function gs_pos_y_Callback(hObject, eventdata, handles)
-% hObject    handle to gs_pos_y (see GCBO)
+function rangeType_Callback(hObject, eventdata, handles)
+% hObject    handle to rangeType (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of gs_pos_y as text
-%        str2double(get(hObject,'String')) returns contents of gs_pos_y as a double
+% Hints: get(hObject,'String') returns contents of rangeType as text
+%        str2double(get(hObject,'String')) returns contents of rangeType as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function gs_pos_y_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to gs_pos_y (see GCBO)
+function rangeType_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rangeType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in range_rate.
+function range_rate_Callback(hObject, eventdata, handles)
+% hObject    handle to range_rate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of range_rate
+
+
+% --- Executes on button press in doppler.
+function doppler_Callback(hObject, eventdata, handles)
+% hObject    handle to doppler (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of doppler
+
+
+% --- Executes on button press in unit_vec.
+function unit_vec_Callback(hObject, eventdata, handles)
+% hObject    handle to unit_vec (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of unit_vec
+
+
+
+function trans_freq_Callback(hObject, eventdata, handles)
+% hObject    handle to trans_freq (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of trans_freq as text
+%        str2double(get(hObject,'String')) returns contents of trans_freq as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function trans_freq_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to trans_freq (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -289,18 +333,18 @@ end
 
 
 
-function gs_pos_z_Callback(hObject, eventdata, handles)
-% hObject    handle to gs_pos_z (see GCBO)
+function meas_cov_Callback(hObject, eventdata, handles)
+% hObject    handle to meas_cov (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of gs_pos_z as text
-%        str2double(get(hObject,'String')) returns contents of gs_pos_z as a double
+% Hints: get(hObject,'String') returns contents of meas_cov as text
+%        str2double(get(hObject,'String')) returns contents of meas_cov as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function gs_pos_z_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to gs_pos_z (see GCBO)
+function meas_cov_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to meas_cov (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -311,23 +355,100 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in gs_name_list.
-function gs_name_list_Callback(hObject, eventdata, handles)
-% hObject    handle to gs_name_list (see GCBO)
+% --- Executes on button press in checkbox8.
+function checkbox8_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox8 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns gs_name_list contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from gs_name_list
+% Hint: get(hObject,'Value') returns toggle state of checkbox8
+
+
+% --- Executes on button press in gps_ionosphere.
+function gps_ionosphere_Callback(hObject, eventdata, handles)
+% hObject    handle to gps_ionosphere (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of gps_ionosphere
+
+
+% --- Executes on button press in ionosphere.
+function ionosphere_Callback(hObject, eventdata, handles)
+% hObject    handle to ionosphere (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ionosphere
+
+
+% --- Executes on button press in troposphere.
+function troposphere_Callback(hObject, eventdata, handles)
+% hObject    handle to troposphere (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of troposphere
+
+
+% --- Executes on button press in angles.
+function angles_Callback(hObject, eventdata, handles)
+% hObject    handle to angles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of angles
+
+
+% --- Executes on button press in charged_particle.
+function charged_particle_Callback(hObject, eventdata, handles)
+% hObject    handle to charged_particle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of charged_particle
+
+
+
+function earth_atm_mask_radius_Callback(hObject, eventdata, handles)
+% hObject    handle to earth_atm_mask_radius (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of earth_atm_mask_radius as text
+%        str2double(get(hObject,'String')) returns contents of earth_atm_mask_radius as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function gs_name_list_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to gs_name_list (see GCBO)
+function earth_atm_mask_radius_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to earth_atm_mask_radius (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Precn_Nutn_Expire_Callback(hObject, eventdata, handles)
+% hObject    handle to Precn_Nutn_Expire (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Precn_Nutn_Expire as text
+%        str2double(get(hObject,'String')) returns contents of Precn_Nutn_Expire as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function Precn_Nutn_Expire_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Precn_Nutn_Expire (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

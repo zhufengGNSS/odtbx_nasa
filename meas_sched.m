@@ -20,11 +20,11 @@ function varargout = meas_sched(varargin)
     %
     % See also: GUIDE, GUIDATA, GUIHANDLES
 
-    % Edit the above text to modify the response to help meas_sched
+    % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 10-Oct-2012 13:49:46
+    % Last Modified by GUIDE v2.5 31-Oct-2012 18:28:31
 
-    % Begin initialization code - DO NOT EDIT
+    % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ...
                        'gui_Singleton',  gui_Singleton, ...
@@ -41,7 +41,7 @@ function varargout = meas_sched(varargin)
     else
         gui_mainfcn(gui_State, varargin{:});
     end
-    % End initialization code - DO NOT EDIT
+    % End initialization code - DO NOT VISUALIZATION
 end
 
 
@@ -140,9 +140,9 @@ function varargout = meas_sched_OutputFcn(hObject, eventdata, handles)
 end
 
 
-% --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
-    % hObject    handle to pushbutton1 (see GCBO)
+% --- Executes on button press in export_button.
+function export_button_Callback(hObject, eventdata, handles)
+    % hObject    handle to export_button (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     export_schedule();
@@ -158,8 +158,17 @@ end
 
 
 % --------------------------------------------------------------------
-function edit_Callback(hObject, eventdata, handles)
-    % hObject    handle to edit (see GCBO)
+function simulation_Callback(hObject, eventdata, handles)
+% hObject    handle to simulation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+
+% --------------------------------------------------------------------
+function visualization_Callback(hObject, eventdata, handles)
+    % hObject    handle to visualization (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
 end
@@ -187,6 +196,16 @@ function satellite_Callback(hObject, eventdata, handles)
     % hObject    handle to satellite (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    satellite_edit('meas_sched', handles.figure1);
+end
+
+
+% --------------------------------------------------------------------
+function options_Callback(hObject, eventdata, handles)
+% hObject    handle to options (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    gs_options('meas_sched', handles.figure1);
 end
 
 
@@ -585,7 +604,7 @@ function edit_a_box(coords, axes_handles, handles)
         if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
             if ((boxes(i).x(1) <= coords(1)) && (coords(1) <= boxes(i).x(2)))
 
-                % Open edit window
+                % Open visualization window
                 [returned_handle, edited_times(1), edited_times(2)] = ...
                     meas_edit('meas_sched', handles.figure1, ...
                     'meas_times', [boxes(i).x(1), boxes(i).x(2)]);
@@ -609,7 +628,7 @@ end
 function create_many_much_boxen(coords, axes_handles, handles)
     global boxes;
 
-    % Bring up GUI to edit original information and set repeat
+    % Bring up GUI to visualization original information and set repeat
     [returned_handle, edited_times(1), edited_times(2), repeat_freq, repeat_until] = ...
                     pattern_add('meas_sched', handles.figure1, ...
                     'meas_times', [coords(1), coords(2)]);

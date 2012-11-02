@@ -317,7 +317,6 @@ function gs_name_list_Callback(hObject, eventdata, handles)
 end
 
 
-
 % --- Executes during object creation, after setting all properties.
 function gs_name_list_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to gs_name_list (see GCBO)
@@ -346,7 +345,6 @@ epoch = datenum('Jan 1 2006');
 gsList = createGroundStationList();
 gsID = { char(get(handles.gs_name_list, 'String')) };
 gsECEF = zeros(3,1);
-
 
 try
     gsECEF(:,1) = getGroundStationInfo(gsList,gsID{1},'ecefPosition',epoch);

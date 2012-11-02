@@ -60,8 +60,10 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     clear global meas_add_remove;
     meas_add_remove = 1;
     set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
-    % get(handles.meas_schedule_mode, 'SelectedObject')
-    % meas_add_remove
+
+    global measOptions;
+    % Bring in data from desktop if it exists, if not start fresh
+    measOptions = odtbxOptions('measurement');
 
     % Choose default command line output for meas_sched
     handles.output = hObject;
@@ -205,6 +207,9 @@ function options_Callback(hObject, eventdata, handles)
 % hObject    handle to options (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    global measOptions;
+%     measOptions = setOdtbxOptions(measOptions, 'useRange', true);
+%     measOptions = setOdtbxOptions(measOptions, 'rangeType', '2way');
     gs_options('meas_sched', handles.figure1);
 end
 

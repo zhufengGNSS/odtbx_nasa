@@ -7,7 +7,7 @@
 <name>Orbit Determination</name>
 <type>toolbox</type>
 <icon>specsimicon.gif</icon>
-<help_location>/HTML</help_location>
+<help_location>.</help_location>
 
 <!--
 <list>

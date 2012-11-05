@@ -63,32 +63,28 @@
 %
 %
 % Developers, 
-% modify these paths for your system.  They can be any path and don't have
-% to exist near each other.  They must be absolute paths, and don't include
-% the trailing slash.
+% modify these paths for your system.  They must be absolute paths, and 
+% don't include the trailing slash.
+%myBasePath = '/Users/ravidavi/Development/odtbx-git';
 %
 % The path to the ODTBX folder (the directory containing ODTBX_Source)
 % e.g., the clone of ssh://git.code.sf.net/p/odtbx/git
-%Win: odtbxPath = 'C:\Users\ravidavi\Development\odtbx-git\odtbx';
-%Mac: odtbxPath = '/Users/ravidavi/Development/odtbx-git/odtbx';
+%odtbxPath = [myBasePath, '/odtbx'];
 %
 % The path to a specific MICE folder (the top-level folder of a MICE 
 % distribution, usually named "mice", and it contains directories like:
 % data, doc, include, lib, src, etc.
-%Win: odtbxMicePath = 'C:\Users\ravidavi\Development\odtbx-git\vendor\WinMice_64\mice';
-%Mac: odtbxMicePath = '/Users/ravidavi/Development/odtbx-git/vendor/MacIntelMice_64/mice;
+%odtbxMicePath = [myBasePath, '/vendor/MacIntelMice_64/mice'];
 %
 % The path to the JAT folder that contains the source and data files
 % (the directory above jat/)
 % Some developers may choose to build their bytecode in these folders as well.
-%Win: jatSrcPath =  'C:\Users\ravidavi\Development\odtbx-git\vendor\Jat';
-%Mac: jatSrcPath =  '/Users/ravidavi/Development/odtbx-git/vendor/Jat';
+%jatSrcPath =  [myBasePath, '/vendor/Jat'];
 %
 % The path to the top-level GMAT folder (the top-level folder of a GMAT
 % distribution, usually named "gmat", and it contains directories like:
 % bin, data, plugins, etc.
-%Win: gmatPath = 'C:\Users\ravidavi\Development\odtbx-git\vendor\GMAT_Linux64\GMAT;
-%Mac: gmatPath = '/Users/ravidavi/Development/odtbx-git/GMAT_Linux64/GMAT;
+%gmatPath = [myBasePath, 'vendor/GMAT_Linux64/GMAT'];
 %
 % (Optional) The path to the JAT folder that contains the Java bytecode
 % (*.class files).  Most developers won't need this if they want to place
@@ -118,8 +114,8 @@ end
 % Installer directory layout:
 % (Keep this coordinated with the installer .xml files!)
 % baseIstPath
+%   ODTBX_Examples
 %   ODTBX_Source
-%       ODTBX_Examples
 %       JAT_Adapters
 %   Regression_Validation
 %   Jat
@@ -210,9 +206,10 @@ end
 
 % Set Matlab paths for OD Toolbox
 addpath(fullfile(odtbxPath,'ODTBX_Source'));
-addpath(fullfile(odtbxPath,'ODTBX_Source','ODTBX_Examples'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','JAT_Adapters'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','GMAT_Adapters'));
+addpath(fullfile(odtbxPath,'ODTBX_Examples'));
+addpath(fullfile(odtbxPath,'HTML'));
 
 % Set these Matlab paths for OD Toolbox
 % However, an end-user install may not provide these directories.
@@ -296,7 +293,7 @@ end
 
 % Clear the remnants out of the workspace to leave only the path setttings.
 clear d i p p2check pseps ;
-clear basePath jatSrcPath jatBytecodePath miceTopPath miceArch gmatPath startuptype odtbxMicePath odtbxPath ;
+clear basePath jatSrcPath jatBytecodePath miceTopPath miceArch gmatPath startuptype odtbxMicePath odtbxPath myBasePath ;
 
 %
 %% End-User Customization Goes Below Here:

@@ -254,7 +254,7 @@ nmeas = length(ytemp);
 eopts = chkestopts(options,ncases,nmeas);
 
 if(~isnan(eopts.monteseed(1)))
-%     RandStream.setDefaultStream(eopts.monteseed(1));
+%     RandStream.setGlobalStream(eopts.monteseed(1));
     randn('state', eopts.monteseed(1));
 end
 

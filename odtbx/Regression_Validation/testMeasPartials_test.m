@@ -25,7 +25,7 @@ function failed = testMeasPartials_test
 %                                           regression test format
 
 %% Set the random number seed
-RandStream.setDefaultStream(RandStream('shr3cong','Seed',546.4737))
+RandStream.setGlobalStream(RandStream('shr3cong','Seed',546.4737))
 
 %% Test gsmeas H matrix with RangeRate
 epoch  = datenum('Jan 1 2010');

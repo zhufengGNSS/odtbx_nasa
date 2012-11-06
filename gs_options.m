@@ -230,7 +230,7 @@ function ok_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global measOptions;
 
-% Save all the changes from the form to the structure
+% Save all the changes from the form to the structurecd
 measOptions = setOdtbxOptions(measOptions, 'useRange', get(handles.range, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'rangeType', get(handles.rangeType, 'String'));
 measOptions = setOdtbxOptions(measOptions, 'useRangeRate', get(handles.range_rate, 'Value'));

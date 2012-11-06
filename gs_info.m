@@ -186,7 +186,18 @@ function ok_button_Callback(hObject, eventdata, handles)
 % hObject    handle to ok_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global measOptions;
 
+% Save the values to the measOptions structure
+% Get the old values
+local_gsID = getOdtbxOptions(measOptions, 'gsID');
+local_gsECEF = getOdtbxOptions(measOptions, 'gsECEF');
+
+% Append the new values
+local_gsID{end+1} = {handles.gs_name};
+local_gsECEF(1:3, end+1) = [handles.gs_pos_x; handles.gs_pos_y; handles.gs_pos_z];
+
+% Set the ground station text value on the main GUI
 text = get(handles.gs_name, 'String');
 main = handles.meas_sched_Main;
 % Obtain handles using GUIDATA with the caller's handle 
@@ -194,7 +205,12 @@ if(ishandle(main))
     mainHandles = guidata(main);
     change_gs_button = mainHandles.gs_label_current;
     set(change_gs_button, 'String', text);
+    % As of now, these fields gs_ID's are never deleted, so this will work
+    set(change_gs_button, 'UserData', length(local_gsID));
 end
+
+measOptions = setOdtbxOptions('gsID', local_gsID);
+measOptions = setOdtbxOptions('gsECEF', local_gsECEF);
 
 handles.output = get(hObject,'String');
 
@@ -360,8 +376,6 @@ set(handles.gs_name, 'String', gsID{1});
 set(handles.gs_pos_x, 'String', gsECEF(1,1));
 set(handles.gs_pos_y, 'String', gsECEF(2,1));
 set(handles.gs_pos_z, 'String', gsECEF(3,1));
-
-% Only the values in the bottom box get passed on
 
 end
 

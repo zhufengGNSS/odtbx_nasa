@@ -24,7 +24,7 @@ function varargout = plot_ominusc(t,dy,Pdy,Pdyt,fhs,iusemn,eflag,sig)
 %
 % plot_ominusc(t,dy,Pdy,Pdyt,fhs) specifies the figure window
 % number from which to increment the new figure windows that will be
-% created.  Default is the max figure number or zero.
+% created.  Default is to use largest existing figure handle.
 %
 % plot_ominusc(t,dy,Pdy,Pdyt,fhs,iusemn) specifies whether the plot of the
 % ensemble standard deviation of the error is relative to the ensemble mean
@@ -85,20 +85,24 @@ function varargout = plot_ominusc(t,dy,Pdy,Pdyt,fhs,iusemn,eflag,sig)
 %                           plot edited measurements separately. Inserted 
 %                           a warning if the time elements between Monte
 %                           Carlo cases does not match. 
+%
+% 2012/11/04  R. Mathur     Auto-computed figure handle now correctly
+%                           ignores existing non-integer figures. This
+%                           fixes the incompatibility with 'publish'.
 
 % Self test for regression testing
 if nargin < 2, % test data
     my=100; % # of time steps
     nc=10;  % # of cases
     mx=19;  % # of states
-    RandStream.setGlobalStream(RandStream('shr3cong', 'Seed', 0))
+    RandStream.setDefaultStream(RandStream('shr3cong', 'Seed', 0))
     e=randn(mx,my,nc); 
 %     fs=e+1.5;
     for i=nc:-1:1
         dy{i}=e(:,:,i);
         fs{i}=e(:,:,i)+1.5;
     end
-    fhs=max([get(0,'children');0]);
+        
     if nargin == 0
         % Case 1
         fail1 = plot_ominusc(0);
@@ -130,12 +134,10 @@ elseif nargin >= 2,
         end
     end
 
-    if nargin<5 || isempty(fhs)
-        fhs = max([get(0,'children');0]);
-    end
     if nargin<6 || isempty(iusemn)
         iusemn=1;
     end
+    
     if nargin<7 || isempty(eflag)
         e_ind=cell(nc,1);
         for i=1:nc
@@ -144,6 +146,7 @@ elseif nargin >= 2,
     else
         e_ind=eflag;
     end
+    
     if nargin<8 || isempty(sig)
         sig=2;
     end
@@ -187,6 +190,17 @@ if nc > 1
     end
 end
 
+% If a starting figure handle was not specified, then set it to the
+% largest existing figure handle.
+if(~exist('fhs', 'var') || isempty(fhs))
+    % There may be figures with non-integer handles, e.g. if the
+    % 'publish' command was used. We need to eliminate these.
+    allfigs = [get(0, 'children');0]; % Get all open figures
+    badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
+    allfigs(badidx) = []; % Remove non-integer handles
+    fhs = max(allfigs); % Get largest of remaining integer handles 
+end
+   
 for j=1:nfig
     ifig=j+fhs;    % Determine figure number
     figure(ifig)

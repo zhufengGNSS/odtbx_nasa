@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 31-Oct-2012 18:28:31
+    % Last Modified by GUIDE v2.5 06-Nov-2012 16:18:38
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -147,7 +147,7 @@ function export_button_Callback(hObject, eventdata, handles)
     % hObject    handle to export_button (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-    export_schedule();
+    export_options_to_workspace();
 end
 
 
@@ -215,11 +215,29 @@ end
 
 
 % --------------------------------------------------------------------
-function export_Callback(hObject, eventdata, handles)
-    % hObject    handle to export (see GCBO)
+function export_workspace_Callback(hObject, eventdata, handles)
+% hObject    handle to export_workspace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    export_options_to_workspace()
+end
+
+
+% --------------------------------------------------------------------
+function export_csv_Callback(hObject, eventdata, handles)
+    % hObject    handle to export_csv (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-    export_schedule();
+    export_schedule_to_csv();
+end
+
+
+% --------------------------------------------------------------------
+function import_options_Callback(hObject, eventdata, handles)
+% hObject    handle to import_options (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    import_options_from_workspace();
 end
 
 
@@ -1094,7 +1112,7 @@ function gs_label20_Callback(hObject, eventdata, handles)
 end
 
 
-function export_schedule()
+function export_schedule_to_csv()
     % Write all of the measurements to a file
     global boxes;
 
@@ -1119,4 +1137,25 @@ function export_schedule()
 %             close(fid);
         end
     end
+end
+
+
+function export_options_to_workspace()
+    global measOptions;
+    
+    % Prompt user for new name
+    
+    % Write out variable
+    assignin('base', 'measOptions', measOptions);
+    
+end
+
+
+function import_options_from_workspace()
+    global measOptions;
+    
+    % Prompt user for new name
+    
+    % Read in variable
+    measOptions = evalin('base', 'measOptions')
 end

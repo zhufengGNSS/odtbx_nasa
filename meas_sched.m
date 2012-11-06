@@ -126,7 +126,7 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.meas_schedule_mode, 'SelectedObject', handles.Add);
 
     % UIWAIT makes meas_sched wait for user response (see UIRESUME)
-    uiwait(handles.figure1);
+%     uiwait(handles.figure1);
 end
 
 
@@ -1144,9 +1144,14 @@ function export_options_to_workspace()
     global measOptions;
     
     % Prompt user for new name
-    
+    prompt = {'Enter target variable name:'};
+    title = 'Export to Workspace';
+    lines = 1;
+    def = {'measOptions'};
+    answer = inputdlg(prompt, title, lines, def);
+
     % Write out variable
-    assignin('base', 'measOptions', measOptions);
+    assignin('base', answer{1}, measOptions);
     
 end
 
@@ -1155,7 +1160,12 @@ function import_options_from_workspace()
     global measOptions;
     
     % Prompt user for new name
-    
+    prompt = {'Enter workspace variable name:'};
+    title = 'Import from Workspace';
+    lines = 1;
+    def = {'measOptions'};
+    answer = inputdlg(prompt, title, lines, def);
+
     % Read in variable
-    measOptions = evalin('base', 'measOptions')
+    measOptions = evalin('base', answer{1})
 end

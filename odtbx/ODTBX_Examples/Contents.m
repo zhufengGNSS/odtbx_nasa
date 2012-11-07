@@ -1,8 +1,8 @@
-% ODTBX TUTORIALS
+% ODTBX Tutorials (can be used with the "publish" command)
 %
 %   pancake_tutorial             - OD Toolbox Tutorial 1: Planet Pancake
 %
-% ODTBX EXAMPLES
+% ODTBX Examples
 %
 %   batch_3gs_demo               - Demo showing how to compute observability using estbat.
 %   batch_estimator_demo         - Batch Estimator Demo
@@ -27,7 +27,7 @@
 %   tdrss_example2               - This file is an example for the tdrss measurement model, tdrssmeas.m
 %   XNAV_only_LEO                - LEO Orbit Determination Simulation of XNAV
 %
-% SUPPORT FUNCTIONS
+% Support Functions (used by tutorials & examples)
 %
 %   dualIADat                    - dualIADat Data file for chaser_target_demo example.
 %   dualIADyn                    - dualIADyn Get dynamics & estimation values for the pancake_demo example.

@@ -1152,7 +1152,7 @@ function export_options_to_workspace()
 
     % Write out variable
     assignin('base', answer{1}, measOptions);
-    
+
 end
 
 
@@ -1167,5 +1167,10 @@ function import_options_from_workspace()
     answer = inputdlg(prompt, title, lines, def);
 
     % Read in variable
-    measOptions = evalin('base', answer{1})
+    try
+        measOptions = evalin('base', answer{1});
+    catch exception
+         errordlg(exception.message, 'Does not exist!');
+    end
+    
 end

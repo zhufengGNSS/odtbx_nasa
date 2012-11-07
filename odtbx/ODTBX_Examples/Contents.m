@@ -1,3 +1,7 @@
+% ODTBX TUTORIALS
+%
+%   pancake_tutorial             - OD Toolbox Tutorial 1: Planet Pancake
+%
 % ODTBX EXAMPLES
 %
 %   batch_3gs_demo               - Demo showing how to compute observability using estbat.
@@ -16,7 +20,6 @@
 %   lnrmeas_example              - This file is an example for the lunar relay measurement model, lnrmeas.m
 %   matlabjatinterface           - Example using the JAT RK8 Integrator and Matlab.
 %   opnavExample                 - Example to demonstrate the functionality of OPNAVMEAS and perform regression tests.
-%   pancake_demo                 - Demo showing how to compute observability and perform batch least squares estimation.
 %   sequential_estimator_demo    - Sequential Estimator Demo
 %   sequential_example_1         - This file is an example for the ODTBX Sequential Estimator, estseq.m
 %   sequential_example_2         - This file is an example for the ODTBX Sequential Estimator, estseq.m

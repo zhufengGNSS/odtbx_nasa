@@ -22,7 +22,7 @@ function varargout = gs_options(varargin)
 
 % Edit the above text to modify the response to help gs_options
 
-% Last Modified by GUIDE v2.5 02-Nov-2012 13:38:08
+% Last Modified by GUIDE v2.5 06-Nov-2012 19:14:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,7 +77,7 @@ if getOdtbxOptions(measOptions, 'useAngles')
     set(handles.angles, 'Value', getOdtbxOptions(measOptions, 'useAngles'));
 end
 if getOdtbxOptions(measOptions, 'epoch')
-    set(handles.epoch, 'String', getOdtbxOptions(measOptions, 'epoch'));
+    set(handles.epoch, 'String', datestr(getOdtbxOptions(measOptions, 'epoch')));
 end
 if getOdtbxOptions(measOptions, 'gsElevationConstraint')
     set(handles.elevationconstraint, 'String', getOdtbxOptions(measOptions, 'gsElevationConstraint'));
@@ -96,6 +96,9 @@ if getOdtbxOptions(measOptions, 'useGPSIonosphere')
 end
 if getOdtbxOptions(measOptions, 'useIonosphere')
     set(handles.ionosphere, 'Value', getOdtbxOptions(measOptions, 'useIonosphere'));
+end
+if getOdtbxOptions(measOptions, 'useChargedParticle')
+    set(handles.charged_particles, 'Value', getOdtbxOptions(measOptions, 'useChargedParticle'));
 end
 if getOdtbxOptions(measOptions, 'useTroposphere')
     set(handles.troposphere, 'Value', getOdtbxOptions(measOptions, 'useTroposphere'));
@@ -230,14 +233,15 @@ function ok_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global measOptions;
 
-% Save all the changes from the form to the structurecd
+% Save all the changes from the form to the structure
+% Make sure they're in the right format (string vs number)
 measOptions = setOdtbxOptions(measOptions, 'useRange', get(handles.range, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'rangeType', get(handles.rangeType, 'String'));
 measOptions = setOdtbxOptions(measOptions, 'useRangeRate', get(handles.range_rate, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useDoppler', get(handles.doppler, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useUnit', get(handles.unit_vec, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useAngles', get(handles.angles, 'Value'));
-measOptions = setOdtbxOptions(measOptions, 'epoch', str2double(get(handles.epoch, 'String')));
+measOptions = setOdtbxOptions(measOptions, 'epoch', datenum(get(handles.epoch, 'String')));
 measOptions = setOdtbxOptions(measOptions, 'gsElevationConstraint', str2num(get(handles.elevationconstraint, 'String')));
 measOptions = setOdtbxOptions(measOptions, 'frequencyTransmit', str2num(get(handles.trans_freq, 'String')));
 measOptions = setOdtbxOptions(measOptions, 'rSigma', str2num(get(handles.meas_cov, 'String')));
@@ -245,6 +249,7 @@ measOptions = setOdtbxOptions(measOptions, 'useLightTime', get(handles.light_tim
 measOptions = setOdtbxOptions(measOptions, 'useGPSIonosphere', get(handles.gps_ionosphere, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useIonosphere', get(handles.ionosphere, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useTroposphere', get(handles.troposphere, 'Value'));
+measOptions = setOdtbxOptions(measOptions, 'useChargedParticle', get(handles.charged_particles, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', str2num(get(handles.earth_atm_mask_radius, 'String')));
 measOptions = setOdtbxOptions(measOptions, 'PrecnNutnExpire', str2num(get(handles.Precn_Nutn_Expire, 'String')));
 
@@ -561,7 +566,17 @@ function Precn_Nutn_Expire_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
 end
+
+
+% --- Executes on button press in charged_particles.
+function charged_particles_Callback(hObject, eventdata, handles)
+% hObject    handle to charged_particles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of charged_particles
 end

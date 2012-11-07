@@ -237,16 +237,26 @@ measOptions = setOdtbxOptions(measOptions, 'useRangeRate', get(handles.range_rat
 measOptions = setOdtbxOptions(measOptions, 'useDoppler', get(handles.doppler, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useUnit', get(handles.unit_vec, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useAngles', get(handles.angles, 'Value'));
-measOptions = setOdtbxOptions(measOptions, 'epoch', get(handles.epoch, 'String'));
-measOptions = setOdtbxOptions(measOptions, 'gsElevationConstraint', get(handles.elevationconstraint, 'String'));
-measOptions = setOdtbxOptions(measOptions, 'frequencyTransmit', get(handles.trans_freq, 'String'));
-measOptions = setOdtbxOptions(measOptions, 'rSigma', get(handles.meas_cov, 'String'));
+measOptions = setOdtbxOptions(measOptions, 'epoch', str2double(get(handles.epoch, 'String')));
+measOptions = setOdtbxOptions(measOptions, 'gsElevationConstraint', str2num(get(handles.elevationconstraint, 'String')));
+measOptions = setOdtbxOptions(measOptions, 'frequencyTransmit', str2num(get(handles.trans_freq, 'String')));
+measOptions = setOdtbxOptions(measOptions, 'rSigma', str2num(get(handles.meas_cov, 'String')));
 measOptions = setOdtbxOptions(measOptions, 'useLightTime', get(handles.light_time, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useGPSIonosphere', get(handles.gps_ionosphere, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useIonosphere', get(handles.ionosphere, 'Value'));
 measOptions = setOdtbxOptions(measOptions, 'useTroposphere', get(handles.troposphere, 'Value'));
-measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', get(handles.earth_atm_mask_radius, 'String'));
-measOptions = setOdtbxOptions(measOptions, 'PrecnNutnExpire', get(handles.Precn_Nutn_Expire, 'String'));
+measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', str2num(get(handles.earth_atm_mask_radius, 'String')));
+measOptions = setOdtbxOptions(measOptions, 'PrecnNutnExpire', str2num(get(handles.Precn_Nutn_Expire, 'String')));
+
+% Empty strings are not what we want for text areas- they really need to be
+% empty
+field_names = fieldnames(measOptions);
+for i = 1:length(field_names)
+    if isempty(getOdtbxOptions(measOptions, field_names{i}))
+%         field_names{i}
+        measOptions = setOdtbxOptions(measOptions, field_names{i}, []); 
+    end
+end
 
 handles.output = get(hObject,'String');
 

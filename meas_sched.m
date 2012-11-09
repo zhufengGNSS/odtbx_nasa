@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 06-Nov-2012 16:18:38
+    % Last Modified by GUIDE v2.5 07-Nov-2012 13:37:15
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -62,9 +62,18 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
 
     global measOptions;
-    % Bring in data from desktop if it exists, if not start fresh
+    clear global measOptions;
     measOptions = odtbxOptions('measurement');
-
+    
+    global time_sim;
+    clear global time_sim;
+    
+    global sat_state_sim;
+    clear global sat_state_sim;
+    
+    global propagator;
+    clear global propagator;
+    
     % Choose default command line output for meas_sched
     handles.output = hObject;
 
@@ -198,7 +207,7 @@ function satellite_Callback(hObject, eventdata, handles)
     % hObject    handle to satellite (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-    satellite_edit('meas_sched', handles.figure1);
+    change_satellite(hObject, eventdata, handles);
 end
 
 
@@ -1162,7 +1171,7 @@ function import_options_from_workspace()
     % Prompt user for new name
     prompt = {'Enter workspace variable name:'};
     title = 'Import from Workspace';
-    lines = 1;
+    lines = 1;sat_state_sim
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
 
@@ -1170,7 +1179,35 @@ function import_options_from_workspace()
     try
         measOptions = evalin('base', answer{1});
     catch exception
-         errordlg(exception.message, 'Does not exist!');
+        errordlg(exception.message, 'Enter a function name!');
     end
     
+end
+
+
+function change_satellite(hObject, eventdata, handles)
+
+    % Set up the necessary structures (if they haven't been created
+    % already)
+    global time_sim;
+    if (isempty(time_sim))
+        time_sim = struct('begin', [], ...
+                          'increment', [], ...
+                          'end', []);
+    end
+    
+    global sat_state_sim;
+    if (isempty(sat_state_sim))
+        sat_state_sim = struct('pos_x', [], ...
+                               'pos_y', [], ...
+                               'pos_z', [], ...
+                               'vel_x', [], ...
+                               'vel_y', [], ...
+                               'vel_z', []);
+    end
+    
+    global propagator;
+    
+    % GUI will gather the data and save it to the structures
+    satellite_edit('meas_sched', handles.figure1);
 end

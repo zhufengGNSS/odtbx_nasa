@@ -217,18 +217,18 @@ function ok_button_Callback(hObject, eventdata, handles)
     
     if (~error)
         % Assign the values to be passed out
-        sat_state_sim.pos_x = str2num(get(handles.x_pos, 'String'));
-        sat_state_sim.pos_y = str2num(get(handles.y_pos, 'String'));
-        sat_state_sim.pos_z = str2num(get(handles.z_pos, 'String'));
-        sat_state_sim.vel_x = str2num(get(handles.x_vel, 'String'));
-        sat_state_sim.vel_y = str2num(get(handles.y_vel, 'String'));
-        sat_state_sim.vel_z = str2num(get(handles.z_vel, 'String'));
+        sat_state_sim.pos_x = state_values.X_Position;
+        sat_state_sim.pos_y = state_values.Y_Position;
+        sat_state_sim.pos_z = state_values.Z_Position;
+        sat_state_sim.vel_x = state_values.X_Velocity;
+        sat_state_sim.vel_y = state_values.Y_Velocity;
+        sat_state_sim.vel_z = state_values.Z_Velocity;
 
-        time_sim.begin = str2num(get(handles.time_begin, 'String'));
-        time_sim.increment = str2num(get(handles.time_inc, 'String'));
-        time_sim.end = str2num(get(handles.time_end, 'String'));
+        time_sim.begin = time_values.Begin_Time;
+        time_sim.increment = time_values.Time_Increment;
+        time_sim.end = time_values.End_Time;
 
-        propagator = get(handles.prop_handle, 'String');
+        propagator = prop_values.Propagator;
 
 
         handles.output = get(hObject,'String');
@@ -272,7 +272,12 @@ function [error] = check_entry_validity(state_values, time_values, prop_values)
     % The user has to actually enter something
     prop_field_names = fieldnames(prop_values);
     try
+        % Warnings appear informing us of the next error check (so we don't
+        % really want to see them. In the future this will throw an error,
+        % not a warning.
+        warning off
         function_handle = str2func(prop_values.(prop_field_names{1}));
+        warning on
     catch exception
         errordlg('Is not a valid function!', prop_field_names{1});
         error = 1;

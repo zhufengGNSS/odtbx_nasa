@@ -78,16 +78,13 @@ y = pancake_dat(t,x,[]); % Generate range measurements
 %%
 % where the function pancake_dat(), defined in pancake_dat.m, computes the
 % range (from the station to the satellite) for each time, as long as the
-% satellite is visible at that time. If we also have an idea of how well
-% the range measurement is related to the states, then we can provide this
-% via the a priori covariance matrix P0.
+% satellite is visible at that time. If we have no prior knowlege about how
+% the measured range is related to the estimated states, we can indicate
+% that via the a priori covariance matrix P0,
 
-P0 = diag([inf inf inf inf 1e-12 1e-6 1e-6]); % Define initial covariance
+P0 = diag([inf inf inf inf inf inf inf]); % Unknown initial covariance
 
 %%
-% Note that we don't have to provide ALL covariance estimates; we can pick
-% and choose depending on our knowlege.
-%
 % ODTBX provides a function called "observ", which computes the
 % observability gramian of a system given observations that have been made.
 % The a priori covariance information can be provided to observ in order to
@@ -100,6 +97,31 @@ M = observ(@pancake_dyn,@pancake_dat,tspan,x0,[],P0,y,w_p,[]); % Compute observa
 % estimated states. These states are observable if (and only if) M is full
 % rank, so let's check the observability.
 
+rank_M = rank(M); % Get rank of observability gramian
+
+% The system is observable if M is full rank
+if rank_M < length(M)
+    fprintf('System is not observable! The observability gramian has rank %i\n', rank_M)
+else
+    fprintf('System is observable!\n')
+end
+
+%%
+% In this case, the system is unobservable because knowledge of range alone
+% cannot be used to differentiate between the station and spacecraft
+% positions. However, if we have prior knowledge of how well the range 
+% measurement is related to the states, then we can provide this via the a 
+% priori covariance matrix P0. Suppose that we know how well the measured
+% range relates to the gravitational parameter and station position,
+
+P0 = diag([inf inf inf inf 1e-12 1e-6 1e-6]); % Define initial covariance
+
+%%
+% Note that we don't have to provide ALL covariance estimates; we can pick
+% and choose depending on our knowlege. Let's re-run the observability
+% function and see what the gramian indicates
+
+M = observ(@pancake_dyn,@pancake_dat,tspan,x0,[],P0,y,w_p,[]); % Compute observability gramian
 rank_M = rank(M); % Get rank of observability gramian
 
 % The system is observable if M is full rank

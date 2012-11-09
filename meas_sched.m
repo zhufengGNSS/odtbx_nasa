@@ -1206,8 +1206,28 @@ function change_satellite(hObject, eventdata, handles)
                                'vel_z', []);
     end
     
-    global propagator;
-    
     % GUI will gather the data and save it to the structures
     satellite_edit('meas_sched', handles.figure1);
+    
+    % Do the actual propagation of the cartesian state using the specified
+    % function
+    global propagator;
+    time = time_sim.begin:time_sim.increment:time_sim.end;
+    coords = [sat_state_sim.pos_x;
+              sat_state_sim.pos_y;
+              sat_state_sim.pos_z;
+              sat_state_sim.vel_x;
+              sat_state_sim.vel_y;
+              sat_state_sim.vel_z];
+    
+    % Set numerical integration tolerances
+    opts = odeset('reltol',1e-9,'abstol',1e-9);      
+    mu = 3.986e5;           % Pancake gravitational parameter
+
+    try
+        [T,X] = integ(propagator, time, coords, opts, mu)
+    catch exceptions
+        errordlg(exceptions.message, 'Propagation Error!');
+    end
+    
 end

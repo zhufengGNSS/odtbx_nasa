@@ -1,4 +1,8 @@
-% ODTBX EXAMPLES
+% ODTBX Tutorials (can be used with the "publish" command)
+%
+%   pancake_tutorial             - OD Toolbox Tutorial 1: Planet Pancake
+%
+% ODTBX Examples
 %
 %   batch_3gs_demo               - Demo showing how to compute observability using estbat.
 %   batch_estimator_demo         - Batch Estimator Demo
@@ -16,7 +20,6 @@
 %   lnrmeas_example              - This file is an example for the lunar relay measurement model, lnrmeas.m
 %   matlabjatinterface           - Example using the JAT RK8 Integrator and Matlab.
 %   opnavExample                 - Example to demonstrate the functionality of OPNAVMEAS and perform regression tests.
-%   pancake_demo                 - Demo showing how to compute observability and perform batch least squares estimation.
 %   sequential_estimator_demo    - Sequential Estimator Demo
 %   sequential_example_1         - This file is an example for the ODTBX Sequential Estimator, estseq.m
 %   sequential_example_2         - This file is an example for the ODTBX Sequential Estimator, estseq.m
@@ -24,7 +27,7 @@
 %   tdrss_example2               - This file is an example for the tdrss measurement model, tdrssmeas.m
 %   XNAV_only_LEO                - LEO Orbit Determination Simulation of XNAV
 %
-% SUPPORT FUNCTIONS
+% Support Functions (used by tutorials & examples)
 %
 %   dualIADat                    - dualIADat Data file for chaser_target_demo example.
 %   dualIADyn                    - dualIADyn Get dynamics & estimation values for the pancake_demo example.

@@ -329,6 +329,10 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     % hObject    handle to figure1 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    handles.output = 'Cancel';
+
+    % Update handles structure
+    guidata(hObject, handles);
 
     % Hint: delete(hObject) closes the figure
     if isequal(get(hObject, 'waitstatus'), 'waiting')

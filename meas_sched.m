@@ -57,22 +57,22 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     clear global boxes; % Get rid of data from previous runs
 
     global meas_add_remove;
-    clear global meas_add_remove;
+%     clear global meas_add_remove;
     meas_add_remove = 1;
     set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
 
     global measOptions;
-    clear global measOptions;
+%     clear global measOptions;
     measOptions = odtbxOptions('measurement');
     
-    global time_sim;
-    clear global time_sim;
+%     global time_prop;
+%     clear global time_sim;
     
-    global sat_state_sim;
-    clear global sat_state_sim;
+%     global sat_state_prop;
+%     clear global sat_state_sim;
     
-    global propagator;
-    clear global propagator;
+%     global propagator;
+%     clear global propagator;
     
     % Choose default command line output for meas_sched
     handles.output = hObject;
@@ -178,7 +178,7 @@ end
 
 
 % --------------------------------------------------------------------
-function visualization_Callback(hObject, eventdata, handles)
+function visualization_Callback(~, eventdata, handles)
     % hObject    handle to visualization (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
@@ -1171,7 +1171,7 @@ function import_options_from_workspace()
     % Prompt user for new name
     prompt = {'Enter workspace variable name:'};
     title = 'Import from Workspace';
-    lines = 1;sat_state_sim
+    lines = 1;
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
 

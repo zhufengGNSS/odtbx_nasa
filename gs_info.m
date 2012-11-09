@@ -56,6 +56,9 @@ function gs_info_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for gs_info
 handles.output = hObject;
 
+% So that we don't have to rebuild this over and over again
+handles.gsList = createGroundStationList();
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -190,11 +193,13 @@ global measOptions;
 
 % Save the values to the measOptions structure
 % Get the old values
+% handles.gsList = createGroundStationList();
+% handles.gsList
 local_gsID = getOdtbxOptions(measOptions, 'gsID');
 local_gsECEF = getOdtbxOptions(measOptions, 'gsECEF');
 
 % Append the new values
-local_gsID{end+1} = {handles.gs_name};
+local_gsID{end+1} = get(handles.gs_name, 'String');
 local_gsECEF(1:3, end+1) = [handles.gs_pos_x; handles.gs_pos_y; handles.gs_pos_z];
 
 % Set the ground station text value on the main GUI
@@ -209,8 +214,9 @@ if(ishandle(main))
     set(change_gs_button, 'UserData', length(local_gsID));
 end
 
-measOptions = setOdtbxOptions('gsID', local_gsID);
-measOptions = setOdtbxOptions('gsECEF', local_gsECEF);
+measOptions = setOdtbxOptions(measOptions, 'gsList', handles.gsList);
+measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
+measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
 
 handles.output = get(hObject,'String');
 
@@ -358,12 +364,12 @@ function find_gs_button_Callback(hObject, eventdata, handles)
 epoch = datenum('Jan 1 2006');
 
 % Take the value and find the corresponding ECEF coordinates
-gsList = createGroundStationList();
+% gsList = createGroundStationList();
 gsID = { char(get(handles.gs_name_list, 'String')) };
 gsECEF = zeros(3,1);
 
 try
-    gsECEF(:,1) = getGroundStationInfo(gsList,gsID{1},'ecefPosition',epoch);
+    gsECEF(:,1) = getGroundStationInfo(handles.gsList,gsID{1},'ecefPosition',epoch);
 catch exception
     % Warn people if their ground station wasn't in the list
     errordlg(exception.message, 'Not Found!');

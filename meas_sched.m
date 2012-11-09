@@ -1189,16 +1189,16 @@ function change_satellite(hObject, eventdata, handles)
 
     % Set up the necessary structures (if they haven't been created
     % already)
-    global time_sim;
-    if (isempty(time_sim))
-        time_sim = struct('begin', [], ...
+    global time_prop;
+    if (isempty(time_prop))
+        time_prop = struct('begin', [], ...
                           'increment', [], ...
                           'end', []);
     end
     
-    global sat_state_sim;
-    if (isempty(sat_state_sim))
-        sat_state_sim = struct('pos_x', [], ...
+    global sat_state_prop;
+    if (isempty(sat_state_prop))
+        sat_state_prop = struct('pos_x', [], ...
                                'pos_y', [], ...
                                'pos_z', [], ...
                                'vel_x', [], ...
@@ -1207,27 +1207,27 @@ function change_satellite(hObject, eventdata, handles)
     end
     
     % GUI will gather the data and save it to the structures
-    satellite_edit('meas_sched', handles.figure1);
-    
-    % Do the actual propagation of the cartesian state using the specified
-    % function
-    global propagator;
-    time = time_sim.begin:time_sim.increment:time_sim.end;
-    coords = [sat_state_sim.pos_x;
-              sat_state_sim.pos_y;
-              sat_state_sim.pos_z;
-              sat_state_sim.vel_x;
-              sat_state_sim.vel_y;
-              sat_state_sim.vel_z];
-    
-    % Set numerical integration tolerances
-    opts = odeset('reltol',1e-9,'abstol',1e-9);      
-    mu = 3.986e5;           % Pancake gravitational parameter
+    output = satellite_edit('meas_sched', handles.figure1);
+    if (~strcmp(output, 'Cancel'))
+        % Do the actual propagation of the cartesian state using the specified
+        % function
+        global propagator;
+        time = time_prop.begin:time_prop.increment:time_prop.end;
+        coords = [sat_state_prop.pos_x;
+                  sat_state_prop.pos_y;
+                  sat_state_prop.pos_z;
+                  sat_state_prop.vel_x;
+                  sat_state_prop.vel_y;
+                  sat_state_prop.vel_z];
 
-    try
-        [T,X] = integ(propagator, time, coords, opts, mu)
-    catch exceptions
-        errordlg(exceptions.message, 'Propagation Error!');
+        % Set numerical integration tolerances
+        opts = odeset('reltol',1e-9,'abstol',1e-9);      
+        mu = 3.986e5;           % Pancake gravitational parameter
+
+        try
+            [T,X] = integ(propagator, time, coords, opts, mu);
+        catch exceptions
+            errordlg(exceptions.message, 'Propagation Error!');
+        end
     end
-    
 end

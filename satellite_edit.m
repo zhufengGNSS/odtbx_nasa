@@ -51,20 +51,20 @@ function satellite_edit_OpeningFcn(hObject, eventdata, handles, varargin)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     % varargin   command line arguments to satellite_edit (see VARARGIN)
-    global time_sim;
-    global sat_state_sim;
+    global time_prop;
+    global sat_state_prop;
     global propagator;
 
-    set(handles.x_pos, 'String', num2str(sat_state_sim.pos_x));
-    set(handles.y_pos, 'String', num2str(sat_state_sim.pos_y));
-    set(handles.z_pos, 'String', num2str(sat_state_sim.pos_z));
-    set(handles.x_vel, 'String', num2str(sat_state_sim.vel_x));
-    set(handles.y_vel, 'String', num2str(sat_state_sim.vel_y));
-    set(handles.z_vel, 'String', num2str(sat_state_sim.vel_z));
+    set(handles.x_pos, 'String', num2str(sat_state_prop.pos_x));
+    set(handles.y_pos, 'String', num2str(sat_state_prop.pos_y));
+    set(handles.z_pos, 'String', num2str(sat_state_prop.pos_z));
+    set(handles.x_vel, 'String', num2str(sat_state_prop.vel_x));
+    set(handles.y_vel, 'String', num2str(sat_state_prop.vel_y));
+    set(handles.z_vel, 'String', num2str(sat_state_prop.vel_z));
 
-    set(handles.time_begin, 'String', num2str(time_sim.begin));
-    set(handles.time_inc, 'String', num2str(time_sim.increment));
-    set(handles.time_end, 'String', num2str(time_sim.end));
+    set(handles.time_begin, 'String', num2str(time_prop.begin));
+    set(handles.time_inc, 'String', num2str(time_prop.increment));
+    set(handles.time_end, 'String', num2str(time_prop.end));
 
     set(handles.prop_handle, 'String', propagator);
 
@@ -179,7 +179,7 @@ function cancel_button_Callback(hObject, eventdata, handles)
     % hObject    handle to cancel_button (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-    handles.output = get(hObject,'String');
+    handles.output = 'Cancel';
 
     % Update handles structure
     guidata(hObject, handles);
@@ -196,8 +196,8 @@ function ok_button_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
 
-    global time_sim;
-    global sat_state_sim;
+    global time_prop;
+    global sat_state_prop;
     global propagator;
 
     state_values = struct('X_Position', str2num(get(handles.x_pos, 'String')), ...
@@ -217,16 +217,16 @@ function ok_button_Callback(hObject, eventdata, handles)
     
     if (~error)
         % Assign the values to be passed out
-        sat_state_sim.pos_x = state_values.X_Position;
-        sat_state_sim.pos_y = state_values.Y_Position;
-        sat_state_sim.pos_z = state_values.Z_Position;
-        sat_state_sim.vel_x = state_values.X_Velocity;
-        sat_state_sim.vel_y = state_values.Y_Velocity;
-        sat_state_sim.vel_z = state_values.Z_Velocity;
+        sat_state_prop.pos_x = state_values.X_Position;
+        sat_state_prop.pos_y = state_values.Y_Position;
+        sat_state_prop.pos_z = state_values.Z_Position;
+        sat_state_prop.vel_x = state_values.X_Velocity;
+        sat_state_prop.vel_y = state_values.Y_Velocity;
+        sat_state_prop.vel_z = state_values.Z_Velocity;
 
-        time_sim.begin = time_values.Begin_Time;
-        time_sim.increment = time_values.Time_Increment;
-        time_sim.end = time_values.End_Time;
+        time_prop.begin = time_values.Begin_Time;
+        time_prop.increment = time_values.Time_Increment;
+        time_prop.end = time_values.End_Time;
 
         propagator = prop_values.Propagator;
 

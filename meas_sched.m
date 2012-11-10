@@ -246,7 +246,7 @@ function import_options_Callback(hObject, eventdata, handles)
 % hObject    handle to import_options (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    import_options_from_workspace();
+    import_options_from_workspace(hObject, eventdata, handles);
 end
 
 
@@ -1167,7 +1167,7 @@ function export_options_to_workspace()
 end
 
 
-function import_options_from_workspace()
+function import_options_from_workspace(hObject, eventdata, handles)
     global measOptions;
     
     % Prompt user for new name
@@ -1177,12 +1177,15 @@ function import_options_from_workspace()
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
 
-    % Read in variable
+    % Read in options structure
     try
         measOptions = evalin('base', answer{1});
     catch exception
         errordlg(exception.message, 'Enter a function name!');
     end
+    
+    % Create the imported ground stations
+    
     
 end
 

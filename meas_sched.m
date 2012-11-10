@@ -754,6 +754,8 @@ function change_gs(axes_handle, new_gs_name)
         i = i + 1;
     end
     
+    % Redo all the measurements
+    make_meas();
 end
 
 
@@ -1223,11 +1225,31 @@ function change_satellite(hObject, eventdata, handles)
         % Set numerical integration tolerances
         opts = odeset('reltol',1e-9,'abstol',1e-9);      
         mu = 3.986e5;           % Pancake gravitational parameter
-
+        
+        global T;
+        global X;
         try
             [T,X] = integ(propagator, time, coords, opts, mu);
         catch exceptions
             errordlg(exceptions.message, 'Propagation Error!');
         end
+        
+        % Redo all the measurements
+        make_meas();
+    end
+end
+
+
+function make_meas()
+    global T;
+    global X;
+    global measOptions;
+    
+%     if (~isempty(T) && ~isempty(X))
+    try
+        [y1, H1, R1] = gsmeas(T, X, measOptions);
+        y1
+    catch exceptions
+        errordlg(exceptions.message, 'Measurement Error!');
     end
 end

@@ -16,25 +16,25 @@
 %
 % Pancake is a circular planet that exists in a 2D universe with no other gravitational influences.
 % Its rotation rate $\omega_p$, radius $r_p$, and gravitational parameter $\mu$ are all known. In
-% addition, there is a satellite tracking station on the surface of
+% addition, there is a satellite ground station on the surface of
 % Pancake that tracks a satellite currently in orbit around the planet.
 %
 % In this tutorial, your goal is to estimate the satellite's position and
-% velocity, Pancake's gravitational parameter, and the tracking station's position.
+% velocity, Pancake's gravitational parameter, and the ground station's position.
 
 %% Initialize Variables
-% Suppose that at some time $t_0$, the tracking station lies on the
-% inertial X axis, and the satellite is directly above the tracking station
+% Suppose that at some time $t_0$, the ground station lies on the
+% inertial X axis, and the satellite is directly above the ground station
 % at an altitude of 500km with a speed of 8.339km/s and zero flight-path angle.
 %
 % First, initialize all values (constants, parameters, and variables) associated with Pancake,
-% the satellite tracking station, and the orbiting satellite. Note that all
+% the satellite ground station, and the orbiting satellite. Note that all
 % vectors are given in inertial coordinates.
 
 w_p = 2*pi/86400;    % [rad/s] Pancake rotation rate
 mu = 3.986e5;        % [km^3/s^2] Pancake gravitational parameter
 r_p = 6378;          % [km] Pancake radius
-Rs0 = [r_p; 0];      % [km] Tracking station initial position
+Rs0 = [r_p; 0];      % [km] ground station initial position
 R0 = [r_p + 500; 0]; % [km] Satellite initial position
 V0 = [0; 8.339];     % [km/s] Satellite initial velocity
 
@@ -48,7 +48,7 @@ x0 = [R0; V0; mu; Rs0];
 % Before any estimation can be performed, we need the "truth" model for the
 % estimation state vector along with the state transition matrix $\phi(t_f,
 % t_0)$. To create the truth model, let's use a time span of 1 day, and
-% assume that the tracking station will track the satellite every 60
+% assume that the ground station will track the satellite every 60
 % seconds.
 
 tspan = 0:60:86400; % Integration time span and step size

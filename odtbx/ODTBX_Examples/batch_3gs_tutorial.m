@@ -68,27 +68,34 @@ dynarg = mu_Earth; % Input gravitational parameter for r2bp
 % a set of ground stations. While this structure offers many options, they
 % all have default values.
 
-% Create an Options structure for ground station measurements with default settings
-datarg = odtbxOptions('measurement');
+% Create an Options structure for ground station measurements with default values
+datarg = odtbxOptions('measurement')
 
 %%
-% Here, the default settings for ground station measurements specify that ground 
-% stations should make 2-way range and rangerate measurements. In addition
-% to these, we need to specify our custom requirements.
+% Note that all measurement options seem to be empty! This actually
+% indicates that defaults will be used for all empty fields. The default 
+% options for ground station measurements specify that ground 
+% stations should make 2-way range and rangerate measurements. To see all
+% possibilities for measurement options, simply omit the output argument;
+% defaults will be indicated in braces.
+
+odtbxOptions('measurement'); % List all measurement options, with defaults in braces
 
 %%
-% Custom requirement: Measurement Epoch. This one's easy.
+% In addition to these default options, we need to specify our custom requirements.
+% First, let's specify the epoch that should be used,
 
 datarg = setOdtbxOptions(datarg, 'epoch', epoch);
 
 %%
-% Custom requirement: Ground station IDs. Assume that the three ground
-% stations have IDs 'HBKS', 'USHS', and 'USPS'.
+% Next, let's specify the IDs for each ground stations taking measurements.
+% Assume that the three ground stations have IDs 'HBKS', 'USHS', and 'USPS'.
 
 datarg = setOdtbxOptions(datarg, 'gsID', {'HBKS','USHS','USPS'});
 
 %%
-% Custom requirement: Measurement Covariance. NEEDS EXPLANATION
+% Finally, if we have a priori knowledge of the measurement covariance, we
+% can specify it here.
 
 datarg = setOdtbxOptions(datarg, 'rSigma',...
     [1e-2 1e-5 1e-2 1e-5 1e-2 1e-5]);
@@ -104,6 +111,12 @@ datarg = setOdtbxOptions(datarg, 'rSigma',...
 datarg = setOdtbxOptions(datarg, 'gsList', createGroundStationList());
 
 %%
+% Let's check that all of our custom measurement options have been set
+% correctly.
+
+datarg
+
+%%
 % Finally, we need to define the function that will create the simulated
 % ground station measurements. ODTBX provides a function for this, called
 % 'gsmeas'.
@@ -112,18 +125,29 @@ datfun = @gsmeas; % Reference to ground station measurement function
 
 %%
 % Now that we've specified options for the measurement functions, let's
-% specify options for the estimator itself. In this case, suppose that we 
-% don't want to use process noise, and we only want to iterate the solution 2 times.
+% specify options for the estimator itself. Conveniently, ODTBX uses the
+% same "Options" structure to organize estimator options, and the same
+% functions to create and set these options.
 
-% Create an Options structure for the estimator, with default settings
+% Create an Options structure for the estimator with default values
 estarg = odtbxOptions('estimator');
+
+%%
+% As before, the default estimator options can be listed by omitting the
+% output argument.
+
+odtbxOptions('estimator'); % List all estimator options, with defaults in braces
+
+%%
+% Let's specify that we don't want to include process noise, and that we
+% want to update the estimated solution twice.
 
 estarg = setOdtbxOptions(estarg, 'UseProcNoise', false); % No process noise
 estarg = setOdtbxOptions(estarg, 'UpdateIterations', 2); % Update solution twice
 
 %% Batch Least Squares Estimation
 % Now run the batch estimator, assuming we have a priori state covariance
-% knowledge.
+% knowledge. This step is similar to the estimation from Tutorial 1.
 
 P0 = diag([1e-3 1e-3 1e-3 1e-6 1e-6 1e-6].^2); % Define initial covariance
 

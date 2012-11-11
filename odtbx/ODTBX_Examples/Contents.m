@@ -1,7 +1,7 @@
 % ODTBX Tutorials (can be used with the "publish" command)
 %
-%   pancake_tutorial             - OD Toolbox Tutorial 1: Planet Pancake
-%   batch_3gs_tutorial           - OD Toolbox Tutorial 2: Demo showing how to compute observability using estbat.
+%   pancake_tutorial             - Tutorial 1: Introduction to Estimation with ODTBX.
+%   batch_3gs_tutorial           - Tutorial 2: Batch Estimation with Multiple Ground Stations.
 %
 % ODTBX Examples
 %

@@ -57,7 +57,9 @@ function gs_info_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % So that we don't have to rebuild this over and over again
+global measOptions;
 handles.gsList = createGroundStationList();
+measOptions = setOdtbxOptions(measOptions, 'gsList', handles.gsList);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -195,28 +197,28 @@ global measOptions;
 % Get the old values
 % handles.gsList = createGroundStationList();
 % handles.gsList
-local_gsID = getOdtbxOptions(measOptions, 'gsID');
-local_gsECEF = getOdtbxOptions(measOptions, 'gsECEF');
-
-% Append the new values
-local_gsID{end+1} = get(handles.gs_name, 'String');
-local_gsECEF(1:3, end+1) = [handles.gs_pos_x; handles.gs_pos_y; handles.gs_pos_z];
+% local_gsID = getOdtbxOptions(measOptions, 'gsID');
+% local_gsECEF = getOdtbxOptions(measOptions, 'gsECEF');
+% 
+% % Append the new values
+% local_gsID{end+1} = get(handles.gs_name, 'String');
+% local_gsECEF(1:3, end+1) = [handles.gs_pos_x; handles.gs_pos_y; handles.gs_pos_z];
 
 % Set the ground station text value on the main GUI
-text = get(handles.gs_name, 'String');
+name = get(handles.gs_name, 'String');
 main = handles.meas_sched_Main;
 % Obtain handles using GUIDATA with the caller's handle 
 if(ishandle(main))
     mainHandles = guidata(main);
-    change_gs_button = mainHandles.gs_label_current;
-    set(change_gs_button, 'String', text);
-    % As of now, these fields gs_ID's are never deleted, so this will work
-    set(change_gs_button, 'UserData', length(local_gsID));
+    % Change the visible label
+    set(mainHandles.gs_label_current, 'String', name);
+    % Save the coordinates of the ground station in UserData
+    set(mainHandles.gs_label_current, 'UserData', [handles.gs_pos_x; handles.gs_pos_y; handles.gs_pos_z]);
 end
 
-measOptions = setOdtbxOptions(measOptions, 'gsList', handles.gsList);
-measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
-measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
+% measOptions = setOdtbxOptions(measOptions, 'gsList', handles.gsList);
+% measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
+% measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
 
 handles.output = get(hObject,'String');
 

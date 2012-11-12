@@ -737,12 +737,40 @@ function redraw_boxes()
 end
 
 
+function harvest_gs(hObject, eventdata, handles)
+    % This function will go through all the defined ground stations and
+    % save their data to the options structure
+    
+    global measOptions;
+    
+    for i = 1:length(handles.slide_labels)
+        if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
+            % Pull in the full variables from the options structure
+            local_gsID = get(measOptions, 'gsID');
+            local_gsECEF = get(measOptions, 'gsECEF');
+            
+            % Get the new values to add to the structure
+            new_gsID = get(handles.slide_labels(i), 'String');
+            new_gsECEF = get(handles.slide_labels(i), 'UserData');
+            
+            % Append the new data to the end of the current data
+            local_gsID{end+1} = new_gsID;
+            local_gsECEF(1:3, end+1) = new_gsECEF;
+            
+            % Save it back to the options structure
+            measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
+            measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
+        end
+    end
+end
+
+
 function change_gs(axes_handle, new_gs_name)
     % This function changes the ground station of a box
     global boxes;
     
     % Change axes_handle ground station
-    set(axes_handle, 'UserData', [new_gs_name]);
+    set(axes_handle, 'UserData', new_gs_name);
     
     i = 2; % The first box is a decoy structure box
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)

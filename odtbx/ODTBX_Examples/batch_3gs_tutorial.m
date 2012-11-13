@@ -88,31 +88,36 @@ odtbxOptions('measurement'); % List all measurement options, with defaults in br
 datarg = setOdtbxOptions(datarg, 'epoch', epoch);
 
 %%
-% Next, let's specify the IDs for each ground stations taking measurements.
-% Assume that the three ground stations have IDs 'HBKS', 'USHS', and 'USPS'.
-
-datarg = setOdtbxOptions(datarg, 'gsID', {'HBKS','USHS','USPS'});
-
-%%
-% Finally, if we have a priori knowledge of the measurement covariance, we
-% can specify it here.
-
-datarg = setOdtbxOptions(datarg, 'rSigma',...
-    [1e-2 1e-5 1e-2 1e-5 1e-2 1e-5]);
-
-%%
-% Note that if we wanted more (or different) ground stations, we would only
-% need to modify the 'gsID' and 'rSigma' options accordingly.
-%
-% Next we need to specify simulation models for the ground stations themselves.
+% Now we need to specify simulation models for the ground stations.
 % ODTBX provides a wrapper function, called 'createGroundStationList', that
-% uses JAT to return a list of all stations in the NDOSL.
+% uses JAT to return a list of all stations in the NASA Directory of
+% Station Locations (NDOSL).
 
 datarg = setOdtbxOptions(datarg, 'gsList', createGroundStationList());
 
 %%
-% Let's check that all of our custom measurement options have been set
-% correctly.
+% Next, let's specify the NDOSL ID for each ground station that we want to
+% use. Assume that the three ground stations have IDs 'HBKS', 'USHS', and
+% 'USPS'.
+
+datarg = setOdtbxOptions(datarg, 'gsID', {'HBKS','USHS','USPS'});
+
+%%
+% Finally, if we know the uncertainties in measurements from each station,
+% we can specify them here. The 'rSigma' option is a vector indicating the
+% $\sigma$ uncertainty of each selected measurement type, for each station.
+
+datarg = setOdtbxOptions(datarg, 'rSigma',...
+    [1e-2 1e-5 1e-2 1e-5 1e-2 1e-5]); % [km, km/s, km, km/s, km, km/s] sigma uncertainties 
+
+%%
+% Here, both measurement sigmas are given for the first ground station, then
+% repeated for each additional ground station in the 'gsID' list. Note that 
+% if we wanted to use more (or different) ground stations, we would only need to
+% modify the 'gsID' and 'rSigma' options accordingly.
+%
+% Before continuing, let's check that all of our custom measurement options
+% have been set correctly.
 
 datarg
 
@@ -124,10 +129,10 @@ datarg
 datfun = @gsmeas; % Reference to ground station measurement function
 
 %%
-% Now that we've specified options for the measurement functions, let's
+% Now that we've specified options for the measurement function, let's
 % specify options for the estimator itself. Conveniently, ODTBX uses the
 % same "Options" structure to organize estimator options, and the same
-% functions to create and set these options.
+% access functions to create and set these options.
 
 % Create an Options structure for the estimator with default values
 estarg = odtbxOptions('estimator');

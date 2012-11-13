@@ -1,10 +1,10 @@
 % ODTBX Tutorials (can be used with the "publish" command)
 %
-%   pancake_tutorial             - OD Toolbox Tutorial 1: Planet Pancake
+%   pancake_tutorial             - Tutorial 1: Introduction to Estimation with ODTBX.
+%   batch_3gs_tutorial           - Tutorial 2: Batch Estimation with Multiple Ground Stations.
 %
 % ODTBX Examples
 %
-%   batch_3gs_demo               - Demo showing how to compute observability using estbat.
 %   batch_estimator_demo         - Batch Estimator Demo
 %   batch_example_1              - Example for the ODTBX Batch Estimator, estbat.m, using range and range rate measurements.
 %   batch_example_2              - Example for the ODTBX Batch Estimator, estbat.m, using GSMEAS measurements.

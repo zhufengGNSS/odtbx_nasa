@@ -788,17 +788,18 @@ function harvest_gs(hObject, eventdata, handles)
         end
     end
     
-    % Write out variable
-    assignin('base', 'optOut', measOptions);
+%     % Write out variable
+%     assignin('base', 'optOut', measOptions);
 end
 
 
-function change_gs(axes_handle, new_gs_name)
+% function change_gs(axes_handle, new_gs_name)
+function change_gs(axes_handle)
     % This function changes the ground station of a box
     global boxes;
     
     % Change axes_handle ground station
-    set(axes_handle, 'UserData', new_gs_name);
+%     set(axes_handle, 'UserData', new_gs_name);
     
     i = 2; % The first box is a decoy structure box
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
@@ -857,7 +858,7 @@ function gs_label1_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -882,7 +883,7 @@ function gs_label2_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -907,7 +908,7 @@ function gs_label3_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -932,7 +933,7 @@ function gs_label4_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -957,7 +958,7 @@ function gs_label5_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -982,7 +983,7 @@ function gs_label6_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1007,7 +1008,7 @@ function gs_label7_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1032,7 +1033,7 @@ function gs_label8_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1057,7 +1058,7 @@ function gs_label9_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1082,7 +1083,7 @@ function gs_label10_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1107,7 +1108,7 @@ function gs_label11_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1132,7 +1133,7 @@ function gs_label12_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1157,7 +1158,7 @@ function gs_label13_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1182,7 +1183,7 @@ function gs_label14_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1207,7 +1208,7 @@ function gs_label15_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1232,7 +1233,7 @@ function gs_label16_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1257,7 +1258,7 @@ function gs_label17_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1282,7 +1283,7 @@ function gs_label18_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1307,7 +1308,7 @@ function gs_label19_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1332,7 +1333,7 @@ function gs_label20_Callback(hObject, eventdata, handles)
     harvest_gs(hObject, eventdata, handles);
     
     % Change the boxes structures to reflect new changes
-    change_gs(handles.gs_axes_current, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1399,7 +1400,33 @@ function import_options_from_workspace(hObject, eventdata, handles)
     end
     
     % Create the imported ground stations
+    % Delete all the old ground stations (if there were any)
+    for i = 1:length(handles.slide_labels)
+        if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
+            set(handles.slide_labels(i), 'String', '[ ]');
+            set(handles.slide_labels(i), 'UserData', '');
+        end
+        i
+    end
     
+    % Write all the new GS data (seed)
+    gsID_local = getOdtbxOptions(measOptions, 'gsID');
+    gsECEF_local = getOdtbxOptions(measOptions, 'gsECEF');
+    for j = 1:length(gsID_local)
+        set(handles.slide_labels(j), 'String', gsID_local(j));
+        set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
+        set(handles.axes_handles(j), 'UserData', gsID_local(j));
+        j
+    end
+    
+    % Update the box structure
+    for k = 1:length(handles.axes_handles)-1
+        change_gs(handles.axes_handles(k));
+        k
+    end
+    
+    % Update handle structure
+    guidata(hObject, handles);
     
 end
 

@@ -1406,7 +1406,6 @@ function import_options_from_workspace(hObject, eventdata, handles)
             set(handles.slide_labels(i), 'String', '[ ]');
             set(handles.slide_labels(i), 'UserData', '');
         end
-        i
     end
     
     % Write all the new GS data (seed)
@@ -1416,17 +1415,12 @@ function import_options_from_workspace(hObject, eventdata, handles)
         set(handles.slide_labels(j), 'String', gsID_local(j));
         set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
         set(handles.axes_handles(j), 'UserData', gsID_local(j));
-        j
     end
     
     % Update the box structure
     for k = 1:length(handles.axes_handles)-1
         change_gs(handles.axes_handles(k));
-        k
     end
-    
-    % Update handle structure
-    guidata(hObject, handles);
     
 end
 

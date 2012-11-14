@@ -76,9 +76,19 @@ else
     
     % Obtain handles using GUIDATA with the caller's handle 
     mainHandles = guidata(handles.meas_sched_Main);
-    % Set the edit text to the String of the main GUI's button
+    
+    % Import the data from main function
     set(handles.gs_name, 'String', ...
         get(mainHandles.gs_label_current, 'String'));
+    gsECEF_local = get(mainHandles.gs_label_current, 'UserData');
+    set(handles.gs_pos_x, 'String', num2str(gsECEF_local(1)));
+    set(handles.gs_pos_y, 'String', num2str(gsECEF_local(2)));
+    set(handles.gs_pos_z, 'String', num2str(gsECEF_local(3)));
+    
+    set(mainHandles.gs_label_current, 'UserData', ...
+        [str2num(get(handles.gs_pos_x, 'String')); ... 
+        str2num(get(handles.gs_pos_y, 'String')); ...
+        str2num(get(handles.gs_pos_z, 'String'))]);
 
     % Determine the position of the dialog - centered on the callback figure
     % if available, else, centered on the screen

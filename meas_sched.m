@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 07-Nov-2012 13:37:15
+    % Last Modified by GUIDE v2.5 13-Nov-2012 10:17:06
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -53,8 +53,8 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     % varargin   command line arguments to meas_sched (see VARARGIN)
-    global boxes;
-    clear global boxes; % Get rid of data from previous runs
+%     global boxes;
+%     clear global boxes; % Get rid of data from previous runs
 
     global meas_add_remove;
 %     clear global meas_add_remove;
@@ -267,6 +267,23 @@ function time_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     change_time(hObject, eventdata, handles);
+end
+
+
+% --------------------------------------------------------------------
+function run_Callback(hObject, eventdata, handles)
+% hObject    handle to run (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --------------------------------------------------------------------
+function refresh_Callback(hObject, eventdata, handles)
+% hObject    handle to refresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+make_meas();
 end
 
 
@@ -742,12 +759,20 @@ function harvest_gs(hObject, eventdata, handles)
     % save their data to the options structure
     
     global measOptions;
+%     measOptions = odtbxOptions('measurement');
+    default_options = odtbxOptions('measurement');
+    
+    % Clear out the entries in the old structure (this function will
+    % completely rebuild the entries)
+    
+    measOptions = setOdtbxOptions(measOptions, 'gsID', getOdtbxOptions(default_options, 'gsID'));
+    measOptions = setOdtbxOptions(measOptions, 'gsECEF', getOdtbxOptions(default_options, 'gsECEF'));
     
     for i = 1:length(handles.slide_labels)
         if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
             % Pull in the full variables from the options structure
-            local_gsID = get(measOptions, 'gsID');
-            local_gsECEF = get(measOptions, 'gsECEF');
+            local_gsID = getOdtbxOptions(measOptions, 'gsID');
+            local_gsECEF = getOdtbxOptions(measOptions, 'gsECEF');
             
             % Get the new values to add to the structure
             new_gsID = get(handles.slide_labels(i), 'String');
@@ -762,6 +787,9 @@ function harvest_gs(hObject, eventdata, handles)
             measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
         end
     end
+    
+    % Write out variable
+    assignin('base', 'optOut', measOptions);
 end
 
 
@@ -781,9 +809,6 @@ function change_gs(axes_handle, new_gs_name)
         end
         i = i + 1;
     end
-    
-    % Redo all the measurements
-    make_meas();
 end
 
 
@@ -816,15 +841,23 @@ function gs_label1_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label1 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label1;
+    handles.gs_axes_current = handles.axes1;
+    
     % Update handle structure
     guidata(hObject, handles);
    
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes1, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -833,15 +866,23 @@ function gs_label2_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label2 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label2;
+    handles.gs_axes_current = handles.axes2;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes2, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -850,15 +891,23 @@ function gs_label3_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label3 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label3;
+    handles.gs_axes_current = handles.axes3;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes3, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -867,15 +916,23 @@ function gs_label4_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label4 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label4;
+    handles.gs_axes_current = handles.axes4;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes4, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -884,15 +941,23 @@ function gs_label5_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label5 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label5;
+    handles.gs_axes_current = handles.axes5;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes5, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -901,15 +966,23 @@ function gs_label6_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label6 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label6;
+    handles.gs_axes_current = handles.axes6;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes6, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -918,15 +991,23 @@ function gs_label7_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label7 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label7;
+    handles.gs_axes_current = handles.axes7;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes7, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -935,15 +1016,23 @@ function gs_label8_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label8 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label8;
+    handles.gs_axes_current = handles.axes8;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes8, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -952,15 +1041,23 @@ function gs_label9_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label9 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+   
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label9;
+    handles.gs_axes_current = handles.axes9;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes9, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -969,15 +1066,23 @@ function gs_label10_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label10 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label10;
+    handles.gs_axes_current = handles.axes10;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes10, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -986,15 +1091,23 @@ function gs_label11_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label11 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label11;
+    handles.gs_axes_current = handles.axes11;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes11, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1003,15 +1116,23 @@ function gs_label12_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label12 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label12;
+    handles.gs_axes_current = handles.axes12;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes12, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1020,15 +1141,23 @@ function gs_label13_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label13 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label13;
+    handles.gs_axes_current = handles.axes13;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes13, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1037,15 +1166,23 @@ function gs_label14_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label14 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label14;
+    handles.gs_axes_current = handles.axes14;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes14, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1054,15 +1191,23 @@ function gs_label15_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label15 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label15;
+    handles.gs_axes_current = handles.axes15;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes15, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1071,15 +1216,23 @@ function gs_label16_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label16 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label16;
+    handles.gs_axes_current = handles.axes16;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes16, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1088,15 +1241,23 @@ function gs_label17_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label17 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label17;
+    handles.gs_axes_current = handles.axes17;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes17, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1105,15 +1266,23 @@ function gs_label18_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label18 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label18;
+    handles.gs_axes_current = handles.axes18;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes18, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1122,15 +1291,23 @@ function gs_label19_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label19 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label19;
+    handles.gs_axes_current = handles.axes19;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes19, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1139,15 +1316,23 @@ function gs_label20_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label20 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label20;
+    handles.gs_axes_current = handles.axes20;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes20, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current, get(hObject, 'String'));
 end
 
 
@@ -1190,7 +1375,8 @@ function export_options_to_workspace()
     answer = inputdlg(prompt, title, lines, def);
 
     % Write out variable
-    assignin('base', answer{1}, measOptions);
+%     assignin('base', answer{1}, measOptions);
+    save(answer{1}, 'measOptions');
 
 end
 
@@ -1266,7 +1452,7 @@ function change_satellite(hObject, eventdata, handles)
         end
         
         % Redo all the measurements
-        make_meas();
+%         make_meas();
     end
 end
 
@@ -1284,3 +1470,4 @@ function make_meas()
         errordlg(exceptions.message, 'Measurement Error!');
     end
 end
+

@@ -81,9 +81,11 @@ else
     set(handles.gs_name, 'String', ...
         get(mainHandles.gs_label_current, 'String'));
     gsECEF_local = get(mainHandles.gs_label_current, 'UserData');
-    set(handles.gs_pos_x, 'String', num2str(gsECEF_local(1)));
-    set(handles.gs_pos_y, 'String', num2str(gsECEF_local(2)));
-    set(handles.gs_pos_z, 'String', num2str(gsECEF_local(3)));
+    if (~isempty(gsECEF_local))
+        set(handles.gs_pos_x, 'String', num2str(gsECEF_local(1)));
+        set(handles.gs_pos_y, 'String', num2str(gsECEF_local(2)));
+        set(handles.gs_pos_z, 'String', num2str(gsECEF_local(3)));
+    end
     
     set(mainHandles.gs_label_current, 'UserData', ...
         [str2num(get(handles.gs_pos_x, 'String')); ... 

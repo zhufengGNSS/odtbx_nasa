@@ -785,11 +785,17 @@ function harvest_gs(hObject, eventdata, handles)
             % Save it back to the options structure
             measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
             measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
+            
+            % Save the gsID to the corresponding axes_handle
+%             set(handles.axes_handles(i), 'UserData', new_gsID);
+        
+        else
+%             set(handles.axes_handles(i), 'UserData', []);
         end
     end
     
 %     % Write out variable
-%     assignin('base', 'optOut', measOptions);
+    assignin('base', 'optOut', measOptions);
 end
 
 
@@ -1376,8 +1382,8 @@ function export_options_to_workspace()
     answer = inputdlg(prompt, title, lines, def);
 
     % Write out variable
-%     assignin('base', answer{1}, measOptions);
-    save(answer{1}, 'measOptions');
+    assignin('base', answer{1}, measOptions);
+%     save(answer{1}, 'measOptions');
 
 end
 
@@ -1412,7 +1418,7 @@ function import_options_from_workspace(hObject, eventdata, handles)
     gsID_local = getOdtbxOptions(measOptions, 'gsID');
     gsECEF_local = getOdtbxOptions(measOptions, 'gsECEF');
     for j = 1:length(gsID_local)
-        set(handles.slide_labels(j), 'String', gsID_local(j));
+        set(handles.slide_labels(j), 'String', gsID_local{j});
         set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
         set(handles.axes_handles(j), 'UserData', gsID_local(j));
     end

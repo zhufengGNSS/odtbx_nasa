@@ -471,6 +471,7 @@ estimatorOptions = {
     'UpdateVectorized'
     'refint'
     'UseSmoother'
+    'Particles'
     };
 
 forceModelOptions = {

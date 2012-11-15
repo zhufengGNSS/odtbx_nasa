@@ -99,7 +99,7 @@ datarg = setOdtbxOptions(datarg,'Schedule',Sched);
 tspan = 0:60:1140;
 
 % Specify the number of particles/samples for the filter
-N =30;
+N =20;
 
 eopts = odtbxOptions('estimator');
 eopts = setOdtbxOptions(eopts,'MonteCarloCases',1);
@@ -107,6 +107,7 @@ eopts = setOdtbxOptions(eopts,'UpdateIterations',1);
 eopts = setOdtbxOptions(eopts,'MonteCarloSeed',1);
 eopts = setOdtbxOptions(eopts,'EditRatio',ones(6,1)*9);
 eopts = setOdtbxOptions(eopts,'EditFlag',ones(6,1));
+eopts = setOdtbxOptions(eopts,'Particles',N);
 
 % Now run (and time) the particle filter:
 

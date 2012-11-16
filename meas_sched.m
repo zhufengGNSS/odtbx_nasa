@@ -16,13 +16,13 @@ function varargout = meas_sched(varargin)
     %      stop.  All inputs are passed to meas_sched_OpeningFcn via varargin.
     %
     %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-    %      instance to run (singleton)".
+    %      instance to calculate (singleton)".
     %
     % See also: GUIDE, GUIDATA, GUIHANDLES
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 13-Nov-2012 10:17:06
+    % Last Modified by GUIDE v2.5 14-Nov-2012 12:15:15
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -271,16 +271,16 @@ end
 
 
 % --------------------------------------------------------------------
-function run_Callback(hObject, eventdata, handles)
-% hObject    handle to run (see GCBO)
+function calculate_Callback(hObject, eventdata, handles)
+% hObject    handle to calculate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 end
 
 
 % --------------------------------------------------------------------
-function refresh_Callback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+function generate_Callback(hObject, eventdata, handles)
+% hObject    handle to generate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 make_meas();
@@ -1491,10 +1491,21 @@ function make_meas()
     
 %     if (~isempty(T) && ~isempty(X))
     try
-        [y1, H1, R1] = gsmeas(T, X, measOptions);
-        y1
+        [y, H, R] = gsmeas(T, X, measOptions);
+        separate_measurements(y);
     catch exceptions
         errordlg(exceptions.message, 'Measurement Error!');
     end
 end
 
+
+function separate_measurements(meas_in)
+    global measurements;
+    global measOptions;
+    
+    % Figure out what measurements we have
+    
+    % Figure out what ground stations we have measurements for
+    
+    
+end

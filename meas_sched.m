@@ -1492,6 +1492,7 @@ function make_meas()
 %     if (~isempty(T) && ~isempty(X))
     try
         [y, H, R] = gsmeas(T, X, measOptions);
+        y
         separate_measurements(y);
     catch exceptions
         errordlg(exceptions.message, 'Measurement Error!');
@@ -1502,10 +1503,51 @@ end
 function separate_measurements(meas_in)
     global measurements;
     global measOptions;
+
+    % Create the structure template
+    measurement = struct('ground_station', [], ...
+        'type', [], ...
+        'data', []);
+
+    % Figure out how many ground stations we have measurements for
+    ground_stations = getOdtbxOptions(measOptions, 'gsID');
+    num_gs = length(ground_stations);
     
     % Figure out what measurements we have
+    options = {};
+    option_size = [];
+    if (getOdtbxOptions(measOptions, 'useRange'))
+        options{end+1} = 'useRange';
+        option_size(end+1) = 1;
+    end
+    if (getOdtbxOptions(measOptions, 'useRangeRate'))
+        options{end+1} = 'useRangeRate';
+        option_size(end+1) = 1;
+    end
+    if (getOdtbxOptions(measOptions, 'useDoppler'))
+        options{end+1} = 'useDoppler';
+        option_size(end+1) = 1;
+    end
+    if (getOdtbxOptions(measOptions, 'useUnit'))
+        options{end+1} = 'useUnit';
+        option_size(end+1) = 3;
+    end
+    if (getOdtbxOptions(measOptions, 'useAngles'))
+        options{end+1} = 'useAngles';
+        option_size(end+1) = 2;
+    end
+    num_options = length(options);
     
-    % Figure out what ground stations we have measurements for
+    % Save the data into a more useable form
+    row_current = 1;
+    for gs = 1:num_gs
+        for opt = 1:num_options
+                measurement(end+1) = struct('ground_station', ground_stations(gs), ...
+                    'type', options(opt), ...
+                    'data', meas_in(row_current:row_current+option_size(opt)-1,:));
+                row_current = row_current + option_size(opt);
+        end
+    end
     
     
 end

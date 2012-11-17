@@ -73,6 +73,7 @@ else
     axes_date_begin = xData(1);
     axes_date_final = xData(end);
     
+    % Display on the GUI
     set(handles.date_begin, 'String', datestr(axes_date_begin, 'mm/dd/yyyy HH:MM:SS'));
     set(handles.date_final, 'String', datestr(axes_date_final, 'mm/dd/yyyy HH:MM:SS'));
     set(handles.num_increments, 'String', length(xData));

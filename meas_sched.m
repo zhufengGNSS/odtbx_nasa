@@ -285,8 +285,34 @@ function generate_Callback(hObject, eventdata, handles)
 % hObject    handle to generate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-make_meas();
-plot_meas(hObject, eventdata, handles);
+    global measOptions;
+    global T;
+    make_meas();
+%     plot_meas(hObject, eventdata, handles);
+    
+    % Adjust the time range we can see on the plots to be the same as the
+    % time span over which the orbit was propagated
+
+    % Pull in the current display data
+    xData = get(handles.meas_total, 'Xtick');
+    increments = length(xData);
+
+    % Calculate the new time range
+    new_begin = getOdtbxOptions(measOptions, 'epoch');
+    new_end = new_begin + T*1/60*1/60*1/24;
+    xData = linspace(new_begin,new_end(end),increments);
+    
+    % Set the new limits on all of the axes
+    set(handles.axes_handles,'XLim',[xData(1) xData(end)]);
+    
+    % Set the number of XTicks to the number of points in xData:
+    set(handles.axes_handles,'XTick',xData);
+    
+    datetick('x', 'mm/dd/yy', 'keepticks');
+
+    % Redraw all the boxes on the potentially new axes scale
+    plot_meas(hObject, eventdata, handles);
+    redraw_boxes();
 end
 
 
@@ -811,7 +837,6 @@ function change_gs(axes_handle)
 %     set(axes_handle, 'UserData', new_gs_name);
     
     i = 2; % The first box is a decoy structure box
-    length(boxes)
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
         % If it's on the correct axes
         if (axes_handle == get(boxes(i).handle, 'Parent'))
@@ -1497,7 +1522,6 @@ function make_meas()
     
     try
         [y, H, R] = gsmeas(T, X, measOptions);
-        y
         separate_measurements(y);
     catch exceptions
         errordlg(exceptions.message, 'Measurement Error!');
@@ -1573,14 +1597,10 @@ function plot_meas(hObject, eventdata, handles)
         if (~isempty(user_data) && user_data > 0)
             for meas_loop = 2:length(measurements)
                 plot_num = measurements(meas_loop).plot;
-                if (user_data == plot_num)
-                    % Replace NaN's with zeros
-%                     measurements(meas_loop).data(isnan(measurements(meas_loop).data)) = 0;
-%                     measurements(meas_loop).data
-                    
+                if (user_data == plot_num)              
                     % Scale the data to fit the axes
-                    max_val = max(measurements(meas_loop).data)
-                    scaled_data = measurements(meas_loop).data / max_val
+                    max_val = max(measurements(meas_loop).data);
+                    scaled_data = measurements(meas_loop).data / max_val;
                     
                     line(time_abs, scaled_data, 'Color', 'k', 'LineStyle', '-', ...
                         'LineWidth', 1, 'Parent', handles.axes_handles(axes_loop));

@@ -233,8 +233,8 @@ function ok_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Bring in the changed values
-new_date_begin = floor(datenum(get(handles.date_begin, 'String')));
-new_date_final = ceil(datenum(get(handles.date_final, 'String')));
+new_date_begin = datenum(get(handles.date_begin, 'String'));
+new_date_final = datenum(get(handles.date_final, 'String'));
 new_num_increments = str2num(get(handles.num_increments, 'String'));
 
 main = handles.meas_sched_Main;

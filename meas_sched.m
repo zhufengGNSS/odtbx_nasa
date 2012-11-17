@@ -53,17 +53,22 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     % varargin   command line arguments to meas_sched (see VARARGIN)
-%     global boxes;
-%     clear global boxes; % Get rid of data from previous runs
 
     global meas_add_remove;
-%     clear global meas_add_remove;
     meas_add_remove = 1;
     set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
 
     global measOptions;
-%     clear global measOptions;
     measOptions = odtbxOptions('measurement');
+    
+    global boxes;
+    if (~isempty(boxes)) % Get rid of data from previous runs
+    boxes = struct('ground_station', [], ...
+        'type', [], ...
+        'x', [0, 0], ...
+        'handle', [], ...
+        'total_handle', []);
+    end
     
 %     global time_prop;
 %     clear global time_sim;
@@ -112,7 +117,7 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     linkaxes(handles.axes_handles, 'xy');
     
     % Give the axes a default name
-    set(handles.axes_handles, 'UserData', ['Unspecified']);
+    set(handles.axes_handles, 'UserData', 0);
 
     % Set the size of the axes (will replace with dates)
     set(handles.axes_handles,'YLim',[0 1]);
@@ -216,9 +221,6 @@ function options_Callback(hObject, eventdata, handles)
 % hObject    handle to options (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global measOptions;
-%     measOptions = setOdtbxOptions(measOptions, 'useRange', true);
-%     measOptions = setOdtbxOptions(measOptions, 'rangeType', '2way');
     gs_options('meas_sched', handles.figure1);
 end
 
@@ -284,6 +286,7 @@ function generate_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 make_meas();
+plot_meas(hObject, eventdata, handles);
 end
 
 
@@ -715,7 +718,7 @@ function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
         x = coords(1);
         dx = coords(2) - coords(1);
     end
-    
+
     % Plot a box on parent axes
     meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 3);%,'FaceColor',[175/255 1 175/255]);
     set(meas, 'parent', axes_handles(1));
@@ -786,8 +789,8 @@ function harvest_gs(hObject, eventdata, handles)
             measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
             measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
             
-            % Save the gsID to the corresponding axes_handle
-%             set(handles.axes_handles(i), 'UserData', new_gsID);
+            % Save the plot number to the corresponding axes_handle
+            set(handles.axes_handles(i), 'UserData', i);
         
         else
 %             set(handles.axes_handles(i), 'UserData', []);
@@ -808,6 +811,7 @@ function change_gs(axes_handle)
 %     set(axes_handle, 'UserData', new_gs_name);
     
     i = 2; % The first box is a decoy structure box
+    length(boxes)
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
         % If it's on the correct axes
         if (axes_handle == get(boxes(i).handle, 'Parent'))
@@ -839,7 +843,9 @@ function change_time(hObject, eventdata, handles)
     time_info('meas_sched', handles.figure1);
     datetick('x', 'mm/dd/yy', 'keepticks');
     % Redraw all the boxes on the potentially new axes scale
+    plot_meas(hObject, eventdata, handles);
     redraw_boxes();
+    
 end
 
 
@@ -1420,7 +1426,7 @@ function import_options_from_workspace(hObject, eventdata, handles)
     for j = 1:length(gsID_local)
         set(handles.slide_labels(j), 'String', gsID_local{j});
         set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
-        set(handles.axes_handles(j), 'UserData', gsID_local(j));
+        set(handles.axes_handles(j), 'UserData', j);
     end
     
     % Update the box structure
@@ -1489,7 +1495,6 @@ function make_meas()
     global X;
     global measOptions;
     
-%     if (~isempty(T) && ~isempty(X))
     try
         [y, H, R] = gsmeas(T, X, measOptions);
         y
@@ -1505,7 +1510,8 @@ function separate_measurements(meas_in)
     global measOptions;
 
     % Create the structure template
-    measurement = struct('ground_station', [], ...
+    measurements = struct('plot', [], ...
+        'ground_station', [], ...
         'type', [], ...
         'data', []);
 
@@ -1542,10 +1548,45 @@ function separate_measurements(meas_in)
     row_current = 1;
     for gs = 1:num_gs
         for opt = 1:num_options
-                measurement(end+1) = struct('ground_station', ground_stations(gs), ...
-                    'type', options(opt), ...
-                    'data', meas_in(row_current:row_current+option_size(opt)-1,:));
-                row_current = row_current + option_size(opt);
+            measurements(end+1) = struct('plot', gs, ...
+                'ground_station', ground_stations(gs), ...
+                'type', options(opt), ...
+                'data', meas_in(row_current:row_current+option_size(opt)-1,:));
+            row_current = row_current + option_size(opt);
+        end
+    end
+end
+
+
+function plot_meas(hObject, eventdata, handles)
+    global measurements;
+    global T;
+    global measOptions;
+    
+    % Convert relative time to absolute time
+    time_abs = getOdtbxOptions(measOptions, 'epoch') + T*1/60*1/60*1/24;
+
+    % In the future, the controls that dictate which plots will be show
+    % will go in here. For now, we show all the plots.
+    for axes_loop = 1:length(handles.axes_handles)-1
+        user_data = get(handles.axes_handles(axes_loop), 'UserData');
+        if (~isempty(user_data) && user_data > 0)
+            for meas_loop = 2:length(measurements)
+                plot_num = measurements(meas_loop).plot;
+                if (user_data == plot_num)
+                    % Replace NaN's with zeros
+%                     measurements(meas_loop).data(isnan(measurements(meas_loop).data)) = 0;
+%                     measurements(meas_loop).data
+                    
+                    % Scale the data to fit the axes
+                    max_val = max(measurements(meas_loop).data)
+                    scaled_data = measurements(meas_loop).data / max_val
+                    
+                    line(time_abs, scaled_data, 'Color', 'k', 'LineStyle', '-', ...
+                        'LineWidth', 1, 'Parent', handles.axes_handles(axes_loop));
+                    hold on;
+                end
+            end
         end
     end
     

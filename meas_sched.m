@@ -1411,6 +1411,9 @@ function export_options_to_workspace()
     lines = 1;
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
+    
+    % Assign schedule to measOptions
+    
 
     % Write out variable
     assignin('base', answer{1}, measOptions);
@@ -1433,7 +1436,7 @@ function import_options_from_workspace(hObject, eventdata, handles)
     try
         measOptions = evalin('base', answer{1});
     catch exception
-        errordlg(exception.message, 'Enter a function name!');
+        errordlg(exception.message, 'Import error!');
     end
     
     % Create the imported ground stations
@@ -1458,6 +1461,11 @@ function import_options_from_workspace(hObject, eventdata, handles)
     for k = 1:length(handles.axes_handles)-1
         change_gs(handles.axes_handles(k));
     end
+    
+    % Import schedule
+    
+    % Delete schedule in imported measOptions (we don't want them limiting
+    % what gsmeas generates)
     
 end
 
@@ -1597,17 +1605,20 @@ function plot_meas(hObject, eventdata, handles)
         if (~isempty(user_data) && user_data > 0)
             for meas_loop = 2:length(measurements)
                 plot_num = measurements(meas_loop).plot;
-                if (user_data == plot_num)              
+                if (user_data == plot_num)       
                     % Scale the data to fit the axes
-                    max_val = max(measurements(meas_loop).data);
+                    max_val = max(max(measurements(meas_loop).data));
                     scaled_data = measurements(meas_loop).data / max_val;
+
+                    % Set up color scheme for different data here
                     
-                    line(time_abs, scaled_data, 'Color', 'k', 'LineStyle', '-', ...
-                        'LineWidth', 1, 'Parent', handles.axes_handles(axes_loop));
+                    line(time_abs, scaled_data, 'LineWidth', 2, ...
+                        'Parent', handles.axes_handles(axes_loop));
                     hold on;
                 end
             end
         end
+        hold off;
     end
     
     

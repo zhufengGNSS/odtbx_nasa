@@ -87,12 +87,10 @@ if ~isempty(getOdtbxOptions(measOptions, 'epoch'))
         datestr(getOdtbxOptions(measOptions, 'epoch'), ...
         'mm/dd/yyyy HH:MM:SS'));
 end
-getOdtbxOptions(measOptions, 'gsElevationConstraint')
 if ~isempty(getOdtbxOptions(measOptions, 'gsElevationConstraint'))
     set(handles.elevationconstraint, 'String', ...
         getOdtbxOptions(measOptions, 'gsElevationConstraint'));
 end
-get(handles.elevationconstraint, 'String')
 if ~isempty(getOdtbxOptions(measOptions, 'frequencyTransmit'))
     set(handles.trans_freq, 'String', ...
         getOdtbxOptions(measOptions, 'frequencyTransmit'));

@@ -1404,6 +1404,7 @@ end
 
 function export_options_to_workspace()
     global measOptions;
+    global boxes;
     
     % Prompt user for new name
     prompt = {'Enter target variable name:'};
@@ -1412,11 +1413,27 @@ function export_options_to_workspace()
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
     
-    % Assign schedule to measOptions
+    % Change schedule to the appropriate format
+    % gsmeas() expects the [ID, ti, tf] where the start and stop times are
+    % in seconds from epoch.
+    epoch = getOdtbxOptions(measOptions, 'epoch');
+    schedule = [];
+    for i = 2:length(boxes)
+        ti = (boxes(i).x(1) - epoch) * 24 * 60 * 60; % Was in days
+        tf = (boxes(i).x(2) - epoch) * 24 * 60 * 60; % Now in seconds
+        new_entry = [boxes(i).ground_station, ti, tf];
+        if isempty(schedule)
+            schedule = new_entry;
+        else
+            schedule = vertcat(schedule, new_entry);
+        end
+    end
     
+    % Assign schedule to measOptions
+    exportedOptions = setOdtbxOptions(measOptions, 'Schedule', schedule);
 
     % Write out variable
-    assignin('base', answer{1}, measOptions);
+    assignin('base', answer{1}, exportedOptions);
 %     save(answer{1}, 'measOptions');
 
 end

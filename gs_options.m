@@ -58,72 +58,74 @@ handles.output = hObject;
 
 % Set up the display with the correct values
 global measOptions;
-if getOdtbxOptions(measOptions, 'useRange')
+if ~isempty(getOdtbxOptions(measOptions, 'useRange'))
     set(handles.range, 'Value', ...
         getOdtbxOptions(measOptions, 'useRange'));
 end
-if getOdtbxOptions(measOptions, 'rangeType')
+if ~isempty(getOdtbxOptions(measOptions, 'rangeType'))
     set(handles.rangeType, 'String', ...
         getOdtbxOptions(measOptions, 'rangeType'));
 end
-if getOdtbxOptions(measOptions, 'useRangeRate')
+if ~isempty(getOdtbxOptions(measOptions, 'useRangeRate'))
     set(handles.range_rate, 'Value', ...
         getOdtbxOptions(measOptions, 'useRangeRate'));
 end
-if getOdtbxOptions(measOptions, 'useDoppler')
+if ~isempty(getOdtbxOptions(measOptions, 'useDoppler'))
     set(handles.doppler, 'Value', ...
         getOdtbxOptions(measOptions, 'useDoppler'));
 end
-if getOdtbxOptions(measOptions, 'useUnit')
+if ~isempty(getOdtbxOptions(measOptions, 'useUnit'))
     set(handles.unit_vec, 'Value', ...
         getOdtbxOptions(measOptions, 'useUnit'));
 end
-if getOdtbxOptions(measOptions, 'useAngles')
+if ~isempty(getOdtbxOptions(measOptions, 'useAngles'))
     set(handles.angles, 'Value', ...
         getOdtbxOptions(measOptions, 'useAngles'));
 end
-if getOdtbxOptions(measOptions, 'epoch')
+if ~isempty(getOdtbxOptions(measOptions, 'epoch'))
     set(handles.epoch, 'String', ...
         datestr(getOdtbxOptions(measOptions, 'epoch'), ...
         'mm/dd/yyyy HH:MM:SS'));
 end
-if getOdtbxOptions(measOptions, 'gsElevationConstraint')
+getOdtbxOptions(measOptions, 'gsElevationConstraint')
+if ~isempty(getOdtbxOptions(measOptions, 'gsElevationConstraint'))
     set(handles.elevationconstraint, 'String', ...
         getOdtbxOptions(measOptions, 'gsElevationConstraint'));
 end
-if getOdtbxOptions(measOptions, 'frequencyTransmit')
+get(handles.elevationconstraint, 'String')
+if ~isempty(getOdtbxOptions(measOptions, 'frequencyTransmit'))
     set(handles.trans_freq, 'String', ...
         getOdtbxOptions(measOptions, 'frequencyTransmit'));
 end
-if getOdtbxOptions(measOptions, 'rSigma')
+if ~isempty(getOdtbxOptions(measOptions, 'rSigma'))
     set(handles.meas_cov, 'String', ...
         getOdtbxOptions(measOptions, 'rSigma'));
 end
-if getOdtbxOptions(measOptions, 'useLightTime')
+if ~isempty(getOdtbxOptions(measOptions, 'useLightTime'))
     set(handles.light_time, 'Value', ...
         getOdtbxOptions(measOptions, 'useLightTime'));
 end
-if getOdtbxOptions(measOptions, 'useGPSIonosphere')
+if ~isempty(getOdtbxOptions(measOptions, 'useGPSIonosphere'))
     set(handles.gps_ionosphere, 'Value', ...
         getOdtbxOptions(measOptions, 'useGPSIonosphere'));
 end
-if getOdtbxOptions(measOptions, 'useIonosphere')
+if ~isempty(getOdtbxOptions(measOptions, 'useIonosphere'))
     set(handles.ionosphere, 'Value', ...
         getOdtbxOptions(measOptions, 'useIonosphere'));
 end
-if getOdtbxOptions(measOptions, 'useChargedParticle')
+if ~isempty(getOdtbxOptions(measOptions, 'useChargedParticle'))
     set(handles.charged_particles, 'Value', ...
         getOdtbxOptions(measOptions, 'useChargedParticle'));
 end
-if getOdtbxOptions(measOptions, 'useTroposphere')
+if ~isempty(getOdtbxOptions(measOptions, 'useTroposphere'))
     set(handles.troposphere, 'Value', ...
         getOdtbxOptions(measOptions, 'useTroposphere'));
 end
-if getOdtbxOptions(measOptions, 'EarthAtmMaskRadius')
+if ~isempty(getOdtbxOptions(measOptions, 'EarthAtmMaskRadius'))
     set(handles.earth_atm_mask_radius, 'String', ...
         getOdtbxOptions(measOptions, 'EarthAtmMaskRadius'));
 end
-if getOdtbxOptions(measOptions, 'PrecnNutnExpire')
+if ~isempty(getOdtbxOptions(measOptions, 'PrecnNutnExpire'))
     set(handles.Precn_Nutn_Expire, 'String', ...
         getOdtbxOptions(measOptions, 'PrecnNutnExpire'));
 end

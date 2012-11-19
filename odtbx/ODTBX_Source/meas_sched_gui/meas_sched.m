@@ -16,15 +16,15 @@ function varargout = meas_sched(varargin)
     %      stop.  All inputs are passed to meas_sched_OpeningFcn via varargin.
     %
     %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-    %      instance to run (singleton)".
+    %      instance to calculate (singleton)".
     %
     % See also: GUIDE, GUIDATA, GUIHANDLES
 
-    % Edit the above text to modify the response to help meas_sched
+    % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 10-Oct-2012 13:49:46
+    % Last Modified by GUIDE v2.5 14-Nov-2012 12:15:15
 
-    % Begin initialization code - DO NOT EDIT
+    % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ...
                        'gui_Singleton',  gui_Singleton, ...
@@ -41,7 +41,7 @@ function varargout = meas_sched(varargin)
     else
         gui_mainfcn(gui_State, varargin{:});
     end
-    % End initialization code - DO NOT EDIT
+    % End initialization code - DO NOT VISUALIZATION
 end
 
 
@@ -53,16 +53,32 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     % varargin   command line arguments to meas_sched (see VARARGIN)
-    global boxes;
-    clear global boxes; % Get rid of data from previous runs
 
     global meas_add_remove;
-    clear global meas_add_remove;
     meas_add_remove = 1;
     set(handles.meas_schedule_mode,'SelectedObject',[handles.Add]);
-    % get(handles.meas_schedule_mode, 'SelectedObject')
-    % meas_add_remove
 
+    global measOptions;
+    measOptions = odtbxOptions('measurement');
+    
+    global boxes;
+    if (~isempty(boxes)) % Get rid of data from previous runs
+    boxes = struct('ground_station', [], ...
+        'type', [], ...
+        'x', [0, 0], ...
+        'handle', [], ...
+        'total_handle', []);
+    end
+    
+%     global time_prop;
+%     clear global time_sim;
+    
+%     global sat_state_prop;
+%     clear global sat_state_sim;
+    
+%     global propagator;
+%     clear global propagator;
+    
     % Choose default command line output for meas_sched
     handles.output = hObject;
 
@@ -101,7 +117,7 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     linkaxes(handles.axes_handles, 'xy');
     
     % Give the axes a default name
-    set(handles.axes_handles, 'UserData', ['Unspecified']);
+    set(handles.axes_handles, 'UserData', 0);
 
     % Set the size of the axes (will replace with dates)
     set(handles.axes_handles,'YLim',[0 1]);
@@ -124,7 +140,7 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.meas_schedule_mode, 'SelectedObject', handles.Add);
 
     % UIWAIT makes meas_sched wait for user response (see UIRESUME)
-    uiwait(handles.figure1);
+%     uiwait(handles.figure1);
 end
 
 
@@ -140,12 +156,12 @@ function varargout = meas_sched_OutputFcn(hObject, eventdata, handles)
 end
 
 
-% --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
-    % hObject    handle to pushbutton1 (see GCBO)
+% --- Executes on button press in export_button.
+function export_button_Callback(hObject, eventdata, handles)
+    % hObject    handle to export_button (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-    export_schedule();
+    export_options_to_workspace();
 end
 
 
@@ -158,8 +174,17 @@ end
 
 
 % --------------------------------------------------------------------
-function edit_Callback(hObject, eventdata, handles)
-    % hObject    handle to edit (see GCBO)
+function simulation_Callback(hObject, eventdata, handles)
+% hObject    handle to simulation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+
+% --------------------------------------------------------------------
+function visualization_Callback(~, eventdata, handles)
+    % hObject    handle to visualization (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
 end
@@ -187,15 +212,43 @@ function satellite_Callback(hObject, eventdata, handles)
     % hObject    handle to satellite (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    change_satellite(hObject, eventdata, handles);
 end
 
 
 % --------------------------------------------------------------------
-function export_Callback(hObject, eventdata, handles)
-    % hObject    handle to export (see GCBO)
+function options_Callback(hObject, eventdata, handles)
+% hObject    handle to options (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    gs_options('meas_sched', handles.figure1);
+end
+
+
+% --------------------------------------------------------------------
+function export_workspace_Callback(hObject, eventdata, handles)
+% hObject    handle to export_workspace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    export_options_to_workspace()
+end
+
+
+% --------------------------------------------------------------------
+function export_csv_Callback(hObject, eventdata, handles)
+    % hObject    handle to export_csv (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-    export_schedule();
+    export_schedule_to_csv();
+end
+
+
+% --------------------------------------------------------------------
+function import_options_Callback(hObject, eventdata, handles)
+% hObject    handle to import_options (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    import_options_from_workspace(hObject, eventdata, handles);
 end
 
 
@@ -216,6 +269,50 @@ function time_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     change_time(hObject, eventdata, handles);
+end
+
+
+% --------------------------------------------------------------------
+function calculate_Callback(hObject, eventdata, handles)
+% hObject    handle to calculate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --------------------------------------------------------------------
+function generate_Callback(hObject, eventdata, handles)
+% hObject    handle to generate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global measOptions;
+    global T;
+    make_meas();
+%     plot_meas(hObject, eventdata, handles);
+    
+    % Adjust the time range we can see on the plots to be the same as the
+    % time span over which the orbit was propagated
+
+    % Pull in the current display data
+    xData = get(handles.meas_total, 'Xtick');
+    increments = length(xData);
+
+    % Calculate the new time range
+    new_begin = getOdtbxOptions(measOptions, 'epoch');
+    new_end = new_begin + T*1/60*1/60*1/24;
+    xData = linspace(new_begin,new_end(end),increments);
+    
+    % Set the new limits on all of the axes
+    set(handles.axes_handles,'XLim',[xData(1) xData(end)]);
+    
+    % Set the number of XTicks to the number of points in xData:
+    set(handles.axes_handles,'XTick',xData);
+    
+    datetick('x', 'mm/dd/yy', 'keepticks');
+
+    % Redraw all the boxes on the potentially new axes scale
+    plot_meas(hObject, eventdata, handles);
+    redraw_boxes();
 end
 
 
@@ -585,7 +682,7 @@ function edit_a_box(coords, axes_handles, handles)
         if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
             if ((boxes(i).x(1) <= coords(1)) && (coords(1) <= boxes(i).x(2)))
 
-                % Open edit window
+                % Open visualization window
                 [returned_handle, edited_times(1), edited_times(2)] = ...
                     meas_edit('meas_sched', handles.figure1, ...
                     'meas_times', [boxes(i).x(1), boxes(i).x(2)]);
@@ -609,7 +706,7 @@ end
 function create_many_much_boxen(coords, axes_handles, handles)
     global boxes;
 
-    % Bring up GUI to edit original information and set repeat
+    % Bring up GUI to visualization original information and set repeat
     [returned_handle, edited_times(1), edited_times(2), repeat_freq, repeat_until] = ...
                     pattern_add('meas_sched', handles.figure1, ...
                     'meas_times', [coords(1), coords(2)]);
@@ -647,7 +744,7 @@ function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
         x = coords(1);
         dx = coords(2) - coords(1);
     end
-    
+
     % Plot a box on parent axes
     meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 3);%,'FaceColor',[175/255 1 175/255]);
     set(meas, 'parent', axes_handles(1));
@@ -686,12 +783,58 @@ function redraw_boxes()
 end
 
 
-function change_gs(axes_handle, new_gs_name)
+function harvest_gs(hObject, eventdata, handles)
+    % This function will go through all the defined ground stations and
+    % save their data to the options structure
+    
+    global measOptions;
+%     measOptions = odtbxOptions('measurement');
+    default_options = odtbxOptions('measurement');
+    
+    % Clear out the entries in the old structure (this function will
+    % completely rebuild the entries)
+    
+    measOptions = setOdtbxOptions(measOptions, 'gsID', getOdtbxOptions(default_options, 'gsID'));
+    measOptions = setOdtbxOptions(measOptions, 'gsECEF', getOdtbxOptions(default_options, 'gsECEF'));
+    
+    for i = 1:length(handles.slide_labels)
+        if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
+            % Pull in the full variables from the options structure
+            local_gsID = getOdtbxOptions(measOptions, 'gsID');
+            local_gsECEF = getOdtbxOptions(measOptions, 'gsECEF');
+            
+            % Get the new values to add to the structure
+            new_gsID = get(handles.slide_labels(i), 'String');
+            new_gsECEF = get(handles.slide_labels(i), 'UserData');
+            
+            % Append the new data to the end of the current data
+            local_gsID{end+1} = new_gsID;
+            local_gsECEF(1:3, end+1) = new_gsECEF;
+            
+            % Save it back to the options structure
+            measOptions = setOdtbxOptions(measOptions, 'gsID', local_gsID);
+            measOptions = setOdtbxOptions(measOptions, 'gsECEF', local_gsECEF);
+            
+            % Save the plot number to the corresponding axes_handle
+            set(handles.axes_handles(i), 'UserData', i);
+        
+        else
+%             set(handles.axes_handles(i), 'UserData', []);
+        end
+    end
+    
+%     % Write out variable
+    assignin('base', 'optOut', measOptions);
+end
+
+
+% function change_gs(axes_handle, new_gs_name)
+function change_gs(axes_handle)
     % This function changes the ground station of a box
     global boxes;
     
     % Change axes_handle ground station
-    set(axes_handle, 'UserData', [new_gs_name]);
+%     set(axes_handle, 'UserData', new_gs_name);
     
     i = 2; % The first box is a decoy structure box
     while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
@@ -702,7 +845,6 @@ function change_gs(axes_handle, new_gs_name)
         end
         i = i + 1;
     end
-    
 end
 
 
@@ -726,7 +868,9 @@ function change_time(hObject, eventdata, handles)
     time_info('meas_sched', handles.figure1);
     datetick('x', 'mm/dd/yy', 'keepticks');
     % Redraw all the boxes on the potentially new axes scale
+    plot_meas(hObject, eventdata, handles);
     redraw_boxes();
+    
 end
 
 
@@ -735,15 +879,23 @@ function gs_label1_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label1 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label1;
+    handles.gs_axes_current = handles.axes1;
+    
     % Update handle structure
     guidata(hObject, handles);
    
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes1, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -752,15 +904,23 @@ function gs_label2_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label2 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label2;
+    handles.gs_axes_current = handles.axes2;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes2, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -769,15 +929,23 @@ function gs_label3_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label3 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label3;
+    handles.gs_axes_current = handles.axes3;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes3, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -786,15 +954,23 @@ function gs_label4_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label4 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label4;
+    handles.gs_axes_current = handles.axes4;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes4, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -803,15 +979,23 @@ function gs_label5_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label5 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label5;
+    handles.gs_axes_current = handles.axes5;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes5, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -820,15 +1004,23 @@ function gs_label6_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label6 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label6;
+    handles.gs_axes_current = handles.axes6;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes6, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -837,15 +1029,23 @@ function gs_label7_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label7 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label7;
+    handles.gs_axes_current = handles.axes7;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes7, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -854,15 +1054,23 @@ function gs_label8_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label8 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label8;
+    handles.gs_axes_current = handles.axes8;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes8, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -871,15 +1079,23 @@ function gs_label9_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label9 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+   
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label9;
+    handles.gs_axes_current = handles.axes9;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes9, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -888,15 +1104,23 @@ function gs_label10_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label10 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label10;
+    handles.gs_axes_current = handles.axes10;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes10, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -905,15 +1129,23 @@ function gs_label11_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label11 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label11;
+    handles.gs_axes_current = handles.axes11;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes11, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -922,15 +1154,23 @@ function gs_label12_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label12 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label12;
+    handles.gs_axes_current = handles.axes12;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes12, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -939,15 +1179,23 @@ function gs_label13_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label13 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label13;
+    handles.gs_axes_current = handles.axes13;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes13, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -956,15 +1204,23 @@ function gs_label14_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label14 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label14;
+    handles.gs_axes_current = handles.axes14;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes14, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -973,15 +1229,23 @@ function gs_label15_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label15 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label15;
+    handles.gs_axes_current = handles.axes15;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes15, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -990,15 +1254,23 @@ function gs_label16_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label16 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label16;
+    handles.gs_axes_current = handles.axes16;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes16, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1007,15 +1279,23 @@ function gs_label17_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label17 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label17;
+    handles.gs_axes_current = handles.axes17;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes17, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1024,15 +1304,23 @@ function gs_label18_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label18 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label18;
+    handles.gs_axes_current = handles.axes18;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes18, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1041,15 +1329,23 @@ function gs_label19_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label19 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label19;
+    handles.gs_axes_current = handles.axes19;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes19, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
@@ -1058,19 +1354,27 @@ function gs_label20_Callback(hObject, eventdata, handles)
     % hObject    handle to gs_label20 (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    
+    % Change the handle to reference the button that has been pressed (this
+    % will be used in gs_info) 
     handles.gs_label_current = handles.gs_label20;
+    handles.gs_axes_current = handles.axes20;
+    
     % Update handle structure
     guidata(hObject, handles);
        
     % Call the GUI to get updated info
     gs_info('meas_sched', handles.figure1);
     
+    % Harvest the new data (take it from the button and collect it to the options structure)
+    harvest_gs(hObject, eventdata, handles);
+    
     % Change the boxes structures to reflect new changes
-    change_gs(handles.axes20, get(hObject, 'String'));
+    change_gs(handles.gs_axes_current);
 end
 
 
-function export_schedule()
+function export_schedule_to_csv()
     % Write all of the measurements to a file
     global boxes;
 
@@ -1095,4 +1399,280 @@ function export_schedule()
 %             close(fid);
         end
     end
+end
+
+
+function export_options_to_workspace()
+    global measOptions;
+    global boxes;
+    
+    % Prompt user for new name
+    prompt = {'Enter target variable name:'};
+    title = 'Export to Workspace';
+    lines = 1;
+    def = {'measOptions'};
+    answer = inputdlg(prompt, title, lines, def);
+    
+    % Change schedule to the appropriate format
+    % gsmeas() expects the [ID, ti, tf] where the start and stop times are
+    % in seconds from epoch.
+    epoch = getOdtbxOptions(measOptions, 'epoch');
+    schedule = [];
+    for i = 2:length(boxes)
+        ti = (boxes(i).x(1) - epoch) * 24 * 60 * 60; % Was in days
+        tf = (boxes(i).x(2) - epoch) * 24 * 60 * 60; % Now in seconds
+        new_entry = [boxes(i).ground_station, ti, tf];
+        if isempty(schedule)
+            schedule = new_entry;
+        else
+            schedule = vertcat(schedule, new_entry);
+        end
+    end
+    
+    % Assign schedule to measOptions
+    exportedOptions = setOdtbxOptions(measOptions, 'Schedule', schedule);
+
+    % Write out variable
+    assignin('base', answer{1}, exportedOptions);
+%     save(answer{1}, 'measOptions');
+
+end
+
+
+function import_options_from_workspace(hObject, eventdata, handles)
+    global measOptions;
+    
+    % Prompt user for new name
+    prompt = {'Enter workspace variable name:'};
+    title = 'Import from Workspace';
+    lines = 1;
+    def = {'measOptions'};
+    answer = inputdlg(prompt, title, lines, def);
+
+    % Read in options structure
+    try
+        measOptions = evalin('base', answer{1});
+    catch exception
+        errordlg(exception.message, 'Import error!');
+    end
+    
+    % Create the imported ground stations
+    % Delete all the old ground stations (if there were any)
+    for i = 1:length(handles.slide_labels)
+        if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
+            set(handles.slide_labels(i), 'String', '[ ]');
+            set(handles.slide_labels(i), 'UserData', '');
+        end
+    end
+    
+    % Write all the new GS data (seed)
+    gsID_local = getOdtbxOptions(measOptions, 'gsID');
+    gsECEF_local = getOdtbxOptions(measOptions, 'gsECEF');
+    for j = 1:length(gsID_local)
+        set(handles.slide_labels(j), 'String', gsID_local{j});
+        set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
+        set(handles.axes_handles(j), 'UserData', j);
+    end
+    
+    % Update the box structure
+    for k = 1:length(handles.axes_handles)-1
+        change_gs(handles.axes_handles(k));
+    end
+    
+    % Import schedule
+    
+    % Delete schedule in imported measOptions (we don't want them limiting
+    % what gsmeas generates)
+    
+end
+
+
+function change_satellite(hObject, eventdata, handles)
+
+    % Set up the necessary structures (if they haven't been created
+    % already)
+    global time_prop;
+    if (isempty(time_prop))
+        time_prop = struct('begin', [], ...
+                          'increment', [], ...
+                          'end', []);
+    end
+    
+    global sat_state_prop;
+    if (isempty(sat_state_prop))
+        sat_state_prop = struct('pos_x', [], ...
+                               'pos_y', [], ...
+                               'pos_z', [], ...
+                               'vel_x', [], ...
+                               'vel_y', [], ...
+                               'vel_z', []);
+    end
+    
+    % GUI will gather the data and save it to the structures
+    output = satellite_edit('meas_sched', handles.figure1);
+    if (~strcmp(output, 'Cancel'))
+        % Do the actual propagation of the cartesian state using the specified
+        % function
+        global propagator;
+        time = time_prop.begin:time_prop.increment:time_prop.end;
+        coords = [sat_state_prop.pos_x;
+                  sat_state_prop.pos_y;
+                  sat_state_prop.pos_z;
+                  sat_state_prop.vel_x;
+                  sat_state_prop.vel_y;
+                  sat_state_prop.vel_z];
+
+        % Set numerical integration tolerances
+        opts = odeset('reltol',1e-9,'abstol',1e-9);      
+        mu = 3.986e5;           % Pancake gravitational parameter
+        
+        global T;
+        global X;
+        try
+            [T,X] = integ(propagator, time, coords, opts, mu);
+        catch exceptions
+            errordlg(exceptions.message, 'Propagation Error!');
+        end
+        
+        % Redo all the measurements
+%         make_meas();
+    end
+end
+
+
+function make_meas()
+    global T;
+    global X;
+    global measOptions;
+    
+    try
+        [y, H, R] = gsmeas(T, X, measOptions);
+        separate_measurements(y);
+    catch exceptions
+        errordlg(exceptions.message, 'Measurement Error!');
+    end
+end
+
+
+function separate_measurements(meas_in)
+    global measurements;
+    global measOptions;
+
+    % Create the structure template
+    measurements = struct('plot', [], ...
+        'ground_station', [], ...
+        'type', [], ...
+        'data', []);
+
+    % Figure out how many ground stations we have measurements for
+    ground_stations = getOdtbxOptions(measOptions, 'gsID');
+    num_gs = length(ground_stations);
+    
+    % Figure out what measurements we have
+    options = {};
+    option_size = [];
+    if (getOdtbxOptions(measOptions, 'useRange'))
+        options{end+1} = 'useRange';
+        option_size(end+1) = 1;
+    end
+    if (getOdtbxOptions(measOptions, 'useRangeRate'))
+        options{end+1} = 'useRangeRate';
+        option_size(end+1) = 1;
+    end
+    if (getOdtbxOptions(measOptions, 'useDoppler'))
+        options{end+1} = 'useDoppler';
+        option_size(end+1) = 1;
+    end
+    if (getOdtbxOptions(measOptions, 'useUnit'))
+        options{end+1} = 'useUnit';
+        option_size(end+1) = 3;
+    end
+    if (getOdtbxOptions(measOptions, 'useAngles'))
+        options{end+1} = 'useAngles';
+        option_size(end+1) = 2;
+    end
+    num_options = length(options);
+    
+    % Save the data into a more useable form
+    row_current = 1;
+    for gs = 1:num_gs
+        for opt = 1:num_options
+            measurements(end+1) = struct('plot', gs, ...
+                'ground_station', ground_stations(gs), ...
+                'type', options(opt), ...
+                'data', meas_in(row_current:row_current+option_size(opt)-1,:));
+            row_current = row_current + option_size(opt);
+        end
+    end
+end
+
+
+function plot_meas(hObject, eventdata, handles)
+    global measurements;
+    global T;
+    global measOptions;
+    
+    % Convert relative time to absolute time
+    time_abs = getOdtbxOptions(measOptions, 'epoch') + T*1/60*1/60*1/24;
+
+    % In the future, the controls that dictate which plots will be show
+    % will go in here. For now, we show all the plots.
+    for axes_loop = 1:length(handles.axes_handles)-1
+        user_data = get(handles.axes_handles(axes_loop), 'UserData');
+        if (~isempty(user_data) && user_data > 0)
+            for meas_loop = 2:length(measurements)
+                plot_num = measurements(meas_loop).plot;
+                if (user_data == plot_num)       
+                    % Set up color scheme and normalizations for different data here
+                    switch measurements(meas_loop).type
+                        case 'useRange'
+                            color = 'r';
+                            % Scale the data to fit the axes, take the max
+                            % to be 1
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
+                        case 'useRangeRate'
+                            color = 'b';
+                            % Scale the data to fit the axes, take the max
+                            % to be 1
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
+                        case 'useDoppler'
+                            color = 'k';
+                            % Scale the data to fit the axes, take the max
+                            % to be one
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
+                        case 'useUnits'
+                            color = 'c';
+                            % These are unit vectors, they should already
+                            % be scaled
+                        case 'useAngles'
+                            color = 'm';
+                            % Scale the data to fit the axes
+                            
+                            % CHECK THE UNITS ON THESE
+                            
+                            % Azimuth: 0 to 360 deg
+                            % Elevation: 0 to 90 deg
+                            measurements(meas_loop).data
+                            scaled_data(1,:) = measurements(meas_loop).data(1,:) / 360;
+                            scaled_data(2,:) = measurements(meas_loop).data(2,:) / 90;
+                        otherwise
+                            color = 'y';
+                            % Scale the data to fit the axes
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
+                    end
+                    
+                    line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...
+                        'Parent', handles.axes_handles(axes_loop));
+                    hold on;
+                end
+            end
+        end
+        hold off;
+    end
+    
+    
 end

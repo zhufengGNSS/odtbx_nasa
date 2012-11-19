@@ -1628,8 +1628,22 @@ function plot_meas(hObject, eventdata, handles)
                     scaled_data = measurements(meas_loop).data / max_val;
 
                     % Set up color scheme for different data here
+                    switch measurements(meas_loop).type
+                        case 'useRange'
+                            color = 'r';
+                        case 'useRangeRate'
+                            color = 'b';
+                        case 'useDoppler'
+                            color = 'k';
+                        case 'useUnits'
+                            color = 'c';
+                        case 'useAngles'
+                            color = 'm';
+                        otherwise
+                            color = 'y';
+                    end
                     
-                    line(time_abs, scaled_data, 'LineWidth', 2, ...
+                    line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...
                         'Parent', handles.axes_handles(axes_loop));
                     hold on;
                 end

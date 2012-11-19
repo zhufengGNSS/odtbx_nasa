@@ -236,39 +236,40 @@ else
     fid1 = 1;
 end
 
-runNames = { '' 'No toolboxes' };
+% Specify which runs should be performed.
+% Always perform the default run.
+runNames = { '' };
 
+% Additional runs can be inserted here if desired (before the no toolbox run)
+
+% If any toolboxes exist, then perform a run without toolboxes to ensure
+% compatibility with bare Matlab installations
+noToolboxRunName = 'No Toolboxes';
+if(~isempty(findToolboxPaths()))
+    runNames = [runNames noToolboxRunName];
+end
+
+% Perform all regression tests for each run
 for run = 1:length(runNames)
     
-    if run == 2
+    if strcmp(runNames{run}, noToolboxRunName)
         removeToolboxPaths(); % remove all optional toolboxes
     end
 
     % Run all the tests in the default environment:
     [runresults, runpassedTests, runfailedTests, runbrokenTests] = runAllCases(testCases,runNames{run});
 
-    % collect the results for all runs:
+    % Collect the results for all runs
+    % Note that this code could be more efficient if the cell arrays were
+    % preallocated, but that would require explicit indexing.
     results = results + runresults;
-    if ~isempty(runpassedTests)
-        for i = 1:length(runpassedTests)
-            passedTests{end+1} = runpassedTests{i};
-        end
-    end
-    if ~isempty(runfailedTests)
-        for i = 1:length(runfailedTests)
-            failedTests{end+1} = runfailedTests{i};
-        end
-    end
-    if ~isempty(runbrokenTests)
-        for i = 1:size(runbrokenTests,1)
-            brokenTests{end+1,1} = runbrokenTests{i,1};
-            brokenTests{end,2} = runbrokenTests{i,2};
-        end
-    end
+    passedTests = [passedTests runpassedTests];  % Row concatenate
+    failedTests = [failedTests runfailedTests];  % Row concatenate
+    brokenTests = [brokenTests; runbrokenTests]; % Column concatenate
 end % run
 
 % Write the log file with the Failure Names (if any)
-if(exist('failedTests','var') && ~isempty(failedTests));
+if(~isempty(failedTests))
     fprintf(fid1,'The Following Test Cases Failed the Regression Testing:\n--------------------------------------------------------\n');
     for i = 1:length(failedTests)
         fprintf(fid1,'%s\n', failedTests{i});
@@ -278,7 +279,7 @@ else
 end
 
 % Write the log file with the Broken Case Details (if any)
-if(exist('brokenTests','var') && ~isempty(brokenTests));
+if(~isempty(brokenTests))
     fprintf(fid1,'\nThe Following Test Cases Returned Errors During the Regression Testing:\n-----------------------------------------------------------------------\n');
     for i = 1:size(brokenTests,1)
         fprintf(fid1,'\n\t%s\n', brokenTests{i,1});        fprintf(fid1,'Error in\n');        tab = '\t';
@@ -294,7 +295,7 @@ else
 end
 
 % Write the log file with the Passing Case Names
-if(exist('passedTests','var') && ~isempty(passedTests));
+if(~isempty(passedTests))
     fprintf(fid1,'\nThe Following Test Cases Passed the Regression Testing:\n---------------------------------------------------------\n');
     for i = 1:length(passedTests)
         fprintf(fid1,'%s\n', passedTests{i});
@@ -304,7 +305,7 @@ else
 end
 
 % If we have an infofile, then concatenate its contents to the log file.
-if nargin >= 4 && ~isempty(varargin{4})
+if(nargin >= 4 && ~isempty(varargin{4}))
     finfo=fopen(varargin{4},'rt'); % text read on PC & unix
     if finfo < 0
         fprintf(fid1,'\n\nScript Error: regressionTestin.m failed to open given info file: %s',varargin{4});

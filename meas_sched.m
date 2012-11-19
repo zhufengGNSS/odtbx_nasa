@@ -762,14 +762,13 @@ function redraw_boxes(hObject, eventdata, handles)
 
     for axes_num = 1:length(handles.axes_handles)-1
         i = 2; % The first box is a decoy structure box
-        while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
-            get(handles.axes_handles(axes_num), 'UserData')
-            boxes(i).ground_station
-            if (get(handles.axes_handles(axes_num), 'UserData') == boxes(i).ground_station)
+        while (i <= length(boxes)) 
+            if (get(handles.axes_handles(axes_num), 'UserData') == ...
+                    boxes(i).ground_station)
                 
                 % Draw the boxes and return the handles to the drawings
                 [meas, meas_on_total] = draw_a_box(boxes(i).x, ...
-                    [handles.axes_handles(axes_num), handles.meas_total])
+                    [handles.axes_handles(axes_num), handles.meas_total]);
                 
                 % Save the new rectangles to the data structure
                 boxes(i).handle = meas;

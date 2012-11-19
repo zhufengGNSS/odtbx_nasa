@@ -1623,24 +1623,46 @@ function plot_meas(hObject, eventdata, handles)
             for meas_loop = 2:length(measurements)
                 plot_num = measurements(meas_loop).plot;
                 if (user_data == plot_num)       
-                    % Scale the data to fit the axes
-                    max_val = max(max(measurements(meas_loop).data));
-                    scaled_data = measurements(meas_loop).data / max_val;
-
-                    % Set up color scheme for different data here
+                    % Set up color scheme and normalizations for different data here
                     switch measurements(meas_loop).type
                         case 'useRange'
                             color = 'r';
+                            % Scale the data to fit the axes, take the max
+                            % to be 1
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
                         case 'useRangeRate'
                             color = 'b';
+                            % Scale the data to fit the axes, take the max
+                            % to be 1
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
                         case 'useDoppler'
                             color = 'k';
+                            % Scale the data to fit the axes, take the max
+                            % to be one
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
                         case 'useUnits'
                             color = 'c';
+                            % These are unit vectors, they should already
+                            % be scaled
                         case 'useAngles'
                             color = 'm';
+                            % Scale the data to fit the axes
+                            
+                            % CHECK THE UNITS ON THESE
+                            
+                            % Azimuth: 0 to 360 deg
+                            % Elevation: 0 to 90 deg
+                            measurements(meas_loop).data
+                            scaled_data(1,:) = measurements(meas_loop).data(1,:) / 360;
+                            scaled_data(2,:) = measurements(meas_loop).data(2,:) / 90;
                         otherwise
                             color = 'y';
+                            % Scale the data to fit the axes
+                            max_val = max(max(measurements(meas_loop).data));
+                            scaled_data = measurements(meas_loop).data / max_val;
                     end
                     
                     line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...

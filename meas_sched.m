@@ -290,6 +290,9 @@ function generate_Callback(hObject, eventdata, handles)
     make_meas();
 %     plot_meas(hObject, eventdata, handles);
     
+    % Clear the axes
+%     cla(handles.axes_handles);
+
     % Adjust the time range we can see on the plots to be the same as the
     % time span over which the orbit was propagated
 
@@ -1620,6 +1623,7 @@ function plot_meas(hObject, eventdata, handles)
     for axes_loop = 1:length(handles.axes_handles)-1
         user_data = get(handles.axes_handles(axes_loop), 'UserData');
         if (~isempty(user_data) && user_data > 0)
+            cla(handles.axes_handles(axes_loop));
             for meas_loop = 2:length(measurements)
                 plot_num = measurements(meas_loop).plot;
                 if (user_data == plot_num)       

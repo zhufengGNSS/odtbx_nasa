@@ -288,10 +288,6 @@ function generate_Callback(hObject, eventdata, handles)
     global measOptions;
     global T;
     make_meas();
-%     plot_meas(hObject, eventdata, handles);
-    
-    % Clear the axes
-%     cla(handles.axes_handles);
 
     % Adjust the time range we can see on the plots to be the same as the
     % time span over which the orbit was propagated
@@ -315,7 +311,7 @@ function generate_Callback(hObject, eventdata, handles)
 
     % Redraw all the boxes on the potentially new axes scale
     plot_meas(hObject, eventdata, handles);
-    redraw_boxes();
+    redraw_boxes(hObject, eventdata, handles);
 end
 
 
@@ -696,7 +692,7 @@ function edit_a_box(coords, axes_handles, handles)
                     boxes(i).x(2) = edited_times(2);
 
                     % Redraw all the boxes
-                    redraw_boxes();
+                    redraw_boxes(hObject, eventdata, handles);
 
                 end
             end
@@ -758,30 +754,30 @@ function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
 end
 
 
-function redraw_boxes()
+function redraw_boxes(hObject, eventdata, handles)
     % This function redraws *all* the boxes
-
+    % Box images have already been deleted (probably by cla)
+    
     global boxes;
 
-    i = 2; % The first box is a decoy structure box
-    while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+    for axes_num = 1:length(handles.axes_handles)-1
+        i = 2; % The first box is a decoy structure box
+        while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+            get(handles.axes_handles(axes_num), 'UserData')
+            boxes(i).ground_station
+            if (get(handles.axes_handles(axes_num), 'UserData') == boxes(i).ground_station)
+                
+                % Draw the boxes and return the handles to the drawings
+                [meas, meas_on_total] = draw_a_box(boxes(i).x, ...
+                    [handles.axes_handles(axes_num), handles.meas_total])
+                
+                % Save the new rectangles to the data structure
+                boxes(i).handle = meas;
+                boxes(i).total_handle = meas_on_total;
+            end
 
-        % Find the parent handles (so we know where to redraw the boxes)
-        axes_handle = get(boxes(i).handle, 'parent');
-        axes_total_handle = get(boxes(i).total_handle, 'parent');
-
-        % Erase the old boxes by their handles
-        delete(boxes(i).handle);
-        delete(boxes(i).total_handle);
-            
-        % Draw the boxes and return the handles to the drawings
-        [meas, meas_on_total] = draw_a_box(boxes(i).x, [axes_handle, axes_total_handle]);
-
-        % Save the new rectangles to the data structure
-        boxes(i).handle = meas;
-        boxes(i).total_handle = meas_on_total;
-
-        i = i + 1;
+            i = i + 1;
+        end
     end
 end
 
@@ -872,7 +868,7 @@ function change_time(hObject, eventdata, handles)
     datetick('x', 'mm/dd/yy', 'keepticks');
     % Redraw all the boxes on the potentially new axes scale
     plot_meas(hObject, eventdata, handles);
-    redraw_boxes();
+    redraw_boxes(hObject, eventdata, handles);
     
 end
 

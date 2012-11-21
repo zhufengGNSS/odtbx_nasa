@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 20-Nov-2012 21:02:45
+    % Last Modified by GUIDE v2.5 20-Nov-2012 22:31:51
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -1724,10 +1724,11 @@ function plot_meas(hObject, eventdata, handles)
                                 % to be one
                                 max_val = max(max(measurements(meas_loop).data));
                                 scaled_data = measurements(meas_loop).data / max_val;
-                            case 'useUnits'
+                            case 'useUnit'
                                 color = 'c';
                                 % These are unit vectors, they should already
                                 % be scaled
+                                scaled_data = measurements(meas_loop).data;
                             case 'useAngles'
                                 color = 'm';
                                 % Scale the data to fit the axes

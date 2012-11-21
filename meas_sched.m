@@ -22,7 +22,7 @@ function varargout = meas_sched(varargin)
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 14-Nov-2012 12:15:15
+    % Last Modified by GUIDE v2.5 20-Nov-2012 21:02:45
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -258,6 +258,7 @@ function quit_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     
+    clear_data();
     % The figure can be deleted now
     delete(handles.figure1);
 end
@@ -287,31 +288,34 @@ function generate_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     global measOptions;
     global T;
-    make_meas();
-
-    % Adjust the time range we can see on the plots to be the same as the
-    % time span over which the orbit was propagated
-
-    % Pull in the current display data
-    xData = get(handles.meas_total, 'Xtick');
-    increments = length(xData);
-
-    % Calculate the new time range
-    new_begin = getOdtbxOptions(measOptions, 'epoch');
-    new_end = new_begin + T*1/60*1/60*1/24;
-    xData = linspace(new_begin,new_end(end),increments);
     
-    % Set the new limits on all of the axes
-    set(handles.axes_handles,'XLim',[xData(1) xData(end)]);
-    
-    % Set the number of XTicks to the number of points in xData:
-    set(handles.axes_handles,'XTick',xData);
-    
-    datetick('x', 'mm/dd/yy', 'keepticks');
+    if (~isempty(T))
+        make_meas();
 
-    % Redraw all the boxes on the potentially new axes scale
-    plot_meas(hObject, eventdata, handles);
-    redraw_boxes(hObject, eventdata, handles);
+        % Adjust the time range we can see on the plots to be the same as the
+        % time span over which the orbit was propagated
+
+        % Pull in the current display data
+        xData = get(handles.meas_total, 'Xtick');
+        increments = length(xData);
+
+        % Calculate the new time range
+        new_begin = getOdtbxOptions(measOptions, 'epoch');
+        new_end = new_begin + T*1/60*1/60*1/24;
+        xData = linspace(new_begin,new_end(end),increments);
+
+        % Set the new limits on all of the axes
+        set(handles.axes_handles,'XLim',[xData(1) xData(end)]);
+
+        % Set the number of XTicks to the number of points in xData:
+        set(handles.axes_handles,'XTick',xData);
+
+        datetick('x', 'mm/dd/yy', 'keepticks');
+
+        % Redraw all the boxes on the potentially new axes scale
+        plot_meas(hObject, eventdata, handles);
+        redraw_boxes(hObject, eventdata, handles);
+    end
 end
 
 
@@ -634,8 +638,17 @@ end
 
 function create_a_box(coords, axes_handles)
     global boxes;
-
-    if (coords(2) < coords(1)) % Rectangles can only have positive deltas
+    
+    if (isempty(boxes))
+        boxes = struct('ground_station', [], ...
+            'type', [], ...
+            'x', [0, 0], ...
+            'handle', [], ...
+            'total_handle', []);
+    end
+    
+    % Rectangles can only have positive deltas
+    if (coords(2) < coords(1)) 
         coords_temp = coords(1);
         coords(1) = coords(2);
         coords(2) = coords_temp;
@@ -677,7 +690,8 @@ function edit_a_box(coords, axes_handles, handles)
     global boxes;
 
     i = 1;
-    while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+    % While loop, *not* for loop (we need length recalculated every iteration)
+    while (i <= length(boxes)) 
         if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
             if ((boxes(i).x(1) <= coords(1)) && (coords(1) <= boxes(i).x(2)))
 
@@ -731,6 +745,13 @@ end
 
 
 function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
+    % Rectangles can only have positive deltas
+    if (coords(2) < coords(1)) 
+        coords_temp = coords(1);
+        coords(1) = coords(2);
+        coords(2) = coords_temp;
+    end
+
     % Prevent boxes from showing up out of chart bounds
     visible_time = get(axes_handles(1), 'XLim');
     if (visible_time(2) < coords(2))
@@ -738,6 +759,7 @@ function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
         dx = visible_time(2) - coords(1);
     elseif (visible_time(1) > coords(1))
         x = visible_time(1);
+        datestr(visible_time(1))
         dx = coords(2) - visible_time(1);
     else
         x = coords(1);
@@ -745,11 +767,13 @@ function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
     end
 
     % Plot a box on parent axes
-    meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 3);%,'FaceColor',[175/255 1 175/255]);
+    meas = rectangle('Position',[x,0,dx,1], 'EdgeColor','g',...
+        'LineWidth', 3);%,'FaceColor',[175/255 1 175/255]);
     set(meas, 'parent', axes_handles(1));
 
     % Plot a box on total axes
-    meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g','LineWidth', 5,'FaceColor','g');
+    meas_on_total = rectangle('Position',[x,0,dx,1], 'EdgeColor','g',...
+        'LineWidth', 5,'FaceColor','g');
     set(meas_on_total, 'parent', axes_handles(2));
 end
 
@@ -792,8 +816,10 @@ function harvest_gs(hObject, eventdata, handles)
     % Clear out the entries in the old structure (this function will
     % completely rebuild the entries)
     
-    measOptions = setOdtbxOptions(measOptions, 'gsID', getOdtbxOptions(default_options, 'gsID'));
-    measOptions = setOdtbxOptions(measOptions, 'gsECEF', getOdtbxOptions(default_options, 'gsECEF'));
+    measOptions = setOdtbxOptions(measOptions, 'gsID', ...
+        getOdtbxOptions(default_options, 'gsID'));
+    measOptions = setOdtbxOptions(measOptions, 'gsECEF', ...
+        getOdtbxOptions(default_options, 'gsECEF'));
     
     for i = 1:length(handles.slide_labels)
         if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
@@ -826,7 +852,7 @@ function harvest_gs(hObject, eventdata, handles)
 end
 
 
-% function change_gs(axes_handle, new_gs_name)
+
 function change_gs(axes_handle)
     % This function changes the ground station of a box
     global boxes;
@@ -1439,6 +1465,12 @@ end
 
 function import_options_from_workspace(hObject, eventdata, handles)
     global measOptions;
+    global boxes;
+    global T;
+    global X;
+    
+    % Clear any current values from measOptions
+    measOptions = odtbxOptions('measurement');
     
     % Prompt user for new name
     prompt = {'Enter workspace variable name:'};
@@ -1447,41 +1479,93 @@ function import_options_from_workspace(hObject, eventdata, handles)
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
 
+    has_options = 1;
     % Read in options structure
     try
         measOptions = evalin('base', answer{1});
     catch exception
         errordlg(exception.message, 'Import error!');
+        has_options = 0;
     end
     
-    % Create the imported ground stations
-    % Delete all the old ground stations (if there were any)
-    for i = 1:length(handles.slide_labels)
-        if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
-            set(handles.slide_labels(i), 'String', '[ ]');
-            set(handles.slide_labels(i), 'UserData', '');
+    if (has_options)
+        % Create the imported ground stations
+        % Delete all the old ground stations (if there were any)
+        for i = 1:length(handles.slide_labels)
+            if (~strcmp(get(handles.slide_labels(i), 'String'), '[ ]'))
+                set(handles.slide_labels(i), 'String', '[ ]');
+                set(handles.slide_labels(i), 'UserData', '');
+            end
         end
+
+        % Write all the new GS data (seed)
+        gsID_local = getOdtbxOptions(measOptions, 'gsID');
+        gsECEF_local = getOdtbxOptions(measOptions, 'gsECEF');
+        for j = 1:length(gsID_local)
+            set(handles.slide_labels(j), 'String', gsID_local{j});
+            set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
+            set(handles.axes_handles(j), 'UserData', j);
+        end
+
+        % Update the box structure
+        for k = 1:length(handles.axes_handles)-1
+            change_gs(handles.axes_handles(k));
+        end
+
+        % We don't know if there will be valid data to propagate a state or
+        % not. If there is, then great. We'll trust the user knows whether or
+        % not the schedule and what they've propagated match up. If not, just
+        % get rid of the schedule data and start fresh.
+        if (~isempty(T) && ~isempty(X))
+            % Clear box data that already exists in the workspace
+            boxes = [];
+            
+            % Import schedule
+            schedule = getOdtbxOptions(measOptions, 'Schedule');
+            epoch = getOdtbxOptions(measOptions, 'epoch');
+
+            % Import schedule information
+            if (~isempty(epoch))
+                for mysched = 1:length(schedule)
+
+                    % Convert times
+                    add_coords(1) = (schedule(mysched,2) / 60 / 60 / 24 ) + epoch; % Was in seconds
+                    add_coords(2) = (schedule(mysched,3) / 60 / 60 / 24 ) + epoch; % Now in days
+
+                    % Find correct axes handles
+                    gs = schedule(mysched, 1);
+                    for myaxes = 1:length(handles.axes_handles)-1
+                        axes_gs = get(handles.axes_handles(myaxes), 'UserData');
+                        if (gs == axes_gs)
+                            display_axes = handles.axes_handles(myaxes);
+                            break;
+                        end
+                    end
+
+                    % Create and display box
+                    create_a_box(add_coords, [display_axes, handles.meas_total]); 
+    %                 [boxes(end).handle, boxes(end).total_handle] = ...
+    %                                 draw_a_box(add_coords, [display_axes, handles.meas_total]);
+                end
+            end
+
+            % Pop up a window telling the user about the assumptions we made with
+            % regards to the propagation time and interval
+            errordlg({'Functions propagated with current satellite data.', ...
+                'May not be data originally used for scheduling.'}, ...
+                'Warning!');
+        else
+            % Inform the user as to why no data was shown
+            errordlg({'No propagated satellite data available.', ...
+                'Please enter this data in Satellite menu.'}, ...
+                'Information');
+        end
+
+        % Delete schedule in imported measOptions (we don't want them limiting
+        % what gsmeas generates)
+        measOptions = setOdtbxOptions(measOptions, 'Schedule', []);
+        generate_Callback(hObject, eventdata, handles)
     end
-    
-    % Write all the new GS data (seed)
-    gsID_local = getOdtbxOptions(measOptions, 'gsID');
-    gsECEF_local = getOdtbxOptions(measOptions, 'gsECEF');
-    for j = 1:length(gsID_local)
-        set(handles.slide_labels(j), 'String', gsID_local{j});
-        set(handles.slide_labels(j), 'UserData', gsECEF_local(:,j));
-        set(handles.axes_handles(j), 'UserData', j);
-    end
-    
-    % Update the box structure
-    for k = 1:length(handles.axes_handles)-1
-        change_gs(handles.axes_handles(k));
-    end
-    
-    % Import schedule
-    
-    % Delete schedule in imported measOptions (we don't want them limiting
-    % what gsmeas generates)
-    
 end
 
 
@@ -1531,9 +1615,6 @@ function change_satellite(hObject, eventdata, handles)
         catch exceptions
             errordlg(exceptions.message, 'Propagation Error!');
         end
-        
-        % Redo all the measurements
-%         make_meas();
     end
 end
 
@@ -1610,68 +1691,93 @@ function plot_meas(hObject, eventdata, handles)
     global T;
     global measOptions;
     
-    % Convert relative time to absolute time
-    time_abs = getOdtbxOptions(measOptions, 'epoch') + T*1/60*1/60*1/24;
+    if (~isempty(T))
+        % Convert relative time to absolute time
+        time_abs = getOdtbxOptions(measOptions, 'epoch') + T*1/60*1/60*1/24;
 
-    % In the future, the controls that dictate which plots will be show
-    % will go in here. For now, we show all the plots.
-    for axes_loop = 1:length(handles.axes_handles)-1
-        user_data = get(handles.axes_handles(axes_loop), 'UserData');
-        if (~isempty(user_data) && user_data > 0)
-            cla(handles.axes_handles(axes_loop));
-            for meas_loop = 2:length(measurements)
-                plot_num = measurements(meas_loop).plot;
-                if (user_data == plot_num)       
-                    % Set up color scheme and normalizations for different data here
-                    switch measurements(meas_loop).type
-                        case 'useRange'
-                            color = 'r';
-                            % Scale the data to fit the axes, take the max
-                            % to be 1
-                            max_val = max(max(measurements(meas_loop).data));
-                            scaled_data = measurements(meas_loop).data / max_val;
-                        case 'useRangeRate'
-                            color = 'b';
-                            % Scale the data to fit the axes, take the max
-                            % to be 1
-                            max_val = max(max(measurements(meas_loop).data));
-                            scaled_data = measurements(meas_loop).data / max_val;
-                        case 'useDoppler'
-                            color = 'k';
-                            % Scale the data to fit the axes, take the max
-                            % to be one
-                            max_val = max(max(measurements(meas_loop).data));
-                            scaled_data = measurements(meas_loop).data / max_val;
-                        case 'useUnits'
-                            color = 'c';
-                            % These are unit vectors, they should already
-                            % be scaled
-                        case 'useAngles'
-                            color = 'm';
-                            % Scale the data to fit the axes
-                            
-                            % CHECK THE UNITS ON THESE
-                            
-                            % Azimuth: 0 to 360 deg
-                            % Elevation: 0 to 90 deg
-                            measurements(meas_loop).data
-                            scaled_data(1,:) = measurements(meas_loop).data(1,:) / 360;
-                            scaled_data(2,:) = measurements(meas_loop).data(2,:) / 90;
-                        otherwise
-                            color = 'y';
-                            % Scale the data to fit the axes
-                            max_val = max(max(measurements(meas_loop).data));
-                            scaled_data = measurements(meas_loop).data / max_val;
+        % In the future, the controls that dictate which plots will be shown
+        % will go in here. For now, we show all the plots.
+        for axes_loop = 1:length(handles.axes_handles)-1
+            user_data = get(handles.axes_handles(axes_loop), 'UserData');
+            if (~isempty(user_data) && user_data > 0)
+                cla(handles.axes_handles(axes_loop));
+                for meas_loop = 2:length(measurements)
+                    plot_num = measurements(meas_loop).plot;
+                    if (user_data == plot_num)       
+                        % Set up color scheme and normalizations for different data here
+                        switch measurements(meas_loop).type
+                            case 'useRange'
+                                color = 'r';
+                                % Scale the data to fit the axes, take the max
+                                % to be 1
+                                max_val = max(max(measurements(meas_loop).data));
+                                scaled_data = measurements(meas_loop).data / max_val;
+                            case 'useRangeRate'
+                                color = 'b';
+                                % Scale the data to fit the axes, take the max
+                                % to be 1
+                                max_val = max(max(measurements(meas_loop).data));
+                                scaled_data = measurements(meas_loop).data / max_val;
+                            case 'useDoppler'
+                                color = 'k';
+                                % Scale the data to fit the axes, take the max
+                                % to be one
+                                max_val = max(max(measurements(meas_loop).data));
+                                scaled_data = measurements(meas_loop).data / max_val;
+                            case 'useUnits'
+                                color = 'c';
+                                % These are unit vectors, they should already
+                                % be scaled
+                            case 'useAngles'
+                                color = 'm';
+                                % Scale the data to fit the axes
+
+                                % CHECK THE UNITS ON THESE
+
+                                % Azimuth: 0 to 360 deg
+                                % Elevation: 0 to 90 deg
+                                measurements(meas_loop).data
+                                scaled_data(1,:) = measurements(meas_loop).data(1,:) / 360;
+                                scaled_data(2,:) = measurements(meas_loop).data(2,:) / 90;
+                            otherwise
+                                color = 'y';
+                                % Scale the data to fit the axes
+                                max_val = max(max(measurements(meas_loop).data));
+                                scaled_data = measurements(meas_loop).data / max_val;
+                        end
+
+                        line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...
+                            'Parent', handles.axes_handles(axes_loop));
+                        hold on;
                     end
-                    
-                    line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...
-                        'Parent', handles.axes_handles(axes_loop));
-                    hold on;
                 end
             end
+            hold off;
         end
-        hold off;
     end
-    
-    
+end
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+clear_data();
+% Hint: delete(hObject) closes the figure
+delete(hObject);
+
+end
+
+
+function clear_data()
+clear global T;
+clear global X;
+clear global measOptions;
+clear global measurements;
+clear global boxes;
+clear global meas_add_remove;
+clear global sat_state_prop;
+clear global time_prop;
+clear global propagator;
 end

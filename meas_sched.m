@@ -1437,6 +1437,11 @@ function export_options_to_workspace()
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
     
+    if (isempty(answer))
+        % If the dialog box is cancelled, we don't do anything.
+        return;
+    end
+    
     % Change schedule to the appropriate format
     % gsmeas() expects the [ID, ti, tf] where the start and stop times are
     % in seconds from epoch.
@@ -1478,7 +1483,12 @@ function import_options_from_workspace(hObject, eventdata, handles)
     lines = 1;
     def = {'measOptions'};
     answer = inputdlg(prompt, title, lines, def);
-
+    
+    if (isempty(answer))
+        % If the dialog box is cancelled, we don't do anything.
+        return;
+    end
+    
     has_options = 1;
     % Read in options structure
     try

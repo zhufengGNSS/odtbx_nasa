@@ -1,3 +1,24 @@
+% MEAS_SCHED This is a graphical tool used for scheduling ground station
+% measurements
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
 function varargout = meas_sched(varargin)
     % MEAS_SCHED MATLAB code for meas_sched.fig
     %      MEAS_SCHED, by itself, creates a new MEAS_SCHED or raises the existing
@@ -1720,41 +1741,36 @@ function plot_meas(hObject, eventdata, handles)
                                 color = 'r';
                                 % Scale the data to fit the axes, take the max
                                 % to be 1
-                                max_val = max(max(measurements(meas_loop).data));
-                                scaled_data = measurements(meas_loop).data / max_val;
+                                max_val = max(max(abs(measurements(meas_loop).data)));
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                             case 'useRangeRate'
                                 color = 'b';
                                 % Scale the data to fit the axes, take the max
                                 % to be 1
-                                max_val = max(max(measurements(meas_loop).data));
-                                scaled_data = measurements(meas_loop).data / max_val;
+                                max_val = max(max(abs(measurements(meas_loop).data)));
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                             case 'useDoppler'
                                 color = 'k';
                                 % Scale the data to fit the axes, take the max
                                 % to be one
-                                max_val = max(max(measurements(meas_loop).data));
-                                scaled_data = measurements(meas_loop).data / max_val;
+                                max_val = max(max(abs(measurements(meas_loop).data)));
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                             case 'useUnit'
                                 color = 'c';
                                 % These are unit vectors, they should already
                                 % be scaled
-                                scaled_data = measurements(meas_loop).data;
+                                scaled_data = measurements(meas_loop).data / 2 + .5
                             case 'useAngles'
                                 color = 'm';
                                 % Scale the data to fit the axes
-
-                                % CHECK THE UNITS ON THESE
-
-                                % Azimuth: 0 to 360 deg
-                                % Elevation: 0 to 90 deg
                                 measurements(meas_loop).data
-                                scaled_data(1,:) = measurements(meas_loop).data(1,:) / 360;
-                                scaled_data(2,:) = measurements(meas_loop).data(2,:) / 90;
+                                scaled_data(1,:) = measurements(meas_loop).data(1,:) / (2*pi)
+                                scaled_data(2,:) = measurements(meas_loop).data(2,:) / (pi/2)
                             otherwise
                                 color = 'y';
                                 % Scale the data to fit the axes
                                 max_val = max(max(measurements(meas_loop).data));
-                                scaled_data = measurements(meas_loop).data / max_val;
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                         end
 
                         line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...

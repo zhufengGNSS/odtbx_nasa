@@ -176,6 +176,32 @@ function varargout = meas_sched_OutputFcn(hObject, eventdata, handles)
     % varargout{1} = handles.output;
 end
 
+%% Menu entries
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+clear_data();
+% Hint: delete(hObject) closes the figure
+delete(hObject);
+
+end
+
+
+function clear_data()
+clear global T;
+clear global X;
+clear global measOptions;
+clear global measurements;
+clear global boxes;
+clear global meas_add_remove;
+clear global sat_state_prop;
+clear global time_prop;
+clear global propagator;
+end
+
 
 % --- Executes on button press in export_button.
 function export_button_Callback(hObject, eventdata, handles)
@@ -339,6 +365,7 @@ function generate_Callback(hObject, eventdata, handles)
     end
 end
 
+%% Scrolling axes
 
 % --- Executes on slider movement.
 function slider1_Callback(hObject, eventdata, handles)
@@ -384,7 +411,7 @@ function slider1_CreateFcn(hObject, eventdata, handles)
 end
 
 
-% Functions for creating boxes when the axes are clicked on
+%% Measurement Scheduling Functions
 
 % --- Executes when selected object is changed in meas_schedule_mode.
 function meas_schedule_mode_SelectionChangeFcn(hObject, eventdata, handles)
@@ -406,187 +433,6 @@ function meas_schedule_mode_SelectionChangeFcn(hObject, eventdata, handles)
     elseif (strcmp(mode, 'Edit'))
         meas_add_remove = 0; % Global variable to determine what mode the gui is in
     end
-end
-
-
-
-% --- Executes on mouse press over axes background.
-function axes1_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes1 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes2_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes2 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes3_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes3 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes4_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes4 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes5_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes5 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes6_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes6 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes7_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes7 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes8_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes8 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes9_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes9 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes10_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes10 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes11_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes11 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes12_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes12 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes13_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes13 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes14_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes14 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes15_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes15 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes16_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes16 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes17_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes17 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes18_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes18 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes19_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes19 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
-end
-
-
-% --- Executes on mouse press over axes background.
-function axes20_ButtonDownFcn(hObject, eventdata, handles)
-    % hObject    handle to axes20 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    schedule_measurements(hObject, eventdata, handles);
 end
 
 
@@ -892,6 +738,187 @@ function change_gs(axes_handle)
     end
 end
 
+%% Functions that handle clicks on axes
+
+% --- Executes on mouse press over axes background.
+function axes1_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes1 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes2_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes2 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes3_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes3 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes4_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes4 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes5_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes5 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes6_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes6 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes7_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes7 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes8_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes8 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes9_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes9 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes10_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes10 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes11_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes11 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes12_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes12 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes13_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes13 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes14_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes14 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes15_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes15 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes16_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes16 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes17_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes17 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes18_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes18 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes19_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes19 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
+
+% --- Executes on mouse press over axes background.
+function axes20_ButtonDownFcn(hObject, eventdata, handles)
+    % hObject    handle to axes20 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    schedule_measurements(hObject, eventdata, handles);
+end
+
 
 % --- Executes on mouse press over axes background.
 function meas_total_ButtonDownFcn(hObject, eventdata, handles)
@@ -918,6 +945,7 @@ function change_time(hObject, eventdata, handles)
     
 end
 
+%% Functions that handle clicking on labels
 
 % --- Executes on button press in gs_label1.
 function gs_label1_Callback(hObject, eventdata, handles)
@@ -1418,6 +1446,7 @@ function gs_label20_Callback(hObject, eventdata, handles)
     change_gs(handles.gs_axes_current);
 end
 
+%% Import and exporting
 
 function export_schedule_to_csv()
     % Write all of the measurements to a file
@@ -1599,6 +1628,7 @@ function import_options_from_workspace(hObject, eventdata, handles)
     end
 end
 
+%% Satellite propagation and display
 
 function change_satellite(hObject, eventdata, handles)
 
@@ -1797,26 +1827,4 @@ function plot_meas(hObject, eventdata, handles)
 end
 
 
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-clear_data();
-% Hint: delete(hObject) closes the figure
-delete(hObject);
 
-end
-
-
-function clear_data()
-clear global T;
-clear global X;
-clear global measOptions;
-clear global measurements;
-clear global boxes;
-clear global meas_add_remove;
-clear global sat_state_prop;
-clear global time_prop;
-clear global propagator;
-end

@@ -191,6 +191,9 @@ end
 
 
 function clear_data()
+% This functions clears all the global variables. It's usually called when
+% the GUI is closed. It prevents old variables from bleeding into new data
+% runs.
 clear global T;
 clear global X;
 clear global measOptions;
@@ -203,14 +206,7 @@ clear global propagator;
 end
 
 
-% --- Executes on button press in export_button.
-function export_button_Callback(hObject, eventdata, handles)
-    % hObject    handle to export_button (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    export_options_to_workspace();
-end
-
+% File menus
 
 % --------------------------------------------------------------------
 function file_Callback(hObject, eventdata, handles)
@@ -220,55 +216,12 @@ function file_Callback(hObject, eventdata, handles)
 end
 
 
-% --------------------------------------------------------------------
-function simulation_Callback(hObject, eventdata, handles)
-% hObject    handle to simulation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-end
-
-
-
-% --------------------------------------------------------------------
-function visualization_Callback(~, eventdata, handles)
-    % hObject    handle to visualization (see GCBO)
+% --- Executes on button press in export_button.
+function export_button_Callback(hObject, eventdata, handles)
+    % hObject    handle to export_button (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-end
-
-
-% --------------------------------------------------------------------
-function help_Callback(hObject, eventdata, handles)
-    % hObject    handle to help (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-end
-
-
-% --------------------------------------------------------------------
-function about_Callback(hObject, eventdata, handles)
-    % hObject    handle to about (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    about('meas_sched', handles.figure1);
-end
-
-
-% --------------------------------------------------------------------
-function satellite_Callback(hObject, eventdata, handles)
-    % hObject    handle to satellite (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    change_satellite(hObject, eventdata, handles);
-end
-
-
-% --------------------------------------------------------------------
-function options_Callback(hObject, eventdata, handles)
-% hObject    handle to options (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    gs_options('meas_sched', handles.figure1);
+    export_options_to_workspace();
 end
 
 
@@ -311,6 +264,44 @@ function quit_Callback(hObject, eventdata, handles)
 end
 
 
+% Simulation menus
+
+% --------------------------------------------------------------------
+function simulation_Callback(hObject, eventdata, handles)
+% hObject    handle to simulation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --------------------------------------------------------------------
+function satellite_Callback(hObject, eventdata, handles)
+    % hObject    handle to satellite (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    change_satellite(hObject, eventdata, handles);
+end
+
+
+% --------------------------------------------------------------------
+function options_Callback(hObject, eventdata, handles)
+% hObject    handle to options (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    gs_options('meas_sched', handles.figure1);
+end
+
+
+% Visualization menus:
+
+% --------------------------------------------------------------------
+function visualization_Callback(~, eventdata, handles)
+    % hObject    handle to visualization (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+end
+
+
 % --------------------------------------------------------------------
 function time_Callback(hObject, eventdata, handles)
     % hObject    handle to time (see GCBO)
@@ -319,6 +310,8 @@ function time_Callback(hObject, eventdata, handles)
     change_time(hObject, eventdata, handles);
 end
 
+
+% Calculate menus:
 
 % --------------------------------------------------------------------
 function calculate_Callback(hObject, eventdata, handles)
@@ -364,6 +357,26 @@ function generate_Callback(hObject, eventdata, handles)
         redraw_boxes(hObject, eventdata, handles);
     end
 end
+
+
+% Help menus:
+
+% --------------------------------------------------------------------
+function help_Callback(hObject, eventdata, handles)
+    % hObject    handle to help (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --------------------------------------------------------------------
+function about_Callback(hObject, eventdata, handles)
+    % hObject    handle to about (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    about('meas_sched', handles.figure1);
+end
+
 
 %% Scrolling axes
 

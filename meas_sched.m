@@ -85,7 +85,7 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
     global boxes;
     if (~isempty(boxes)) % Get rid of data from previous runs
     boxes = struct('ground_station', [], ...
-        'type', [], ...
+        'type_meas', [], ...
         'x', [0, 0], ...
         'handle', [], ...
         'total_handle', []);
@@ -603,7 +603,7 @@ function schedule_measurements(hObject, eventdata, handles)
 
     if (isempty(boxes))
         boxes = struct('ground_station', [], ...
-            'type', [], ...
+            'type_meas', [], ...
             'x', [0, 0], ...
             'handle', [], ...
             'total_handle', []);
@@ -662,7 +662,7 @@ function create_a_box(coords, axes_handles)
     
     if (isempty(boxes))
         boxes = struct('ground_station', [], ...
-            'type', [], ...
+            'type_meas', [], ...
             'x', [0, 0], ...
             'handle', [], ...
             'total_handle', []);
@@ -679,7 +679,7 @@ function create_a_box(coords, axes_handles)
 
     % Save a box in memory
     boxes(end+1) = struct('ground_station', get(axes_handles(1), 'UserData'), ...
-        'type', 'measurement', ...
+        'type_meas', 'measurement', ...
         'x', [coords(1), coords(2)], ...
         'handle', [], ...
         'total_handle', []);
@@ -1436,7 +1436,7 @@ function export_schedule_to_csv()
             i = 2; % The first box is a decoy structure box
                 while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
                     fprintf(fid, '%s, %s, %s, %s\n', ...
-                                boxes(i).ground_station, boxes(i).type, ...
+                                boxes(i).ground_station, boxes(i).type_meas, ...
                                 datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
                                 datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
                     i = i + 1;
@@ -1671,7 +1671,7 @@ function separate_measurements(meas_in)
     % Create the structure template
     measurements = struct('plot', [], ...
         'ground_station', [], ...
-        'type', [], ...
+        'type_meas', [], ...
         'data', []);
 
     % Figure out how many ground stations we have measurements for
@@ -1709,7 +1709,7 @@ function separate_measurements(meas_in)
         for opt = 1:num_options
             measurements(end+1) = struct('plot', gs, ...
                 'ground_station', ground_stations(gs), ...
-                'type', options(opt), ...
+                'type_meas', options(opt), ...
                 'data', meas_in(row_current:row_current+option_size(opt)-1,:));
             row_current = row_current + option_size(opt);
         end
@@ -1728,6 +1728,12 @@ function plot_meas(hObject, eventdata, handles)
 
         % In the future, the controls that dictate which plots will be shown
         % will go in here. For now, we show all the plots.
+        
+        % Find the maximum values for all of the ground stations so that
+        % measurement levels will appear consistant with each other
+%         max_range = max(max(measurements(measurements.type_meas == 'useRange').data))
+%         measurements.type_meas == 'useRange'
+        
         for axes_loop = 1:length(handles.axes_handles)-1
             user_data = get(handles.axes_handles(axes_loop), 'UserData');
             if (~isempty(user_data) && user_data > 0)
@@ -1736,39 +1742,45 @@ function plot_meas(hObject, eventdata, handles)
                     plot_num = measurements(meas_loop).plot;
                     if (user_data == plot_num)       
                         % Set up color scheme and normalizations for different data here
-                        switch measurements(meas_loop).type
+                        switch measurements(meas_loop).type_meas
                             case 'useRange'
                                 color = 'r';
                                 % Scale the data to fit the axes, take the max
                                 % to be 1
+                                range = measurements(meas_loop).data
                                 max_val = max(max(abs(measurements(meas_loop).data)));
                                 scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                             case 'useRangeRate'
                                 color = 'b';
                                 % Scale the data to fit the axes, take the max
                                 % to be 1
+                                range_rate = measurements(meas_loop).data
                                 max_val = max(max(abs(measurements(meas_loop).data)));
                                 scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                             case 'useDoppler'
                                 color = 'k';
                                 % Scale the data to fit the axes, take the max
                                 % to be one
+                                doppler = measurements(meas_loop).data
                                 max_val = max(max(abs(measurements(meas_loop).data)));
                                 scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                             case 'useUnit'
                                 color = 'c';
                                 % These are unit vectors, they should already
                                 % be scaled
+                                unit = measurements(meas_loop).data
                                 scaled_data = measurements(meas_loop).data / 2 + .5
                             case 'useAngles'
                                 color = 'm';
                                 % Scale the data to fit the axes
-                                measurements(meas_loop).data
-                                scaled_data(1,:) = measurements(meas_loop).data(1,:) / (2*pi)
-                                scaled_data(2,:) = measurements(meas_loop).data(2,:) / (pi/2)
+                                angles = measurements(meas_loop).data
+                                scaled_data(1,:) = measurements(meas_loop).data(1,:) / (2*pi) / 2 + .5;
+                                scaled_data(2,:) = measurements(meas_loop).data(2,:) / (pi/2) / 2 + .5;
+                                scaled_data
                             otherwise
                                 color = 'y';
                                 % Scale the data to fit the axes
+                                other = measurements(meas_loop).data
                                 max_val = max(max(measurements(meas_loop).data));
                                 scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
                         end

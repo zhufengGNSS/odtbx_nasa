@@ -1485,7 +1485,9 @@ end
 
 function export_schedule_to_csv()
     % Write all of the scheduled measurements to a file
+    
     global boxes;
+    global measOptions;
 
     [name, path] = uiputfile('*.csv','Export To','measurement_schedule.csv');
     if (name ~= 0)
@@ -1497,10 +1499,13 @@ function export_schedule_to_csv()
             fprintf(fid, 'Measurement Schedule\n\n');
             fprintf(fid, 'Ground Station, Event Type, Start Date/Time, Finish Date/Time,\n');
 
+            ground_stations = getOdtbxOptions(measOptions, 'gsID');
+            
             i = 2; % The first box is a decoy structure box
                 while (i <= length(boxes)) 
                     fprintf(fid, '%s, %s, %s, %s\n', ...
-                                boxes(i).ground_station, boxes(i).type_meas, ...
+                                ground_stations{boxes(i).ground_station}, ...
+                                boxes(i).type_meas, ...
                                 datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
                                 datestr(boxes(i).x(2), 'mm/dd/yyyy HH:MM:SS'));
                     i = i + 1;

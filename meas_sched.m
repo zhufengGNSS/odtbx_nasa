@@ -176,6 +176,8 @@ function varargout = meas_sched_OutputFcn(hObject, eventdata, handles)
     % varargout{1} = handles.output;
 end
 
+
+
 %% Menu entries
 
 % --- Executes when user attempts to close figure1.
@@ -378,6 +380,7 @@ function about_Callback(hObject, eventdata, handles)
 end
 
 
+
 %% Scrolling axes
 
 % --- Executes on slider movement.
@@ -424,6 +427,7 @@ function slider1_CreateFcn(hObject, eventdata, handles)
 end
 
 
+
 %% Measurement Scheduling Functions
 
 % --- Executes when selected object is changed in meas_schedule_mode.
@@ -450,16 +454,23 @@ end
 
 
 function schedule_measurements(hObject, eventdata, handles)
-
+    % This function turns clicks on the axes into commands to manipulate
+    % the measurement schedule. Currently, the ability to add measurements,
+    % add repeating measurements, edit existing measurements, and remove
+    % existing measurements are available.
+    
+    % This persistent variable is needed because to create boxes a start
+    % point and an end point are required.
     persistent add_coords;
+    
     global meas_add_remove;
     global boxes;
 
     if (isempty(meas_add_remove))
         meas_add_remove = 1;
     end
-    % meas_add_remove
 
+    % Creates a default structure type for boxes
     if (isempty(boxes))
         boxes = struct('ground_station', [], ...
             'type_meas', [], ...
@@ -468,9 +479,10 @@ function schedule_measurements(hObject, eventdata, handles)
             'total_handle', []);
     end
 
+    % Gets the coordinates of the click relative to the current axes
     mousepos = get(hObject, 'currentpoint');
-    % screenpos = get(handles.axes1, 'position')
 
+    % Determines what to do with the click
     switch meas_add_remove
         case 1 % Add boxes to axes
             if isempty(add_coords) % First mouse click
@@ -482,7 +494,6 @@ function schedule_measurements(hObject, eventdata, handles)
                 [boxes(end).handle, boxes(end).total_handle] = ...
                     draw_a_box(add_coords, [hObject, handles.meas_total]);
                 clear add_coords;
-
             end
 
         case -1 % Remove boxes from axes
@@ -517,8 +528,12 @@ end
 
 
 function create_a_box(coords, axes_handles)
+    % This function creates a "box" (a scheduled measurement) in memory
+    
     global boxes;
     
+    % If required (it shouldn't be at this point), create a default
+    % structure
     if (isempty(boxes))
         boxes = struct('ground_station', [], ...
             'type_meas', [], ...
@@ -527,14 +542,12 @@ function create_a_box(coords, axes_handles)
             'total_handle', []);
     end
     
-    % Rectangles can only have positive deltas
+    % Rectangles (used for plotting) can only have positive deltas
     if (coords(2) < coords(1)) 
         coords_temp = coords(1);
         coords(1) = coords(2);
         coords(2) = coords_temp;
     end
-
-%     [meas, meas_on_total] = draw_a_box(coords, axes_handles);
 
     % Save a box in memory
     boxes(end+1) = struct('ground_station', get(axes_handles(1), 'UserData'), ...
@@ -546,6 +559,9 @@ end
 
 
 function remove_a_box(coords, axes_handles)
+    % This function removes a "box" (a scheduled measurement) from memory
+    % and deletes its plotted representation.
+
     global boxes;
 
     i = 1;
@@ -553,7 +569,7 @@ function remove_a_box(coords, axes_handles)
         if (isequal(axes_handles(1), get(boxes(i).handle, 'parent')))
             if ((boxes(i).x(1) <= coords(1)) && (coords(1) <= boxes(i).x(2)))
 
-                % Delete boxes
+                % Delete displayed boxes
                 delete(boxes(i).handle);
                 delete(boxes(i).total_handle);
 
@@ -567,6 +583,9 @@ end
 
 
 function edit_a_box(coords, axes_handles, handles)
+    % This function allows the user to change the initial and final
+    % dates/times on an existing measurement
+
     global boxes;
 
     i = 1;
@@ -587,7 +606,6 @@ function edit_a_box(coords, axes_handles, handles)
 
                     % Redraw all the boxes
                     redraw_boxes(hObject, eventdata, handles);
-
                 end
             end
         end
@@ -597,6 +615,8 @@ end
 
 
 function create_many_much_boxen(coords, axes_handles, handles)
+    % This function creates a series of box(en)- a repeated measurement
+
     global boxes;
 
     % Bring up GUI to visualization original information and set repeat
@@ -625,7 +645,10 @@ end
 
 
 function [meas, meas_on_total] = draw_a_box(coords, axes_handles)
-    % Rectangles can only have positive deltas
+    % Draws a box to the screen on the appropriate axis
+
+    % Rectangles can only have positive deltas (this should be taken care
+    % of already, but just to be safe...)
     if (coords(2) < coords(1)) 
         coords_temp = coords(1);
         coords(1) = coords(2);
@@ -690,7 +713,7 @@ function harvest_gs(hObject, eventdata, handles)
     % save their data to the options structure
     
     global measOptions;
-%     measOptions = odtbxOptions('measurement');
+    
     default_options = odtbxOptions('measurement');
     
     % Clear out the entries in the old structure (this function will
@@ -735,13 +758,11 @@ end
 
 function change_gs(axes_handle)
     % This function changes the ground station of a box
+    
     global boxes;
     
-    % Change axes_handle ground station
-%     set(axes_handle, 'UserData', new_gs_name);
-    
     i = 2; % The first box is a decoy structure box
-    while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+    while (i <= length(boxes)) 
         % If it's on the correct axes
         if (axes_handle == get(boxes(i).handle, 'Parent'))
             % Change boxes(i).ground_station
@@ -1459,10 +1480,11 @@ function gs_label20_Callback(hObject, eventdata, handles)
     change_gs(handles.gs_axes_current);
 end
 
+
 %% Import and exporting
 
 function export_schedule_to_csv()
-    % Write all of the measurements to a file
+    % Write all of the scheduled measurements to a file
     global boxes;
 
     [name, path] = uiputfile('*.csv','Export To','measurement_schedule.csv');
@@ -1476,7 +1498,7 @@ function export_schedule_to_csv()
             fprintf(fid, 'Ground Station, Event Type, Start Date/Time, Finish Date/Time,\n');
 
             i = 2; % The first box is a decoy structure box
-                while (i <= length(boxes)) % While loop, *not* for loop (we need length recalculated every iteration)
+                while (i <= length(boxes)) 
                     fprintf(fid, '%s, %s, %s, %s\n', ...
                                 boxes(i).ground_station, boxes(i).type_meas, ...
                                 datestr(boxes(i).x(1), 'mm/dd/yyyy HH:MM:SS'), ...
@@ -1490,6 +1512,9 @@ end
 
 
 function export_options_to_workspace()
+    % Exports the options structure to the workspace. Changes the scheduled
+    % measurments into the appropriate format.
+    
     global measOptions;
     global boxes;
     
@@ -1532,6 +1557,12 @@ end
 
 
 function import_options_from_workspace(hObject, eventdata, handles)
+    % Imports a specified options structure from the workspace into the
+    % GUI. This includes the ground stations. If there is no satellite
+    % created, it informs the user that one needs to be created to display
+    % measurements. If there is a satellite created, then it is propagated
+    % and measurements are displayed. 
+    
     global measOptions;
     global boxes;
     global T;
@@ -1641,9 +1672,11 @@ function import_options_from_workspace(hObject, eventdata, handles)
     end
 end
 
+
 %% Satellite propagation and display
 
 function change_satellite(hObject, eventdata, handles)
+    % Sets satellite information and attempts to propagate it.
 
     % Set up the necessary structures (if they haven't been created
     % already)
@@ -1694,6 +1727,8 @@ end
 
 
 function make_meas()
+    % This is the function that actually runs gsmeas (the backend program).
+    
     global T;
     global X;
     global measOptions;
@@ -1708,6 +1743,9 @@ end
 
 
 function separate_measurements(meas_in)
+    % After gsmeas has been run and measurements generated, they are split
+    % by groundstation and measurement type. 
+    
     global measurements;
     global measOptions;
 
@@ -1761,6 +1799,10 @@ end
 
 
 function plot_meas(hObject, eventdata, handles)
+    % Takes the separates gsmeas measurements and plots them on the axes to
+    % which they correspond. Scales all of the data so that it can all
+    % appear on the axes which only go from 0 to 1 in Y.
+
     global measurements;
     global T;
     global measOptions;

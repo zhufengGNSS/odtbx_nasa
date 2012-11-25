@@ -43,7 +43,7 @@ function varargout = meas_sched(varargin)
 
     % visualization the above text to modify the response to help meas_sched
 
-    % Last Modified by GUIDE v2.5 20-Nov-2012 22:31:51
+    % Last Modified by GUIDE v2.5 25-Nov-2012 14:10:54
 
     % Begin initialization code - DO NOT VISUALIZATION
     gui_Singleton = 1;
@@ -1885,6 +1885,3 @@ function plot_meas(hObject, eventdata, handles)
         end
     end
 end
-
-
-

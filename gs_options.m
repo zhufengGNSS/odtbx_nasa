@@ -44,7 +44,7 @@ function varargout = gs_options(varargin)
 
 % Edit the above text to modify the response to help gs_options
 
-% Last Modified by GUIDE v2.5 06-Nov-2012 19:14:10
+% Last Modified by GUIDE v2.5 25-Nov-2012 14:47:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -624,4 +624,18 @@ function charged_particles_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of charged_particles
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function elevationconstraint_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to elevationconstraint (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end

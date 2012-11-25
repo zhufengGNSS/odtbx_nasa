@@ -142,6 +142,9 @@ function meas_sched_OpeningFcn(hObject, eventdata, handles, varargin)
 
     % Set the size of the axes (will replace with dates)
     set(handles.axes_handles,'YLim',[0 1]);
+    set(handles.axes_handles,'YTick',[.5]);
+    set(handles.meas_total,'YTick', []);
+    
     % Select a starting date:
     startDate = datenum('07-03-2012');
     % Select an ending date:
@@ -1812,6 +1815,10 @@ function plot_meas(hObject, eventdata, handles)
     global T;
     global measOptions;
     
+    % Change this variable if you'd like to see the unscaled results in the
+    % terminal
+    unscaled_in_terminal = 0;
+    
     if (~isempty(T))
         % Convert relative time to absolute time
         time_abs = getOdtbxOptions(measOptions, 'epoch') + T*1/60*1/60*1/24;
@@ -1837,42 +1844,66 @@ function plot_meas(hObject, eventdata, handles)
                                 color = 'r';
                                 % Scale the data to fit the axes, take the max
                                 % to be 1
-                                range = measurements(meas_loop).data
+                                if (unscaled_in_terminal)
+                                    range = measurements(meas_loop).data
+                                else
+                                    range = measurements(meas_loop).data;
+                                end
                                 max_val = max(max(abs(measurements(meas_loop).data)));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5;
                             case 'useRangeRate'
                                 color = 'b';
                                 % Scale the data to fit the axes, take the max
                                 % to be 1
-                                range_rate = measurements(meas_loop).data
+                                if (unscaled_in_terminal)
+                                    range_rate = measurements(meas_loop).data
+                                else
+                                    range_rate = measurements(meas_loop).data;
+                                end
                                 max_val = max(max(abs(measurements(meas_loop).data)));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5;
                             case 'useDoppler'
                                 color = 'k';
                                 % Scale the data to fit the axes, take the max
                                 % to be one
-                                doppler = measurements(meas_loop).data
+                                if (unscaled_in_terminal)
+                                    doppler = measurements(meas_loop).data
+                                else
+                                    doppler = measurements(meas_loop).data;
+                                end
                                 max_val = max(max(abs(measurements(meas_loop).data)));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5;
                             case 'useUnit'
                                 color = 'c';
                                 % These are unit vectors, they should already
                                 % be scaled
-                                unit = measurements(meas_loop).data
-                                scaled_data = measurements(meas_loop).data / 2 + .5
+                                if (unscaled_in_terminal)
+                                    unit = measurements(meas_loop).data
+                                else
+                                    unit = measurements(meas_loop).data;
+                                end
+                                scaled_data = measurements(meas_loop).data / 2 + .5;
                             case 'useAngles'
                                 color = 'm';
                                 % Scale the data to fit the axes
-                                angles = measurements(meas_loop).data
+                                if (unscaled_in_terminal)
+                                    angles = measurements(meas_loop).data
+                                else
+                                    angles = measurements(meas_loop).data;
+                                end
                                 scaled_data(1,:) = measurements(meas_loop).data(1,:) / (2*pi) / 2 + .5;
                                 scaled_data(2,:) = measurements(meas_loop).data(2,:) / (pi/2) / 2 + .5;
-                                scaled_data
+                                scaled_data;
                             otherwise
                                 color = 'y';
                                 % Scale the data to fit the axes
-                                other = measurements(meas_loop).data
+                                if (unscaled_in_terminal)
+                                    other = measurements(meas_loop).data
+                                else
+                                    other = measurements(meas_loop).data;
+                                end
                                 max_val = max(max(measurements(meas_loop).data));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5
+                                scaled_data = measurements(meas_loop).data / (2 * max_val) + .5;
                         end
 
                         line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...

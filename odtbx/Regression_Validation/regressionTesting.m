@@ -101,6 +101,7 @@ clc
 
 testCases = {
     % Release 5.0
+        'bplane',''
         'gasdyn', ''
         'opt_sched', ''
         'initialize_cov', ''

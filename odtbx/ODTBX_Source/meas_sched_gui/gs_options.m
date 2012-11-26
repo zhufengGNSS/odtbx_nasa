@@ -1,3 +1,25 @@
+% GS_OPTIONS This is a function of MEAS_SCHED used to select options for
+% the measurement structure.
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+
 function varargout = gs_options(varargin)
 % GS_OPTIONS MATLAB code for gs_options.fig
 %      GS_OPTIONS, by itself, creates a new GS_OPTIONS or raises the existing
@@ -22,7 +44,7 @@ function varargout = gs_options(varargin)
 
 % Edit the above text to modify the response to help gs_options
 
-% Last Modified by GUIDE v2.5 06-Nov-2012 19:14:10
+% Last Modified by GUIDE v2.5 25-Nov-2012 15:04:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -602,4 +624,18 @@ function charged_particles_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of charged_particles
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function elevationconstraint_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to elevationconstraint (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end

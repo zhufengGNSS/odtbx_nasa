@@ -526,7 +526,7 @@ function schedule_measurements(hObject, eventdata, handles)
     end
 
     % Debugging
-    assignin('base', 'boxes', boxes(:));
+%     assignin('base', 'boxes', boxes(:));
 end
 
 

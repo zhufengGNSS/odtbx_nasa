@@ -52,6 +52,7 @@ measOptions = setOdtbxOptions(measOptions,'frequencyTransmit', 2106406.250);
 measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
 measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',0);
 measOptions = setOdtbxOptions(measOptions,'gsECEF',gsECEF);
+measOptions = setOdtbxOptions(measOptions,'gsID', gsID);
 
 measOptions = setOdtbxOptions(measOptions,'useLightTime',true);
 measOptions = setOdtbxOptions(measOptions,'useIonosphere',false);

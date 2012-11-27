@@ -178,23 +178,22 @@ end
 % odtbx (basePath)
 %   ODTBX_Source
 %   Regression_Validation
-% jat
-%   jat (source, perhaps data, but JAT has frequent hardcoded assumptions)
-%   maven
+% vendor
+%   Jat
+%     jat (source, perhaps data, but JAT has frequent hardcoded assumptions)
+%     maven
 %       target
 %           classes (bytecode, data files must be here too for JAT's assumptions)
-% mice (from the git repo /vendor/LinuxMice_64/mice)
-%   doc
-%   src
-%   lib
-%   kernels, (etc)
+%   LinuxMice_64
+%     mice
+%       doc, src, lib, kernels, etc...
 %
 if startuptype == 1
     odtbxPath = basePath;
-    odtbxMicePath = fullfile(basePath,'..','mice');
-    jatSrcPath = fullfile(basePath,'..','jat');
-    jatBytecodePath = fullfile(basePath,'..','jat','maven','target','classes');
-    gmatPath = fullfile(basePath,'..','gmat');
+    odtbxMicePath = fullfile(basePath,'..','vendor','LinuxMice_64','mice');
+    jatSrcPath = fullfile(basePath,'..','vendor','Jat');
+    jatBytecodePath = fullfile(basePath,'..','vendor','Jat','maven','target','classes');
+    gmatPath = fullfile(basePath,'..','vendor','GMAT_Linux64','GMAT');
 end
 %
 %% REGRESSION SETUP END

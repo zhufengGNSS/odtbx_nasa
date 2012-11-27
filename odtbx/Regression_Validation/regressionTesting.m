@@ -16,14 +16,14 @@ function regressionTesting(varargin)
 %    local machine - "regressionTesting"
 %
 %    auto regression:
-%       "regressingTesting(logpath, email, smptserver)"
+%       "regressingTesting(logpath, email, smtpserver, infofile)"
 %           where:
 %           logpath = (optional, recommended) the path where the log file
 %                     will be placed, will write to the screen if not
 %                     supplied
 %           email = (optional) the email of the person to receive the 
 %                    report, leave empty ('') if specifying other arguments
-%           smptserver = (optional) the fully-qualified name of the SMTP
+%           smtpserver = (optional) the fully-qualified name of the SMTP
 %                        server to send the email, leave empty ('') if
 %                        specifying other arguments
 %           infofile = (optional) the full filepath of any additional text

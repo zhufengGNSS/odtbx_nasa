@@ -77,6 +77,35 @@ function satellite_edit_OpeningFcn(hObject, eventdata, handles, varargin)
     global sat_state_prop;
     global propagator;
 
+    % Fix tab order (higher in the stack goes first)
+
+%     ChildHandles = get(handles.figure1, 'Children')
+%     length(ChildHandles)
+%     for i = 1:length(ChildHandles)
+%         disp(get(ChildHandles(i), 'Tag'))
+%     end
+%     
+%     h = findobj('Tag', 'ok_button')
+%     uistack(h, 'up');
+%     
+%     h = findobj('Tag', 'cancel_button')
+%     uistack(h, 'up');
+%     
+%     h = findobj('Tag', 'prop_panel')
+%     uistack(h, 'up');
+%     
+%     h = findobj('Tag', 'uipanel2')
+%     uistack(h, 'up');
+%     
+%     h = findobj('Tag', 'satellite_state')
+%     uistack(h, 'up');
+%     
+%     ChildHandles = get(handles.figure1, 'Children')
+%     for i = 1:length(ChildHandles)
+%         disp(get(ChildHandles(i), 'Tag'))
+%     end
+    
+    % Read in existing values
     set(handles.x_pos, 'String', num2str(sat_state_prop.pos_x));
     set(handles.y_pos, 'String', num2str(sat_state_prop.pos_y));
     set(handles.z_pos, 'String', num2str(sat_state_prop.pos_z));

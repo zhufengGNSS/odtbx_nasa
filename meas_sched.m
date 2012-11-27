@@ -19,6 +19,9 @@
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
+% Author
+% Phillip Anderson      phillip.anderson@emergentspace.com      11/16/2012
+
 function varargout = meas_sched(varargin)
     % MEAS_SCHED MATLAB code for meas_sched.fig
     %      MEAS_SCHED, by itself, creates a new MEAS_SCHED or raises the existing
@@ -176,12 +179,9 @@ function varargout = meas_sched_OutputFcn(hObject, eventdata, handles)
     % handles    structure with handles and user data (see GUIDATA)
 
     % Get default command line output from handles structure
-    % varargout{1} = handles.output;
+    varargout{1} = handles.output;
 end
 
-
-
-%% Menu entries
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
@@ -210,6 +210,9 @@ clear global time_prop;
 clear global propagator;
 end
 
+
+
+%% Menu entries
 
 % File menus
 

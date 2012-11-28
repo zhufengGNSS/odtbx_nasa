@@ -1,6 +1,6 @@
 #!/bin/bash
 # Driver script for the ODTBX regression testing.  This script updates
-# the svn working copies, builds with Apache Maven, then runs the
+# the git working copies, builds with Apache Maven, then runs the
 # MATLAB ODTBX regressionTesting.m in batch mode.  The results are 
 # emailed out.  Log files are placed in a logs directory under the pwd
 # when this script is run.
@@ -27,71 +27,97 @@
 
 # Set these to enable email, if no email is desired, then set each to
 # ''.
-#DEFAULT_EMAIL='allen.brown@emergentspace.com'
-#DEFAULT_SMTP_SERVER='mailhost.gsfc.nasa.gov'
-
-# aet - send email to an alias on cain
-#DEFAULT_EMAIL=odtbx
-#DEFAULT_SMTP_SERVER=localhost
-
 # keb - send mail to the nasa mail list
 DEFAULT_EMAIL='odtbx@lists.nasa.gov'
 DEFAULT_SMTP_SERVER='mailhost.gsfc.nasa.gov'
 
 export LANG=en_US.UTF-8
 
+# Set outgoing email address if specified
 if [ -n "$1" ] ; then
         EMAIL=$1
 else
         EMAIL=$DEFAULT_EMAIL
 fi
 
+# Set outgoing email server if specified
 if [ -n "$2" ] ; then
         SMTP_SERVER=$2
 else
         SMTP_SERVER=$DEFAULT_SMTP_SERVER
 fi
 
+# Add paths to built-in commands (e.g. 'date' and 'tee')
 PATH=/usr/bin:/bin:$HOME/bin
 
-# I'm sure there's a better way to go up 2 directories...
-DIR=`dirname $0`
-DIR=`dirname $DIR`
-DIR=`dirname $DIR`
+ODTBX="$HOME/projects/odtbxsync-git/odtbx"
+echo "ODTBX Directory = $ODTBX"
 
-LOG_PATH=$DIR/../log
-INFO_LOG_FILE=$LOG_PATH/supporting_info.txt
+VENDOR="$HOME/projects/odtbxsync-git/vendor"
+echo "ODTBX Vendor Directory = $VENDOR"
 
-echo "ODTBX Regression Test update,build,run script running at `date`" > $INFO_LOG_FILE
-echo "ODTBX Regression Test update,build,run script running at `date`"
+LOG_PATH="$HOME/log"
+INFO_LOG_FILE="$LOG_PATH/supporting_info.txt"
 
-# The --config-dir is set for cypher:
-echo "Updating source trees."
-svn update $DIR/odtbx
-svn update $DIR/mice
-svn update $DIR/jat
-svn update $DIR/jat-lib
-svn update $DIR/gmat
+echo "ODTBX Regression Test update,build,run script running at `date`" | tee $INFO_LOG_FILE
 
-# record the svn info:
-echo "Gathering information on working copies for log files."
-echo "Subversion working copy information:" >> $INFO_LOG_FILE
-echo -e "\n" >> $INFO_LOG_FILE
+# rmathur
+# The process of merging public and internal Git repositories is documented
+# in ~/projects/README-GIT.txt .
 
-svn info $DIR/odtbx >> $INFO_LOG_FILE
-svn info $DIR/mice >> $INFO_LOG_FILE
-svn info $DIR/jat >> $INFO_LOG_FILE
-svn info $DIR/jat-lib >> $INFO_LOG_FILE
-svn info $DIR/gmat >> $INFO_LOG_FILE
+# Get changes to internal master branch
+echo -e "\n***Pulling internal master branch." | tee -a $INFO_LOG_FILE
+git pull internal master >> $INFO_LOG_FILE 2>&1
+giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
+if [ "$giterr" != 0 ]; then
+	echo "git pull internal master failed!" >> $INFO_LOG_FILE
+	exit
+fi
 
-echo -e "\n" >> $INFO_LOG_FILE
-echo "Maven build results:" >> $INFO_LOG_FILE
-echo "Building checkout with Maven."
-mvn -f $DIR/jat/maven/pom.xml clean compile >> $INFO_LOG_FILE
+# Get changes to public master branch
+echo -e "\n***Pulling public master branch." | tee -a $INFO_LOG_FILE
+git pull public master >> $INFO_LOG_FILE 2>&1
+giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
+if [ "$giterr" != 0 ]; then
+	echo "git pull public master failed!" >> $INFO_LOG_FILE
+	exit
+fi
 
-echo "Running Matlab."
+# Push merged master branch to both repos
+echo -e "\n***Pushing master branch." | tee -a $INFO_LOG_FILE
+git push internal master >> $INFO_LOG_FILE 2>&1
+git push public master >> $INFO_LOG_FILE 2>&1
+
+# Get changes to internal develop branch
+echo -e "\n***Pulling internal develop branch." | tee -a $INFO_LOG_FILE
+git pull internal develop >> $INFO_LOG_FILE 2>&1
+giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
+if [ "$giterr" != 0 ]; then
+	echo "git pull internal develop failed!" >> $INFO_LOG_FILE
+	exit
+fi
+
+# Get changes to public develop branch
+echo -e "\n***Pulling public develop branch." | tee -a $INFO_LOG_FILE
+git pull public develop >> $INFO_LOG_FILE 2>&1
+giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
+if [ "$giterr" != 0 ]; then
+	echo "git pull public develop failed!" >> $INFO_LOG_FILE
+	exit
+fi
+
+# Push merged develop branch to both repos
+echo -e "\n***Pushing develop branch." | tee -a $INFO_LOG_FILE
+git push internal develop >> $INFO_LOG_FILE 2>&1
+git push public develop >> $INFO_LOG_FILE 2>&1
+
+# Build JAT using Apache Maven
+echo -e "\nBuilding JAT with Apache Maven." | tee -a $INFO_LOG_FILE
+mvn -f "$VENDOR/Jat/maven/pom.xml" clean compile >> $INFO_LOG_FILE 2>&1
+
+echo -e "\nRunning ODTBX regression tests in Matlab." | tee -a $INFO_LOG_FILE
 matlab -nodisplay -r "\
-        basePath = '$DIR/odtbx';\
+        basePath = '$ODTBX';\
         addpath(basePath);\
         startup();\
         regressionTesting('$LOG_PATH','$EMAIL','$SMTP_SERVER','$INFO_LOG_FILE');\

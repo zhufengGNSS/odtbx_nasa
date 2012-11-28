@@ -24,10 +24,13 @@ function D = dcm(type, varargin)
 %      'los' pos. 1 and pos. 2      Line-of-Sight, Normal, Bi-normal
 %                                   Note that both position vectors
 %                                   must be specified as 3x1 vectors.
-%      'con' relative pos. & vel.   Conjunction Basis
+%      'con' relative pos. & vel.   Conjunction Basis (see FAQ below)
 %                                   Note that the relative position and
 %                                   velocity vectors must both be specified
 %                                   as 3x1 vectors.
+%      'enc' relative vel.          Encounter Basis (see FAQ below)
+%                                   Note that the relative velocity 
+%                                   must be specified as 3x1 vectors.
 %   In all cases, the DCM has as its rows the "new" basis vectors
 %   corresponding to TYPE, i.e. the DCM is "from" the original basis to the
 %   "new" TYPE basis.  To get the "vectorized" 3x3xN output array, provide 
@@ -35,7 +38,21 @@ function D = dcm(type, varargin)
 %   vectors.  The convention for the latter is that the columns of the
 %   input matrices correspond to input vectors for each desired output.
 %
-%keyword: Coordinate Transformations, Attitude, Utilities,
+%   FAQs:
+%   Q1) What is the difference between the conjunction basis and the
+%   encounter basis?
+%   A1) The conjunction basis uses the unit relative position to define its
+%   first basis vector; this means the relative position vector will always
+%   transform to [rho;0;0], where rho is the magnitude of the relative
+%   position vector.  The encounter basis doesn't use relative position at
+%   all; instead it uses a vector in the local horizontal plane as its
+%   first basis vector.  This means it is more like the "B-plane"
+%   coordinate system used for hyperbolic encounters.  Also, these
+%   definitions imply that the conjunction basis will not be be normal to
+%   the relative velocity vector *unless* the close approach condition,
+%   dot(r,v) = 0, is met.
+%
+% keyword: Coordinate Transformations, Attitude, Utilities,
 % See also: JATDCM
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
@@ -124,6 +141,11 @@ switch type,
         u1 = unit(dr);
         u3 = unit(cross(dr,dv));
         u2 = cross(u3,u1);
+    case 'enc'
+        dv = varargin{1};
+        u1 = unit(dv);
+        u2 = unit([-u1(2,:); u1(1,:); zeros(1,size(u1,2))]);
+        u3 = cross(u1,u2);
 end
 D(3,:,:) = u3;
 D(2,:,:) = u2;

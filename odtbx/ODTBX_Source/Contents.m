@@ -5,6 +5,7 @@
 %   alm_pos_az_el            - Calculates GPS SV antenna azimuth and elevation for a given receiver state.
 %   Attitude                 - Class to store spacecraft attitude information
 %   Body                     - Class representing a simple solar system body (i.e. planet, asteroid, comet, etc.)
+%   bplane                   - Function to calculate B-Plane parameters for a hyperbolic orbit
 %   calc_obliquity           - Compute Earth obliquity of the ecliptic
 %   calc_JulianCenturies2000 - Compute the time in Julian Centuries since the ephemeris epoch of 2000
 %   cameradyn                - Models dynamics for camera calibration parameters
@@ -87,6 +88,7 @@
 %   makeGpsTXID              - Creates a blank data structure for describing a GPS transmitter.
 %   makePpData               - Creates a blank data structure for holding GPS physical parameters.
 %   nbodypm                  - N-Body Point Mass dynamics equations.
+%   meas_sched               - GUI tool to interactively edit the ODTBX Options structure.
 %   observ                   - Observability grammian, and possibly mapped innovations.
 %   odtbxOptions             - Returns a valid ODTBX options structure of the input type 
 %   ominusc                  - Innovations, meas. partials, and possibly innovation covariance.
@@ -130,4 +132,3 @@
 %   varpiles                 - Variance Sandpiles.
 %   xmat                     - Cross-product matrix for arrays of vectors.
 %   xnavmeas                 - Calculates spacecraft to distant RSO range difference & range difference rate measurements. 
-

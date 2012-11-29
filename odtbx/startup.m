@@ -81,11 +81,6 @@
 % Some developers may choose to build their bytecode in these folders as well.
 %jatSrcPath =  [myBasePath, '/vendor/Jat'];
 %
-% The path to the top-level GMAT folder (the top-level folder of a GMAT
-% distribution, usually named "gmat", and it contains directories like:
-% bin, data, plugins, etc.
-%gmatPath = [myBasePath, 'vendor/GMAT_Linux64/GMAT'];
-%
 % (Optional) The path to the JAT folder that contains the Java bytecode
 % (*.class files).  Most developers won't need this if they want to place
 % their bytecode in the same folders as their source location, above.
@@ -94,6 +89,18 @@
 
 %
 %% DEVELOPER SETUP ENDS  (That's it for a standard developer setup.)
+%
+
+%
+%% GMAT WITH ODTBX:
+%
+% The path to the top-level GMAT folder (the top-level folder of a GMAT
+% distribution, usually named "GMAT", and it contains directories like:
+% bin, data, plugins, etc.
+%gmatPath = '/absolute/path/to/GMAT';
+
+%
+%% CHECK STARTUP TYPE:
 %
 
 % First, check if we've got regression test going on or not.
@@ -152,7 +159,9 @@ if startuptype == 0
         odtbxMicePath = fullfile(baseIstPath,'mice');
         jatSrcPath = fullfile(baseIstPath,'Jat');
         jatBytecodePath = jatSrcPath;
-        gmatPath = fullfile(baseIstPath,'gmat');
+        if ~exist('gmatPath', 'var')
+            gmatPath = fullfile(baseIstPath,'GMAT');
+        end
     end
     
     clear baseIstPath;

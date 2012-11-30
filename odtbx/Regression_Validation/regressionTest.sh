@@ -65,6 +65,15 @@ echo "ODTBX Regression Test update,build,run script running at `date`" | tee $IN
 # The process of merging public and internal Git repositories is documented
 # in ~/projects/README-GIT.txt .
 
+# Switch to the master branch
+echo -e "\n***Switching to master branch." | tee -a $INFO_LOG_FILE
+git checkout master >> $INFO_LOG_FILE 2>&1
+giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
+if [ "$giterr" != 0 ]; then
+	echo "git checkout master failed!" >> $INFO_LOG_FILE
+	exit
+fi
+
 # Get changes to internal master branch
 echo -e "\n***Pulling internal master branch." | tee -a $INFO_LOG_FILE
 git pull internal master >> $INFO_LOG_FILE 2>&1
@@ -87,6 +96,15 @@ fi
 echo -e "\n***Pushing master branch." | tee -a $INFO_LOG_FILE
 git push internal master >> $INFO_LOG_FILE 2>&1
 git push public master >> $INFO_LOG_FILE 2>&1
+
+# Switch to the develop branch
+echo -e "\n***Switching to develop branch." | tee -a $INFO_LOG_FILE
+git checkout develop >> $INFO_LOG_FILE 2>&1
+giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
+if [ "$giterr" != 0 ]; then
+	echo "git checkout develop failed!" >> $INFO_LOG_FILE
+	exit
+fi
 
 # Get changes to internal develop branch
 echo -e "\n***Pulling internal develop branch." | tee -a $INFO_LOG_FILE

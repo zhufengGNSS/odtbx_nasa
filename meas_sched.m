@@ -1818,9 +1818,33 @@ function plot_meas(hObject, eventdata, handles)
     global T;
     global measOptions;
     
+    max_vals(1:6) = 0;
+    for i = 1:length(measurements)
+        if (strcmp(measurements(i).type_meas, 'useRange'))
+            meas_index = 1;
+        elseif (strcmp(measurements(i).type_meas, 'useRangeRate'))
+            meas_index = 2;
+        elseif (strcmp(measurements(i).type_meas, 'useDoppler'))
+            meas_index = 3;   
+        elseif (strcmp(measurements(i).type_meas, 'useUnit'))
+            meas_index = 4;
+        elseif (strcmp(measurements(i).type_meas, 'useAngles'))
+            meas_index = 5;    
+        else
+            meas_index = 6;
+        end
+        
+        local_max = max(max(abs(measurements(i).data)));
+        
+        if (local_max > max_vals(meas_index))
+            max_vals(meas_index) = local_max; 
+        end
+    end
+    max_vals(:)
+    
     % Change this variable if you'd like to see the unscaled results in the
     % terminal
-    unscaled_in_terminal = 0;
+    unscaled_in_terminal = 1;
     
     if (~isempty(T))
         % Convert relative time to absolute time
@@ -1852,8 +1876,8 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     range = measurements(meas_loop).data;
                                 end
-                                max_val = max(max(abs(measurements(meas_loop).data)));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5;
+%                                 max_val = max(max(abs(measurements(meas_loop).data)));
+                                scaled_data = measurements(meas_loop).data / (2 * max_vals(1)) +.5;
                             case 'useRangeRate'
                                 color = 'b';
                                 % Scale the data to fit the axes, take the max
@@ -1863,8 +1887,8 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     range_rate = measurements(meas_loop).data;
                                 end
-                                max_val = max(max(abs(measurements(meas_loop).data)));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5;
+%                                 max_val = max(max(abs(measurements(meas_loop).data)));
+                                scaled_data = measurements(meas_loop).data / (2 * max_vals(2)) +.5;
                             case 'useDoppler'
                                 color = 'k';
                                 % Scale the data to fit the axes, take the max
@@ -1874,8 +1898,8 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     doppler = measurements(meas_loop).data;
                                 end
-                                max_val = max(max(abs(measurements(meas_loop).data)));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) +.5;
+%                                 max_val = max(max(abs(measurements(meas_loop).data)));
+                                scaled_data = measurements(meas_loop).data / (2 * max_vals(3)) +.5;
                             case 'useUnit'
                                 color = 'c';
                                 % These are unit vectors, they should already
@@ -1905,8 +1929,8 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     other = measurements(meas_loop).data;
                                 end
-                                max_val = max(max(measurements(meas_loop).data));
-                                scaled_data = measurements(meas_loop).data / (2 * max_val) + .5;
+%                                 max_val = max(max(measurements(meas_loop).data));
+                                scaled_data = measurements(meas_loop).data / (2 * max_vals(6)) + .5;
                         end
 
                         line(time_abs, scaled_data, 'Color', color, 'LineWidth', 2, ...

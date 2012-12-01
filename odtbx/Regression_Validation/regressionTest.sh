@@ -3,9 +3,12 @@
 # the git working copies, builds with Apache Maven, then runs the
 # MATLAB ODTBX regressionTesting.m in batch mode.  The results are 
 # emailed out.  Log files are placed in a logs directory under the pwd
-# when this script is run.
+# when this script is run.  If nothing changed in the develop branch,
+# then the regression test is not run.
 #
 # Arguments: 
+# -f         Force-run the regression test, even if nothing changed in
+#            the develop branch
 # (optional) The recipient's email address, if not provided then
 #            the DEFAULT_EMAIL below is used
 # (optional) The email server to use, if not provided then
@@ -24,6 +27,21 @@
 # You should have received a copy of the NASA Open Source Agreement along
 # with this program (in a file named License.txt); if not, write to the 
 # NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+# Sends email using MATLAB (since that supports SMTP servers)
+function send_email
+{
+  email=$1
+  subject=$2
+  message=$3
+  server=$4
+
+  matlab -nodisplay -r "\
+    setpref('Internet','SMTP_Server','$server');\
+    setpref('Internet','E_mail','odtbx-builder@emergentspace.com');\
+    sendmail('$email','$subject','$message');\
+    quit;"
+}
 
 # Set these to enable email, if no email is desired, then set each to
 # ''.
@@ -64,32 +82,40 @@ echo "ODTBX Regression Test update,build,run script running at `date`" | tee $IN
 # rmathur
 # The process of merging public and internal Git repositories is documented
 # in ~/projects/README-GIT.txt .
+git_subj="ODTBX Git failure"
 
-# Switch to the master branch
+# Switch to the master branch, so that changes to master can be 
+# properly merged
 echo -e "\n***Switching to master branch." | tee -a $INFO_LOG_FILE
 git checkout master >> $INFO_LOG_FILE 2>&1
-giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
-if [ "$giterr" != 0 ]; then
-	echo "git checkout master failed!" >> $INFO_LOG_FILE
-	exit
+gitstatus=$? # Get error code of git checkout master
+if [ $gitstatus != 0 ]; then
+	msg="git checkout master failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL $git_subj $msg $SMTP_SERVER
+	exit $gitstatus
 fi
 
-# Get changes to internal master branch
+# Merge changes from internal master branch
 echo -e "\n***Pulling internal master branch." | tee -a $INFO_LOG_FILE
 git pull internal master >> $INFO_LOG_FILE 2>&1
-giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
-if [ "$giterr" != 0 ]; then
-	echo "git pull internal master failed!" >> $INFO_LOG_FILE
-	exit
+gitstatus=$? # Get error code of git pull
+if [ $gitstatus != 0 ]; then
+	msg="git pull internal master failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL $git_subj $msg $SMTP_SERVER
+	exit $gitstatus
 fi
 
-# Get changes to public master branch
+# Merge changes from public master branch
 echo -e "\n***Pulling public master branch." | tee -a $INFO_LOG_FILE
 git pull public master >> $INFO_LOG_FILE 2>&1
-giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
-if [ "$giterr" != 0 ]; then
-	echo "git pull public master failed!" >> $INFO_LOG_FILE
-	exit
+gitstatus=$? # Get error code of git pull
+if [ $gitstatus != 0 ]; then
+	msg="git pull public master failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL $git_subj $msg $SMTP_SERVER
+	exit $gitstatus
 fi
 
 # Push merged master branch to both repos
@@ -97,31 +123,54 @@ echo -e "\n***Pushing master branch." | tee -a $INFO_LOG_FILE
 git push internal master >> $INFO_LOG_FILE 2>&1
 git push public master >> $INFO_LOG_FILE 2>&1
 
-# Switch to the develop branch
+# Switch to the develop branch, so that changes to develop can be 
+# properly merged
 echo -e "\n***Switching to develop branch." | tee -a $INFO_LOG_FILE
 git checkout develop >> $INFO_LOG_FILE 2>&1
-giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
-if [ "$giterr" != 0 ]; then
-	echo "git checkout develop failed!" >> $INFO_LOG_FILE
-	exit
+gitstatus=$? # Get error code of git checkout develop
+if [ $gitstatus != 0 ]; then
+	msg="git checkout develop failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL $git_subj $msg $SMTP_SERVER
+	exit $gitstatus
 fi
 
-# Get changes to internal develop branch
+# Check develop commit before merging internal & public repos
+prevcommit=`git log -1 --pretty=format:%H`
+echo -e "\nBefore merge, develop commit = $prevcommit" | tee -a $INFO_LOG_FILE
+
+# Merge changes from internal develop branch
 echo -e "\n***Pulling internal develop branch." | tee -a $INFO_LOG_FILE
 git pull internal develop >> $INFO_LOG_FILE 2>&1
-giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
-if [ "$giterr" != 0 ]; then
-	echo "git pull internal develop failed!" >> $INFO_LOG_FILE
-	exit
+gitstatus=$? # Get error code of git pull
+if [ $gitstatus != 0 ]; then
+	msg="git pull internal develop failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL $git_subj $msg $SMTP_SERVER
+	exit $gitstatus $gitstatus
 fi
 
-# Get changes to public develop branch
+# Merge changes from public develop branch
 echo -e "\n***Pulling public develop branch." | tee -a $INFO_LOG_FILE
 git pull public develop >> $INFO_LOG_FILE 2>&1
-giterr=${PIPESTATUS[0]} # Get error code of first command above (git pull)
-if [ "$giterr" != 0 ]; then
-	echo "git pull public develop failed!" >> $INFO_LOG_FILE
-	exit
+gitstatus=$? # Get error code of git pull
+if [ $gitstatus != 0 ]; then
+	msg="git pull public develop failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL $git_subj $msg $SMTP_SERVER
+	exit $gitstatus
+fi
+
+# Check develop commit after merging internal & public repos
+nextcommit=`git log -1 --pretty=format:%H`
+echo -e "\nAfter merge, develop commit = $nextcommit" | tee -a $INFO_LOG_FILE
+
+# If the develop branch commit hash didn't change after merging, then
+# nothing was done during the merge, so there's nothing to test.
+# But if the "-f" flag was given, then always run the regression test.
+if [ "$prevcommit" == "$nextcommit" ] && [ "$1" != "-f" ]; then
+	echo "Branch develop has not changed. Nothing to test." >> $INFO_LOG_FILE
+	exit 0
 fi
 
 # Push merged develop branch to both repos
@@ -132,13 +181,19 @@ git push public develop >> $INFO_LOG_FILE 2>&1
 # Build JAT using Apache Maven
 echo -e "\nBuilding JAT with Apache Maven." | tee -a $INFO_LOG_FILE
 mvn -f "$VENDOR/Jat/maven/pom.xml" clean compile >> $INFO_LOG_FILE 2>&1
+mvnstatus=$? # Get error code of mvn compile
+if [ $mvnstatus != 0 ]; then
+	msg="mvn clean compile failed!"
+	echo $msg >> $INFO_LOG_FILE
+	send_email $EMAIL "ODTBX Maven failure" $msg $SMTP_SERVER
+	exit $mvnstatus
+fi
 
+# Run Matlab regression test suite
 echo -e "\nRunning ODTBX regression tests in Matlab." | tee -a $INFO_LOG_FILE
 matlab -nodisplay -r "\
         basePath = '$ODTBX';\
         addpath(basePath);\
         startup();\
         regressionTesting('$LOG_PATH','$EMAIL','$SMTP_SERVER','$INFO_LOG_FILE');\
-        quit;\
-"
-
+        quit;"

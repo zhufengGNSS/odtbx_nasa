@@ -1818,6 +1818,8 @@ function plot_meas(hObject, eventdata, handles)
     global T;
     global measOptions;
     
+    % Find the maximum values for all of the ground stations so that
+    % measurement levels will appear consistant with each other
     max_vals(1:6) = 0;
     for i = 1:length(measurements)
         if (strcmp(measurements(i).type_meas, 'useRange'))
@@ -1841,7 +1843,11 @@ function plot_meas(hObject, eventdata, handles)
         end
     end
     
+    % Change this variable if you'd like to see the maximum values of the
+    % variables in the terminal. This helps the user understand how the
+    % displayed variables are scaled.
     max_vals_in_terminal = 1;
+    
     if (max_vals_in_terminal)
         fprintf('\n=== Maximum values === \n');
         fprintf('Range: %d km\n', max_vals(1));
@@ -1862,11 +1868,6 @@ function plot_meas(hObject, eventdata, handles)
         % In the future, the controls that dictate which plots will be shown
         % will go in here. For now, we show all the plots.
         
-        % Find the maximum values for all of the ground stations so that
-        % measurement levels will appear consistant with each other
-%         max_range = max(max(measurements(measurements.type_meas == 'useRange').data))
-%         measurements.type_meas == 'useRange'
-        
         for axes_loop = 1:length(handles.axes_handles)-1
             user_data = get(handles.axes_handles(axes_loop), 'UserData');
             if (~isempty(user_data) && user_data > 0)
@@ -1885,7 +1886,6 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     range = measurements(meas_loop).data;
                                 end
-%                                 max_val = max(max(abs(measurements(meas_loop).data)));
                                 scaled_data = measurements(meas_loop).data / (2 * max_vals(1)) +.5;
                             case 'useRangeRate'
                                 color = 'b';
@@ -1896,7 +1896,6 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     range_rate = measurements(meas_loop).data;
                                 end
-%                                 max_val = max(max(abs(measurements(meas_loop).data)));
                                 scaled_data = measurements(meas_loop).data / (2 * max_vals(2)) +.5;
                             case 'useDoppler'
                                 color = 'k';
@@ -1907,7 +1906,6 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     doppler = measurements(meas_loop).data;
                                 end
-%                                 max_val = max(max(abs(measurements(meas_loop).data)));
                                 scaled_data = measurements(meas_loop).data / (2 * max_vals(3)) +.5;
                             case 'useUnit'
                                 color = 'c';
@@ -1929,7 +1927,6 @@ function plot_meas(hObject, eventdata, handles)
                                 end
                                 scaled_data(1,:) = measurements(meas_loop).data(1,:) / (2*pi) / 2 + .5;
                                 scaled_data(2,:) = measurements(meas_loop).data(2,:) / (pi/2) / 2 + .5;
-                                scaled_data;
                             otherwise
                                 color = 'y';
                                 % Scale the data to fit the axes
@@ -1938,7 +1935,6 @@ function plot_meas(hObject, eventdata, handles)
                                 else
                                     other = measurements(meas_loop).data;
                                 end
-%                                 max_val = max(max(measurements(meas_loop).data));
                                 scaled_data = measurements(meas_loop).data / (2 * max_vals(6)) + .5;
                         end
 

@@ -1840,11 +1840,20 @@ function plot_meas(hObject, eventdata, handles)
             max_vals(meas_index) = local_max; 
         end
     end
-    max_vals(:)
+    
+    max_vals_in_terminal = 1;
+    if (max_vals_in_terminal)
+        fprintf('\n=== Maximum values === \n');
+        fprintf('Range: %d km\n', max_vals(1));
+        fprintf('Range Rate: %d km/s\n', max_vals(2));
+        fprintf('Doppler: %d Hz\n', max_vals(3));
+        fprintf('Unit: %d \n', max_vals(4));
+        fprintf('Angles: %d rad\n', max_vals(5));
+    end
     
     % Change this variable if you'd like to see the unscaled results in the
     % terminal
-    unscaled_in_terminal = 1;
+    unscaled_in_terminal = 0;
     
     if (~isempty(T))
         % Convert relative time to absolute time

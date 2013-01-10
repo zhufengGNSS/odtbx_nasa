@@ -1708,12 +1708,17 @@ function change_satellite(hObject, eventdata, handles)
                                'vel_z', []);
     end
     
+    global propagator;
+    if (isempty(propagator))
+        propagator = struct('dynfun', [], ...
+                            'dynarg', []);
+    end
+    
     % GUI will gather the data and save it to the structures
     output = satellite_edit('meas_sched', handles.figure1);
     if (~strcmp(output, 'Cancel'))
         % Do the actual propagation of the cartesian state using the specified
         % function
-        global propagator;
         time = time_prop.begin:time_prop.increment:time_prop.end;
         coords = [sat_state_prop.pos_x;
                   sat_state_prop.pos_y;
@@ -1728,8 +1733,19 @@ function change_satellite(hObject, eventdata, handles)
         
         global T;
         global X;
+        
+        % Dynarg could be a number or an anonymous function returning a
+        % structure
+        % If it's a number, this should convert it
+        dynarg = str2num(propagator.dynarg);
+        % If conversion fails, the resultant string should be empty
+        if isempty(dynarg)
+            % We would then know to evaluate it, because it is a function
+            dynarg = eval('propagator.dynarg');
+        end
+        
         try
-            [T,X] = integ(propagator, time, coords, opts, mu);
+            [T,X] = integ(propagator.dynfun, time, coords, opts, dynarg);
         catch exceptions
             errordlg(exceptions.message, 'Propagation Error!');
         end

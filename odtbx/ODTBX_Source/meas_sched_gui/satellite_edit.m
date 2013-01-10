@@ -44,7 +44,7 @@ function varargout = satellite_edit(varargin)
 
     % Edit the above text to modify the response to help satellite_edit
 
-    % Last Modified by GUIDE v2.5 01-Nov-2012 12:33:32
+    % Last Modified by GUIDE v2.5 07-Jan-2013 11:53:17
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -117,7 +117,8 @@ function satellite_edit_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.time_inc, 'String', num2str(time_prop.increment));
     set(handles.time_end, 'String', num2str(time_prop.end));
 
-    set(handles.prop_handle, 'String', propagator);
+    set(handles.prop_handle, 'String', propagator.dynfun);
+    set(handles.dynarg, 'String', num2str(propagator.dynarg));
 
 
     % Choose default command line output for satellite_edit
@@ -262,7 +263,8 @@ function ok_button_Callback(hObject, eventdata, handles)
                          'Time_Increment', str2num(get(handles.time_inc, 'String')), ...
                          'End_Time', str2num(get(handles.time_end, 'String')));
     
-    prop_values = struct('Propagator', get(handles.prop_handle, 'String'));
+    prop_values = struct('Propagator', get(handles.prop_handle, 'String'), ...
+                         'Dynarg', get(handles.dynarg, 'String'));
         
     error = check_entry_validity(state_values, time_values, prop_values);
     
@@ -279,8 +281,8 @@ function ok_button_Callback(hObject, eventdata, handles)
         time_prop.increment = time_values.Time_Increment;
         time_prop.end = time_values.End_Time;
 
-        propagator = prop_values.Propagator;
-
+        propagator.dynfun = prop_values.Propagator;
+        propagator.dynarg = prop_values.Dynarg;
 
         handles.output = get(hObject,'String');
 
@@ -321,6 +323,7 @@ function [error] = check_entry_validity(state_values, time_values, prop_values)
     
     % Make sure propagator exists
     % The user has to actually enter something
+    % Is there a way to check dynargs?
     prop_field_names = fieldnames(prop_values);
     try
         % Warnings appear informing us of the next error check (so we don't
@@ -703,6 +706,31 @@ function prop_handle_CreateFcn(hObject, eventdata, handles)
 
     % Hint: edit controls usually have a white background on Windows.
     %       See ISPC and COMPUTER.
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+
+
+function dynarg_Callback(hObject, eventdata, handles)
+% hObject    handle to dynarg (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of dynarg as text
+%        str2double(get(hObject,'String')) returns contents of dynarg as a double
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function dynarg_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to dynarg (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
     end

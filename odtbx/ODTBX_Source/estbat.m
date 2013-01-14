@@ -505,7 +505,8 @@ end
 for i = lent:-1:1,
     k = find(~isnan(Ybar(:,i)));
     %K{i} = J\Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i));
-    K{i} = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+    %K{i} = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+    K{i} = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
     Ktilde{i} = Stilde(:,:,i)*K{i};
 end
 
@@ -839,7 +840,8 @@ parfor j = 1:ncases,
                 Phato{j} = 0;
             end
             k = find(~isnan(Y{j}(:,i)));
-            Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+            %Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+            Kj = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
             ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
             Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
             dxo = dxo + Kj*dY(k,i);
@@ -953,17 +955,17 @@ if nargout >= 14
 end 
 end % function
 
-function x = robustls(A,b)
-% More robust least-squares solution to Ax = b.  This is based on the help
-% for the QR function, which shows how "the least squares approximate
-% solution to A*x = b can be found with the Q-less qr decomposition and one
-% step of iterative refinement."
-R = triu(qr(A));
-x = R\(R'\(A'*b));
-r = b - A*x;
-e = R\(R'\(A'*r));
-x = x + e;
-end
+% function x = robustls(A,b)
+% % More robust least-squares solution to Ax = b.  This is based on the help
+% % for the QR function, which shows how "the least squares approximate
+% % solution to A*x = b can be found with the Q-less qr decomposition and one
+% % step of iterative refinement."
+% R = triu(qr(A));
+% x = R\(R'\(A'*b));
+% r = b - A*x;
+% e = R\(R'\(A'*r));
+% x = x + e;
+% end
 
 % Self-test user functions
 function [Xdot,A,Q] = rwdyn(t,X,q) % Test 1 dynfun

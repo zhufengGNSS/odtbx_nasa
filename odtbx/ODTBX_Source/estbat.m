@@ -225,7 +225,23 @@ classdef estbat < handle
     
     methods
         function obj = estbat()
-
+            % Preallocate these variables are cells (makes it faster?)
+            obj.t = {};
+            obj.Xhat = {};
+            obj.Phat = {};
+            obj.e = {};
+            obj.y = {};
+            obj.Pdy = {};
+            
+            % The rest will be preallocated automatically as arrays
+%             obj.Pa = [];
+%             obj.Pv = [];
+%             obj.Pw = [];
+%             obj.Phata = [];
+%             obj.Phatv = [];
+%             obj.Phatw = [];
+%             obj.Sigma_a = [];
+%             obj.Pdyt = [];
         end
         
         function check_for_events(obj)

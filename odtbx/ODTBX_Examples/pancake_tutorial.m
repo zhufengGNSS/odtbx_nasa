@@ -134,15 +134,14 @@ end
 %% Batch Least Squares Estimation
 % Assuming that all states are observable, let's estimate the states at
 % all times using a batch least squares estimation method. To do this,
-% ODTBX provides the function "estbat".
+% ODTBX provides the "estbat" class.
 
+% Select the estbat estimator class
 myest = estbat;
 
+% Run the estimator
 [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
     myest.run_estimator(@pancake_dyn,@pancake_dat,tspan,x0,P0,[],w_p,[]);
-
-% [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
-%     estbat(@pancake_dyn,@pancake_dat,tspan,x0,P0,[],w_p,[]);
 
 %% Output Results
 % It is important to know the errors incurred by an estimation process. In

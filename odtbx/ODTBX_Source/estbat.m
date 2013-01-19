@@ -871,7 +871,7 @@ classdef estbat < handle
                             Phato{j} = 0;
                         end
                         k = find(~isnan(Y{j}(:,i)));
-                        Kj = obj.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                        Kj = estbat.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
                         ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
                         Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
                         dxo = dxo + Kj*dY(k,i);

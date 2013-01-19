@@ -235,7 +235,7 @@ classdef estbat < handle
             % handling.
         end
         
-        function run_estimator(obj, varargin)
+        function run_estimator(obj,varargin)
             %% Input Parsing and Setup
             % Parse the input list and options structure.  Pre-allocate arrays, using a
             % cell index for the monte carlo cases, which will avoid the need for each
@@ -254,19 +254,21 @@ classdef estbat < handle
             %
             % If there are no output arguments, then plot the results of a particular
             % input self-test as a demo.
-
-            if(nargin == 0)
+            varargin
+            num_args = length(varargin); % Matlab counts the incoming object in nargin, we don't want this
+            
+            if(num_args == 0)
                 error('estbat no longer supports zero-input regression testing. Please use estbat_test.');
             end
 
             % testmode specifies which self test to run
-            if nargin == 1,
+            if num_args == 1,
                 testmode = varargin{1};
             else
                 testmode = false;
             end
 
-            if nargin >= 4,
+            if num_args >= 4,
                 if all(isfield(varargin{1}, {'tru','est'})),
                     dynfun = varargin{1};
                 else
@@ -288,7 +290,7 @@ classdef estbat < handle
                     Xbaro = varargin{4};
                 end
             end
-            if nargin >= 5,
+            if num_args >= 5,
                 if isstruct(varargin{5}),
                     Po = varargin{5}.Po;
                     Pbaro = varargin{5}.Pbaro;
@@ -302,36 +304,36 @@ classdef estbat < handle
                 if isempty(Pbaro) || all(all(isinf(Pbaro)))
                     Pbaro = diag( inf*ones( size(Xbaro) ) );
                 end
-            elseif nargin >= 4,
+            elseif num_args >= 4,
                 Po = diag( inf*ones( size(Xo) ) );
                 Pbaro = Po;
             end
-            if nargin >=6,
+            if num_args >=6,
                 options = varargin{6};
             else
                 options = setOdtbxOptions('OdeSolvOpts',odeset);
             end
             ncases = getOdtbxOptions(options,'MonteCarloCases',1);
             niter = getOdtbxOptions(options,'UpdateIterations',10);
-            if nargin >= 7,
+            if num_args >= 7,
                 if all(isfield(varargin{7}, {'tru','est'}))
                     dynarg = varargin{7};
                 else
                     dynarg.tru = varargin{7};
                     dynarg.est = varargin{7};
                 end
-            elseif nargin >= 4,
+            elseif num_args >= 4,
                 dynarg.tru = [];
                 dynarg.est = [];
             end
-            if nargin >= 8,
+            if num_args >= 8,
                 if all(isfield(varargin{8}, {'tru','est'}))
                     datarg = varargin{8};
                 else
                     datarg.tru = varargin{8};
                     datarg.est = varargin{8};
                 end
-            elseif nargin >= 4,
+            elseif num_args >= 4,
                 datarg.tru = [];
                 datarg.est = [];
             end
@@ -345,10 +347,10 @@ classdef estbat < handle
             if testmode,
                 switch testmode
                     case 1
-                        dynfun.tru = @rwdyn;
-                        dynfun.est = @rwdyn;
-                        datfun.tru = @rwdat;
-                        datfun.est = @rwdat;
+                        dynfun.tru = @obj.rwdyn;
+                        dynfun.est = @obj.rwdyn;
+                        datfun.tru = @obj.rwdat;
+                        datfun.est = @obj.rwdat;
                         load estbat_test1 % Input for this file from comments below
                         options = setOdtbxOptions('MonteCarloSeed',1);
             %             tspan = 1:5;
@@ -364,10 +366,10 @@ classdef estbat < handle
             %             datarg.tru = 1; % Measurement Noise Variance
             %             datarg.est = 1; % Measurement Noise Variance
                     case 2
-                        dynfun.tru = @irwbdyn;
-                        dynfun.est = @irwdyn;          
-                        datfun.tru = @irwbdat;
-                        datfun.est = @irwdat;
+                        dynfun.tru = @obj.irwbdyn;
+                        dynfun.est = @obj.irwdyn;          
+                        datfun.tru = @obj.irwbdat;
+                        datfun.est = @obj.irwdat;
                         load estbat_test2 % Input for this file from comments below
                         options = setOdtbxOptions('MonteCarloSeed',2);
             %             tspan = 1:30;
@@ -384,10 +386,10 @@ classdef estbat < handle
             %             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
             %             datarg.est = 1.0e02^2; % Measurement Noise Variance
                     case 3
-                        dynfun.tru = @sogmbdyn;
-                        dynfun.est = @rwdyn;          
-                        datfun.tru = @sogmbdat;
-                        datfun.est = @rwdat;
+                        dynfun.tru = @obj.sogmbdat;
+                        dynfun.est = @obj.rwdyn;          
+                        datfun.tru = @obj.sogmbdat;
+                        datfun.est = @obj.rwdat;
                         load estbat_test3 % Input for this file from comments below
                         options = setOdtbxOptions('MonteCarloSeed',2);
             %             tspan = 1:30;
@@ -416,7 +418,7 @@ classdef estbat < handle
             % Note that if tspan is a 2-vector, then it will be replaced by a new tspan
             % as determined by the variable step integrator within the function integ.
             [tspan,Xref,Phi,Qd] = integ(dynfun.tru,tspan,Xo,options,dynarg.tru);
-            [t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options,dynarg.est);
+            [obj.t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options,dynarg.est);
             Yref = feval(datfun.tru,tspan,Xref,datarg.tru);
             Ybar = feval(datfun.est,tspan,Xsref,datarg.est);
             [~,H,R] = ominusc(datfun.tru,tspan,Xref,Yref,options,[],datarg.tru);
@@ -424,18 +426,18 @@ classdef estbat < handle
             % nmeas = size(Yref,1);
 
             % Assign other input variables dependent on tspan, if needed
-            if nargin >= 9,
+            if num_args >= 9,
                 if isa(varargin{9},'function_handle'),
                     mapfun = varargin{9}; %TODO
                 elseif isa(varargin{9},'numeric') % constant solve-for map
                     S = repmat(varargin{9},[1,1,length(tspan)]);
                     C = zeros(0,0,length(tspan)); % in case C is not also input 
                 end
-            elseif nargin >= 4,
+            elseif num_args >= 4,
                 S = repmat(eye(size(Po)),[1,1,length(tspan)]);
                 C = zeros(0,0,length(tspan));
             end
-            if nargin >= 10, % constant consider map
+            if num_args >= 10, % constant consider map
                 C = repmat(varargin{10},[1,1,length(tspan)]);
             end
             
@@ -468,7 +470,7 @@ classdef estbat < handle
             % $$ x(t) = \tilde{S}(t) s(t) + \tilde{C}(t) c(t) $$
 
             if ~exist('S','var'),
-                [S,C] = feval(mapfun,t,Xref);
+                [S,C] = feval(mapfun,obj.t,Xref);
             end
             ns = size(S(:,:,1),1); 
             nc = size(C(:,:,1),1); 
@@ -535,7 +537,7 @@ classdef estbat < handle
             for i = lent:-1:1,
                 k = find(~isnan(Ybar(:,i)));
                 %K{i} = J\Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i));
-                K{i} = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                K{i} = obj.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
                 Ktilde{i} = Stilde(:,:,i)*K{i};
             end
 
@@ -650,18 +652,18 @@ classdef estbat < handle
             % Note that Phi(:,:,i) = Phi(ti,to), Qd(:,:,i) = Qd(ti,to), and 
             % Phi(:,:,1) = I, Qd(:,:,1) = 0
             for i = lent:-1:1,
-                Pa(:,:,i) = Phi(:,:,i)*Pao*Phi(:,:,i)'; 
-                Pv(:,:,i) = Phi(:,:,i)*Pvo*Phi(:,:,i)'; 
+                obj.Pa(:,:,i) = Phi(:,:,i)*Pao*Phi(:,:,i)'; 
+                obj.Pv(:,:,i) = Phi(:,:,i)*Pvo*Phi(:,:,i)'; 
                 if nonzeroq
                     %Nd = -cell2mat(Ktilde)*cell2mat(Nu(:,i));
                     Nd = -cell2mat(Gamma)*cell2mat(Qtilde(:,i));
-                    Pw(:,:,i) = Phi(:,:,i)*Pwo*Phi(:,:,i)' ...
+                    obj.Pw(:,:,i) = Phi(:,:,i)*Pwo*Phi(:,:,i)' ...
                         + Phi(:,:,i)*Nd + Nd'*Phi(:,:,i)' + Qd(:,:,i); 
                 else
-                    Pw(:,:,i) = Pwo; 
+                    obj.Pw(:,:,i) = Pwo; 
                 end
-                Phata(:,:,i) = Phiss(:,:,i)*Phatao*Phiss(:,:,i)'; 
-                Phatv(:,:,i) = Phiss(:,:,i)*Phatvo*Phiss(:,:,i)'; 
+                obj.Phata(:,:,i) = Phiss(:,:,i)*Phatao*Phiss(:,:,i)'; 
+                obj.Phatv(:,:,i) = Phiss(:,:,i)*Phatvo*Phiss(:,:,i)'; 
             end
 
             %%
@@ -694,7 +696,7 @@ classdef estbat < handle
 
             Sigma_ao = ImSKH*[Stilde(:,:,1), Ctilde(:,:,1)]; 
             for i = lent:-1:1,
-                Sigma_a(:,:,i) = S(:,:,1)*Phi(:,:,i)*Sigma_ao; 
+                obj.Sigma_a(:,:,i) = S(:,:,1)*Phi(:,:,i)*Sigma_ao; 
             end
             Sigma_ao = S(:,:,1)*Sigma_ao;
 
@@ -720,17 +722,17 @@ classdef estbat < handle
             % variance as a negative sandpile, and relabel the negative y-axes to
             % indicate this.
 
-            P = Pa + Pv + Pw;
-            Phat = Phata + Phatv;
-            Phatw = zeros(size(Phat));
+            P = obj.Pa + obj.Pv + obj.Pw;
+            obj.Phat = obj.Phata + obj.Phatv;
+            obj.Phatw = zeros(size(obj.Phat));
             for i = lent:-1:1,
-                dPa(:,:,i) = S(:,:,i)*Pa(:,:,i)*S(:,:,i)' - Phata(:,:,i); 
-                dPv(:,:,i) = S(:,:,i)*Pv(:,:,i)*S(:,:,i)' - Phatv(:,:,i); 
-                dPw(:,:,i) = S(:,:,i)*Pw(:,:,i)*S(:,:,i)'; 
+                dPa(:,:,i) = S(:,:,i)*obj.Pa(:,:,i)*S(:,:,i)' - obj.Phata(:,:,i); 
+                dPv(:,:,i) = S(:,:,i)*obj.Pv(:,:,i)*S(:,:,i)' - obj.Phatv(:,:,i); 
+                dPw(:,:,i) = S(:,:,i)*obj.Pw(:,:,i)*S(:,:,i)'; 
             end
 
             % Compute the true measurement error covariance Pdyt
-            [~,~,R,Pdyt] = ominusc(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
+            [~,~,R,obj.Pdyt] = ominusc(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
 
             % NOTE: For the demomode examples plotted below, the pre- and
             % post-multiplication of P_a, P_v, and P_w by S and S',
@@ -745,14 +747,14 @@ classdef estbat < handle
                         squeeze(dPa(i,i,:)),...
                         squeeze(dPv(i,i,:)),...
                         squeeze(dPw(i,i,:)),...
-                        squeeze(Pa(i,i,:)),...
-                        squeeze(Pv(i,i,:)),...
-                        squeeze(Pw(i,i,:)),...
-                        squeeze(Phata(i,i,:)),...
-                        squeeze(Phatv(i,i,:)),...
-                        squeeze(Phatw(i,i,:)),...
+                        squeeze(obj.Pa(i,i,:)),...
+                        squeeze(obj.Pv(i,i,:)),...
+                        squeeze(obj.Pw(i,i,:)),...
+                        squeeze(obj.Phata(i,i,:)),...
+                        squeeze(obj.Phatv(i,i,:)),...
+                        squeeze(obj.Phatw(i,i,:)),...
                         squeeze(P(i,i,:)),...
-                        squeeze(Phat(i,i,:)))
+                        squeeze(obj.Phat(i,i,:)))
                 end
             end
 
@@ -777,7 +779,7 @@ classdef estbat < handle
                     'units','normalized','position',...
                     get(gca,'position')*[1 0 0 0;0 1 0 -.1;0 0 1 0;0 0 0 .1]'); 
                 ca = @(h,e) pcolor(eye(ns+1,ns)*...
-                    Sigma_a(:,:,round(get(sa,'value')))*eye(n,n+1));
+                    obj.Sigma_a(:,:,round(get(sa,'value')))*eye(n,n+1));
                 set(sa,'callback', ca)
                 ylabel('Solve-For State Index')
                 set(gca,'ydir','rev','xaxisloc','top')
@@ -869,7 +871,7 @@ classdef estbat < handle
                             Phato{j} = 0;
                         end
                         k = find(~isnan(Y{j}(:,i)));
-                        Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                        Kj = obj.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
                         ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
                         Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
                         dxo = dxo + Kj*dY(k,i);
@@ -899,16 +901,19 @@ classdef estbat < handle
 
             clear t Phat
             for j = ncases:-1:1,
-                [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
-                for i = length(t{j}):-1:1,
+                obj.t(j)
+                obj.Xhat(j)
+                Xhato{j}
+                [obj.t{j},obj.Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
+                for i = length(obj.t{j}):-1:1,
                     pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
-                    Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
-                    e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
+                    obj.Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
+                    obj.e{j}(:,i) = obj.Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
                 end
-                [y{j},~,~,Pdy{j}] = ominusc(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
+                [obj.y{j},~,~,obj.Pdy{j}] = ominusc(datfun.est,obj.t{j},obj.Xhat{j},Y{j},options,unscrunch(obj.Phat{j}),datarg.est); 
             end
             if demomode,
-                estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
+                estval(obj.t,obj.e,obj.Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
                 disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
                 keyboard
             end
@@ -925,9 +930,9 @@ classdef estbat < handle
                 end
                 for k = ncases:-1:1,
                     % TODO: use chi2 test like in estseq instead of "9\sigma"
-                    dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-                    sPhat{k} = Phat_test{k} + Phat{k}; 
-                    de{k} = e_test{k} - e{k}; %#ok<USENS>
+                    dPhat{k} = Phat_test{k} - obj.Phat{k}; %#ok<USENS>
+                    sPhat{k} = Phat_test{k} + obj.Phat{k}; 
+                    de{k} = e_test{k} - obj.e{k}; %#ok<USENS>
                     % Is each error sample within 9\sigma of its corresponding test
                     % value?  Is each Phat sample "close enough," in terms of the
                     % matrix 2-norm (largest singular value) to its test value?
@@ -942,44 +947,44 @@ classdef estbat < handle
                 end
                 fail = logical([...
                     any(any(any(abs(P_test - P) > 1e-10))), ...
-                    any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
-                    any(any(any(abs(Pv_test - Pv) > 1e-10))),...
-                    any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
-                    any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
-                    any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
-                    any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
+                    any(any(any(abs(Pa_test - obj.Pa) > 1e-10))), ...
+                    any(any(any(abs(Pv_test - obj.Pv) > 1e-10))),...
+                    any(any(any(abs(Pw_test - obj.Pw) > 1e-10))), ...
+                    any(any(any(abs(Phatv_test - obj.Phatv) > 1e-10))), ...
+                    any(any(any(abs(Phata_test - obj.Phata) > 1e-10))), ...
+                    any(any(any(abs(Sigma_a_test - obj.Sigma_a) > 1e-10))), ...
                     any(any(efail)), ...
                     any(any(Pfail))]); 
                 varargout{1} = fail;
             end
 
             if nargout >= 3,
-                varargout{1} = t;
-                varargout{2} = Xhat;
-                varargout{3} = Phat;
+                varargout{1} = obj.t;
+                varargout{2} = obj.Xhat;
+                varargout{3} = obj.Phat;
             end
             if nargout >= 4,
-                varargout{4} = e;
+                varargout{4} = obj.e;
             end
             if nargout >= 5,
-                varargout{5} = y;
+                varargout{5} = obj.y;
             end
             if nargout >= 6,
-                varargout{6} = Pa;
-                varargout{7} = Pv;
-                varargout{8} = Pw;
-                varargout{9} = Phata;
-                varargout{10} = Phatv;
-                varargout{11} = Phatw;
+                varargout{6} = obj.Pa;
+                varargout{7} = obj.Pv;
+                varargout{8} = obj.Pw;
+                varargout{9} = obj.Phata;
+                varargout{10} = obj.Phatv;
+                varargout{11} = obj.Phatw;
             end
             if nargout >= 12,
-                varargout{12} = Sigma_a;
+                varargout{12} = obj.Sigma_a;
             end
             if nargout >= 13
-                varargout{13} = Pdy;
+                varargout{13} = obj.Pdy;
             end 
             if nargout >= 14
-                varargout{14} = Pdyt;
+                varargout{14} = obj.Pdyt;
             end 
         end % function
     end

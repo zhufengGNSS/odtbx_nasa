@@ -225,7 +225,7 @@ classdef estbat < handle
     
     methods
         function obj = estbat()
-            
+
         end
         
         function check_for_events(obj)
@@ -235,7 +235,7 @@ classdef estbat < handle
             % handling.
         end
         
-        function run_estimator(obj,varargin)
+        function varargout = run_estimator(obj,varargin)
             %% Input Parsing and Setup
             % Parse the input list and options structure.  Pre-allocate arrays, using a
             % cell index for the monte carlo cases, which will avoid the need for each
@@ -254,7 +254,7 @@ classdef estbat < handle
             %
             % If there are no output arguments, then plot the results of a particular
             % input self-test as a demo.
-            varargin
+            
             num_args = length(varargin); % Matlab counts the incoming object in nargin, we don't want this
             
             if(num_args == 0)
@@ -418,7 +418,7 @@ classdef estbat < handle
             % Note that if tspan is a 2-vector, then it will be replaced by a new tspan
             % as determined by the variable step integrator within the function integ.
             [tspan,Xref,Phi,Qd] = integ(dynfun.tru,tspan,Xo,options,dynarg.tru);
-            [obj.t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options,dynarg.est);
+            [t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options,dynarg.est);
             Yref = feval(datfun.tru,tspan,Xref,datarg.tru);
             Ybar = feval(datfun.est,tspan,Xsref,datarg.est);
             [~,H,R] = ominusc(datfun.tru,tspan,Xref,Yref,options,[],datarg.tru);
@@ -470,7 +470,7 @@ classdef estbat < handle
             % $$ x(t) = \tilde{S}(t) s(t) + \tilde{C}(t) c(t) $$
 
             if ~exist('S','var'),
-                [S,C] = feval(mapfun,obj.t,Xref);
+                [S,C] = feval(mapfun,t,Xref);
             end
             ns = size(S(:,:,1),1); 
             nc = size(C(:,:,1),1); 
@@ -723,8 +723,8 @@ classdef estbat < handle
             % indicate this.
 
             P = obj.Pa + obj.Pv + obj.Pw;
-            obj.Phat = obj.Phata + obj.Phatv;
-            obj.Phatw = zeros(size(obj.Phat));
+            Phat = obj.Phata + obj.Phatv;
+            obj.Phatw = zeros(size(Phat));
             for i = lent:-1:1,
                 dPa(:,:,i) = S(:,:,i)*obj.Pa(:,:,i)*S(:,:,i)' - obj.Phata(:,:,i); 
                 dPv(:,:,i) = S(:,:,i)*obj.Pv(:,:,i)*S(:,:,i)' - obj.Phatv(:,:,i); 
@@ -754,7 +754,7 @@ classdef estbat < handle
                         squeeze(obj.Phatv(i,i,:)),...
                         squeeze(obj.Phatw(i,i,:)),...
                         squeeze(P(i,i,:)),...
-                        squeeze(obj.Phat(i,i,:)))
+                        squeeze(Phat(i,i,:)))
                 end
             end
 
@@ -901,10 +901,7 @@ classdef estbat < handle
 
             clear t Phat
             for j = ncases:-1:1,
-                obj.t(j)
-                obj.Xhat(j)
-                Xhato{j}
-                [obj.t{j},obj.Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
+                [obj.t{j},obj.Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est);
                 for i = length(obj.t{j}):-1:1,
                     pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
                     obj.Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings

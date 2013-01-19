@@ -136,8 +136,13 @@ end
 % all times using a batch least squares estimation method. To do this,
 % ODTBX provides the function "estbat".
 
+myest = estbat;
+
 [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
-    estbat(@pancake_dyn,@pancake_dat,tspan,x0,P0,[],w_p,[]);
+    myest.run_estimator(@pancake_dyn,@pancake_dat,tspan,x0,P0,[],w_p,[]);
+
+% [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
+%     estbat(@pancake_dyn,@pancake_dat,tspan,x0,P0,[],w_p,[]);
 
 %% Output Results
 % It is important to know the errors incurred by an estimation process. In

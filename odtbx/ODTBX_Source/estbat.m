@@ -1,4 +1,4 @@
-classdef estbat < handle
+classdef estbat < estimator
 %   ESTBAT Batch Estimator
 %
 %   [T,X,P] = ESTBAT(DYNFUN,DATFUN,TSPAN,X0,P0) updates x0 with the
@@ -190,58 +190,27 @@ classdef estbat < handle
 % 2012-08-28 R. Mathur       Extracted regression test
 % 2013-01-16 P. Anderson     Converted to Object Oriented code
 %
-%% ESTBAT: Batch Estimator
-%
-% ESTBAT is the primary batch estimator for OD Toolbox.  The original
-% version was a fairly simple batch estimator of the sort described Tapley,
-% Schutz, and Born, and other standard textbooks.  The current version is a
-% fairly significant generalization, based primarily on the work of
-% Markley, et al. (F. L. Markley, E. Seidewitz, and M. Nicholson, "A
-% General Model for Attitude Determination Error Analysis,"  _NASA
-% Conference Publication 3011: Flight Mechanics/Estimation Theory
-% Symposium_, May 1988, pp. 3-25, and F. L. Markley, E. Seidewitz, and J.
-% Deutschmann, "Attitude Determination Error Analysis: General Model and
-% Specific Application,"  _Proceedings of the CNES Space Dynamics
-% Conference_, Toulouse, France, November 1989, pp. 251-266).
-%
-% The following mathematical specifications were published from comments
-% embedded within the m-file.
+
     properties
-        t
-        Xhat
-        Phat
-        e
-        y
-        Pa
-        Pv
-        Pw
-        Phata
-        Phatv
-        Phatw
-        Sigma_a
-        Pdy
-        Pdyt
+%         t
+%         Xhat
+%         Phat
+%         e
+%         y
+%         Pa
+%         Pv
+%         Pw
+%         Phata
+%         Phatv
+%         Phatw
+%         Sigma_a
+%         Pdy
+%         Pdyt
     end
     
     methods
         function obj = estbat()
-            % Preallocate these variables are cells (makes it faster?)
-            obj.t = {};
-            obj.Xhat = {};
-            obj.Phat = {};
-            obj.e = {};
-            obj.y = {};
-            obj.Pdy = {};
-            
-            % The rest will be preallocated automatically as arrays
-%             obj.Pa = [];
-%             obj.Pv = [];
-%             obj.Pw = [];
-%             obj.Phata = [];
-%             obj.Phatv = [];
-%             obj.Phatw = [];
-%             obj.Sigma_a = [];
-%             obj.Pdyt = [];
+
         end
         
         function check_for_events(obj)
@@ -252,6 +221,23 @@ classdef estbat < handle
         end
         
         function varargout = run_estimator(obj,varargin)
+            %% ESTBAT: Batch Estimator
+            %
+            % ESTBAT is the primary batch estimator for OD Toolbox.  The original
+            % version was a fairly simple batch estimator of the sort described Tapley,
+            % Schutz, and Born, and other standard textbooks.  The current version is a
+            % fairly significant generalization, based primarily on the work of
+            % Markley, et al. (F. L. Markley, E. Seidewitz, and M. Nicholson, "A
+            % General Model for Attitude Determination Error Analysis,"  _NASA
+            % Conference Publication 3011: Flight Mechanics/Estimation Theory
+            % Symposium_, May 1988, pp. 3-25, and F. L. Markley, E. Seidewitz, and J.
+            % Deutschmann, "Attitude Determination Error Analysis: General Model and
+            % Specific Application,"  _Proceedings of the CNES Space Dynamics
+            % Conference_, Toulouse, France, November 1989, pp. 251-266).
+            %
+            % The following mathematical specifications were published from comments
+            % embedded within the m-file.
+            
             %% Input Parsing and Setup
             % Parse the input list and options structure.  Pre-allocate arrays, using a
             % cell index for the monte carlo cases, which will avoid the need for each
@@ -363,10 +349,10 @@ classdef estbat < handle
             if testmode,
                 switch testmode
                     case 1
-                        dynfun.tru = @obj.rwdyn;
-                        dynfun.est = @obj.rwdyn;
-                        datfun.tru = @obj.rwdat;
-                        datfun.est = @obj.rwdat;
+                        dynfun.tru = @estimator.rwdyn;
+                        dynfun.est = @estimator.rwdyn;
+                        datfun.tru = @estimator.rwdat;
+                        datfun.est = @estimator.rwdat;
                         load estbat_test1 % Input for this file from comments below
                         options = setOdtbxOptions('MonteCarloSeed',1);
             %             tspan = 1:5;
@@ -382,10 +368,10 @@ classdef estbat < handle
             %             datarg.tru = 1; % Measurement Noise Variance
             %             datarg.est = 1; % Measurement Noise Variance
                     case 2
-                        dynfun.tru = @obj.irwbdyn;
-                        dynfun.est = @obj.irwdyn;          
-                        datfun.tru = @obj.irwbdat;
-                        datfun.est = @obj.irwdat;
+                        dynfun.tru = @estimator.irwbdyn;
+                        dynfun.est = @estimator.irwdyn;          
+                        datfun.tru = @estimator.irwbdat;
+                        datfun.est = @estimator.irwdat;
                         load estbat_test2 % Input for this file from comments below
                         options = setOdtbxOptions('MonteCarloSeed',2);
             %             tspan = 1:30;
@@ -402,10 +388,10 @@ classdef estbat < handle
             %             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
             %             datarg.est = 1.0e02^2; % Measurement Noise Variance
                     case 3
-                        dynfun.tru = @obj.sogmbdat;
-                        dynfun.est = @obj.rwdyn;          
-                        datfun.tru = @obj.sogmbdat;
-                        datfun.est = @obj.rwdat;
+                        dynfun.tru = @estimator.sogmbdat;
+                        dynfun.est = @estimator.rwdyn;          
+                        datfun.tru = @estimator.sogmbdat;
+                        datfun.est = @estimator.rwdat;
                         load estbat_test3 % Input for this file from comments below
                         options = setOdtbxOptions('MonteCarloSeed',2);
             %             tspan = 1:30;
@@ -553,7 +539,7 @@ classdef estbat < handle
             for i = lent:-1:1,
                 k = find(~isnan(Ybar(:,i)));
                 %K{i} = J\Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i));
-                K{i} = obj.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                K{i} = estimator.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
                 Ktilde{i} = Stilde(:,:,i)*K{i};
             end
 
@@ -887,7 +873,7 @@ classdef estbat < handle
                             Phato{j} = 0;
                         end
                         k = find(~isnan(Y{j}(:,i)));
-                        Kj = estbat.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                        Kj = estimator.robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
                         ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
                         Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
                         dxo = dxo + Kj*dY(k,i);
@@ -1000,91 +986,9 @@ classdef estbat < handle
                 varargout{14} = obj.Pdyt;
             end 
         end % function
-    end
+    end % methods
     
-    methods(Static)
-        function x = robustls(A,b)
-            % More robust least-squares solution to Ax = b.  This is based on the help
-            % for the QR function, which shows how "the least squares approximate
-            % solution to A*x = b can be found with the Q-less qr decomposition and one
-            % step of iterative refinement."
-            R = triu(qr(A));
-            x = R\(R'\(A'*b));
-            r = b - A*x;
-            e = R\(R'\(A'*r));
-            x = x + e;
-        end
 
-        % Self-test user functions
-        function [Xdot,A,Q] = rwdyn(t,X,q) % Test 1 dynfun
-            el = length(t);
-            A = zeros(1,1,el);
-            Xdot = A*X;
-            Q = q*ones(1,1,el);
-        end
-
-        function [Y,H,R] = rwdat(t,X,r) % Test 1 datfun
-            Y = X;
-            H = ones(1,1,length(t));
-            R = r*ones(1,1,length(t));
-        end
-
-        function [Xdot,A,Q] = irwbdyn(t,X,q) % Test 2 dynfun.tru
-            el = length(t);
-            A([1:3 7:8],[4:6 8]) = eye(5,4);
-            Xdot = A*X;
-            A = repmat(A,[1 1 el]);
-            Q([4:6 8],[4:6 8]) = q*eye(4);
-            Q = repmat(Q,[1 1 el]);
-        end
-        
-        function [Xdot,A,Q] = irwdyn(t,X,q) % Test 2 dynfun.est
-            el = length(t);
-            A(:,4:6) = eye(6,3);
-            Xdot = A*X;
-            A = repmat(A,[1 1 el]);
-            Q(4:6,4:6) = q*eye(3);
-            Q = repmat(Q,[1 1 el]);
-        end
-        
-        function [Xdot,A,Q] = sogmbdyn(t,X,c) % Test 3 dynfun.tru
-            el = length(t);
-            A(:,2:3) = eye(3,2);
-            A(3,2:3) = [-c.w_n^2, -2*c.zeta*c.w_n];
-            Xdot = A*X;
-            A = repmat(A,[1 1 el]);
-            Q(3,3) = c.q;
-            Q = repmat(Q,[1 1 el]);
-        end
-        
-        function [Y,H,R] = sogmbdat(t,X,r) % Test 3 datfun.tru
-            Y = X(1,:) + X(2,:);
-            H = [1 1 0];
-            H = repmat(H,[1,1,length(t)]);
-            R = r*ones(1,1,length(t));
-        end
-        
-        function [Y,H,R] = irwbdat(t,X,r) % Test 2 datfun.tru
-            el = length(t);
-            H = [eye(3) zeros(3,3) -ones(3,1) zeros(3,1)];
-            Y = H*X;
-            H = repmat(H,[1 1 el]);
-            R = r*repmat(eye(3),[1 1 el]);
-        end
-        
-        function [Y,H,R] = irwdat(t,X,r) % Test 2 datfun.est
-            el = length(t);
-            H = [eye(3) zeros(3,3)];
-            Y = H*X;
-            H = repmat(H,[1 1 el]);
-            R = r*repmat(eye(3),[1 1 el]);
-        end
-
-            
-    end
-        
-        
-        
-end
+end % Class
     
 

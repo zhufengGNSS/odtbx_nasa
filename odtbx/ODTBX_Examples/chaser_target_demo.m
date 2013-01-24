@@ -132,7 +132,10 @@ opts = setOdtbxOptions(opts,'EditRatio',9*ones(35,1));
 %% Time the Sequential Estimator
 
 tic
-[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = estseq(...
+
+myest = estseq();
+
+[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator(...
     dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts,S,C);
 toc
 

@@ -473,7 +473,7 @@ classdef estseq < estimator
             %             tspan = 1:30;
             %             ncases = 12;
             %             refint = 3;
-            %             tint = refine(tspan,refint);
+            %             tint = estimator.refine(tspan,refint);
             %             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
             %             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
             %             Po = 1e0*eye(8);
@@ -568,7 +568,7 @@ classdef estseq < estimator
                 tint = tint(1:ind);
                 Xref = Xref(:,1:ind);
             else
-                tint = refine(tspan,refint);
+                tint = estimator.refine(tspan,refint);
                 [~,Xref] = integ(dynfun.tru,tint,Xo,options,dynarg.tru);
             end
             lenti = length(tint);
@@ -737,23 +737,33 @@ classdef estseq < estimator
                 Phatmco = NaN(n,n,ncases);
             end
 
+            % Objects break the parfor "Type of First-Level Indexing" rule,
+            % so we'll have to make temporary variables to pass in and then
+            % save the variables when they come out.
+            % Consider using the preallocation above to save time?
+            Xhat = obj.Xhat;
+            Phat = obj.Phat;
+            y = obj.y;
+            eflag = obj.eflag;
+            Pdy = obj.Pdy;
+            
             parfor j = 1:ncases,
 
-                % Allocate each variable cell used in the parfor initially with NaNs.
+                % Allocate each variable cell used in the parfor initialy with NaNs.
                 % (FYI, If all accesses in the parfor occur via the same X{j} then the 
                 % parfor only moves the X{j} data in and out of the parfor.)
-                obj.Xhat{j} = NaN(length(Xbaro),lentr);
-                obj.Phat{j} = NaN([size(Pbaro),lentr]);
-                obj.y{j} = NaN(m,lentr);     % Measurement innovations
-                obj.eflag{j} = NaN(m,lentr);
-                obj.Pdy{j} = NaN(m,m,lentr); % Measurement innovations covariance
+                Xhat{j} = NaN(length(Xbaro),lentr);
+                Phat{j} = NaN([size(Pbaro),lentr]);
+                y{j} = NaN(m,lentr);     % Measurement innovations
+                eflag{j} = NaN(m,lentr);
+                Pdy{j} = NaN(m,m,lentr); % Measurement innovations covariance
 
                 if restart
-                    obj.Xhat{j}(:,1) = Xhatmco(:,j);
-                    obj.Phat{j}(:,:,1) = Phatmco(:,:,j);
+                    Xhat{j}(:,1) = Xhatmco(:,j);
+                    Phat{j}(:,:,1) = Phatmco(:,:,j);
                 else
-                    obj.Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
-                    obj.Phat{j}(:,:,1) = Pbaro;
+                    Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
+                    Phat{j}(:,:,1) = Pbaro;
                 end
 
                 for i = 1:lents,
@@ -763,17 +773,17 @@ classdef estseq < estimator
                         thisint = 1;
                     else
                         thisint = iint(ispan(i-1)):iint(ispan(i))-niter; %#ok<PFBNS>
-                        [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),obj.Xhat{j}(:,thisint(1)),options,dynarg.est);%#ok<PFBNS>
+                        [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),options,dynarg.est);%#ok<PFBNS>
                         if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
                             xdum = [xdum(:,1) xdum(:,end)];
                             phidum(:,:,2) = phidum(:,:,end);
                             sdum(:,:,2) = sdum(:,:,end);
                         end
-                        obj.Xhat{j}(:,thisint) = xdum;
+                        Xhat{j}(:,thisint) = xdum;
                         for k = 2:length(thisint)
                             sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
-                            obj.Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*obj.Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
-                            obj.Phat{j}(:,:,thisint(k)) = (obj.Phat{j}(:,:,thisint(k)) + obj.Phat{j}(:,:,thisint(k))')/2;
+                            Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
+                            Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
                         end
                     end
 
@@ -786,40 +796,40 @@ classdef estseq < estimator
                         if(upvec == 1)
 
                             if ischmidt == 1
-                                [obj.Xhat{j}(:,k),obj.Phat{j}(:,:,k),obj.eflag{j}(isel,k),obj.y{j}(isel,k),obj.Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
-                                    tspan(i),obj.Xhat{j}(:,k-1),obj.Phat{j}(:,:,k-1),Y{j}(:,i),...
+                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
+                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
                                     options,eopts.eflag,eopts.eratio,datarg.est,isel,S(:,:,i),C(:,:,i));  %#ok<PFBNS>
                             else
-                                [obj.Xhat{j}(:,k),obj.Phat{j}(:,:,k),obj.eflag{j}(isel,k),obj.y{j}(isel,k),obj.Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
-                                    tspan(i),obj.Xhat{j}(:,k-1),obj.Phat{j}(:,:,k-1),Y{j}(:,i),...
+                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
+                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
                                     options,eopts.eflag,eopts.eratio,datarg.est,isel);
                             end
 
                         else
 
-                            Xhat_tmp = obj.Xhat{j}(:,k-1);
+                            Xhat_tmp = Xhat{j}(:,k-1);
 
-                            Phat_tmp = obj.Phat{j}(:,:,k-1);
+                            Phat_tmp = Phat{j}(:,:,k-1);
 
                             % This assumes that there are always the same number of measurements for
                             % all cases for all time.
                             for bb=1:nmeas
 
                                 if ischmidt == 1
-                                    [Xhat_tmp,Phat_tmp,obj.eflag{j}(bb,k),obj.y{j}(bb,k),obj.Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
+                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
                                         tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
                                         options,eopts.eflag,eopts.eratio,datarg.est,bb,S(:,:,i),C(:,:,i)); 
                                 else
-                                    [Xhat_tmp,Phat_tmp,obj.eflag{j}(bb,k),obj.y{j}(bb,k),obj.Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
+                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
                                         tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
                                         options,eopts.eflag,eopts.eratio,datarg.est,bb); 
                                 end
 
                             end
 
-                            obj.Xhat{j}(:,k) = Xhat_tmp;
+                            Xhat{j}(:,k) = Xhat_tmp;
 
-                            obj.Phat{j}(:,:,k) = Phat_tmp;
+                            Phat{j}(:,:,k) = Phat_tmp;
 
                         end
 
@@ -828,6 +838,15 @@ classdef estseq < estimator
                 end
 
             end
+            
+            % Objects break the parfor "Type of First-Level Indexing" rule,
+            % so we made temporary variables to pass in and then
+            % save the variables when they come out.
+            obj.Xhat = Xhat;
+            obj.Phat = Phat;
+            obj.y = y;
+            obj.eflag = eflag;
+            obj.Pdy = Pdy;
 
 
             %% Estimation Error Ensemble

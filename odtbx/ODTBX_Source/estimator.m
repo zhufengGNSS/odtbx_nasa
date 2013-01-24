@@ -43,7 +43,7 @@ classdef estimator < handle
             % overwrite this function with the function that will run the
             % estimator.
         end
-    end
+    end % Methods
     
     methods(Static)
         function x = robustls(A,b)
@@ -122,6 +122,11 @@ classdef estimator < handle
             H = repmat(H,[1 1 el]);
             R = r*repmat(eye(3),[1 1 el]);
         end
-    end % Static methods
+        
+        function y = refine(u,refine)
+            y = [reshape([u(1:end-1);repmat(u(1:end-1),refine,1)+...
+            cumsum(repmat(diff(u)/(refine+1),refine,1),1)],[],1);u(end)]';
+        end
+    end % Methods (Static)
 end % Class
 

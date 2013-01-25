@@ -115,6 +115,7 @@ measopts = setOdtbxOptions(measopts,'epoch',epoch);
 measopts = setOdtbxOptions(measopts,'UseRange',true);
 measopts = setOdtbxOptions(measopts,'UseRangeRate',false);
 measopts = setOdtbxOptions(measopts,'rsigma',rsigma);
+
 measopts.('AntennaPattern') = {'sensysmeas_ant.txt' 'sensysmeas_ant.txt'}; 
 measopts.('AntennaPointing') = [1 -1];
 measopts.('RecAcqThresh') = 19;
@@ -127,6 +128,8 @@ measopts.sig = sigma;
 opts = setOdtbxOptions('MonteCarloCases',1,'UpdateIterations',1);
 opts = setOdtbxOptions(opts,'EditFlag',2*ones(35,1));
 opts = setOdtbxOptions(opts,'EditRatio',9*ones(35,1));
+% opts = setOdtbxOptions(opts,'Refint',-3);
+
 
 %
 %% Time the Sequential Estimator

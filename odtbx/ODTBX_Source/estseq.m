@@ -159,7 +159,7 @@ classdef estseq < estimator
 %  more details.)
 
 % ODTBX: Orbit Determination Toolbox
-% 
+% or sugar for that matter)
 % Copyright (c) 2003-2011 United States Government as represented by the
 % administrator of the National Aeronautics and Space Administration. All
 % Other Rights Reserved.
@@ -568,12 +568,35 @@ classdef estseq < estimator
                 tint = tint(1:ind);
                 Xref = Xref(:,1:ind);
             else
-                tint = estimator.refine(tspan,refint);
-                [~,Xref] = integ(dynfun.tru,tint,Xo,options,dynarg.tru);
+                % Originally this section looked like this:
+%                 tint = estimator.refine(tspan,refint);
+%                 [~,Xref] = integ(dynfun.tru,tint,Xo,options,dynarg.tru);
+
+                % It was changed to this so we could have access to the
+                % intermediate stages
+                xinit     = Xo;
+                tint      = NaN(1,lents*100);
+                Xref      = NaN(length(Xo),lents*100);
+                tint(1)   = tspan(1); % Time vector including intermediate points
+                Xref(:,1) = Xo;      % True states at measurement points tspan only
+                ind = 1;
+                for i = 1:lents-1
+                    tspan(i:i+1)
+                    ti = estimator.refine(tspan(i:i+1),refint)
+                    [~,xi] = integ(dynfun.tru,ti,xinit,options,dynarg.tru);
+                    len = length(ti);
+                    tint(ind+1:ind+len-1) = ti(2:end)';
+                    Xref(:,ind+1:ind+len-1) = xi(:,2:end);
+                    xinit = xi(:,end);
+                    ind = ind+len-1;
+                end
+                tint = tint(1:ind);
+                Xref = Xref(:,1:ind);
             end
             lenti = length(tint);
-            [~,Xsref] = integ(dynfun.est,tint,Xbaro,options,dynarg.est);
 
+            [~,Xsref] = integ(dynfun.est,tint,Xbaro,options,dynarg.est);
+            
             % Indices within tint that point back to tspan, i.e., tint(ispan)=tspan
             [~,ispan] = ismember(tspan,tint);
 

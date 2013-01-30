@@ -233,11 +233,25 @@ classdef estseq < estimator
             
         end
         
-        function check_for_events(obj)
+        function check_time_events(obj)
             % This is a dummy function that will be supersceded by a
             % subclass function of the same name. Calls to this function
             % will be inserted into the estimator to facilitate event
             % handling.            
+        end
+        
+        function check_state_events(obj)
+            % This is a dummy function that will be supersceded by a
+            % subclass function of the same name. Calls to this function
+            % will be inserted into the estimator to facilitate event
+            % handling.
+        end
+        
+        function check_error_events(obj)
+            % This is a dummy function that will be supersceded by a
+            % subclass function of the same name. Calls to this function
+            % will be inserted into the estimator to facilitate event
+            % handling.
         end
         
         function varargout = run_estimator(obj,varargin)
@@ -559,6 +573,8 @@ classdef estseq < estimator
                 ind = 1;
                 for i = 1:lents-1
                     [ti,xi] = integ(dynfun.tru,tspan(i:i+1),xinit,options,dynarg.tru);
+                    check_time_events(obj);
+                    check_state_events(obj);
                     len = length(ti);
                     tint(ind+1:ind+len-1) = ti(2:end)';
                     Xref(:,ind+1:ind+len-1) = xi(:,2:end);
@@ -573,7 +589,7 @@ classdef estseq < estimator
 %                 [~,Xref] = integ(dynfun.tru,tint,Xo,options,dynarg.tru);
 
                 % It was changed to this so we could have access to the
-                % intermediate stages
+%                 intermediate stages for controls
                 xinit     = Xo;
                 tint      = NaN(1,lents*100);
                 Xref      = NaN(length(Xo),lents*100);
@@ -581,9 +597,10 @@ classdef estseq < estimator
                 Xref(:,1) = Xo;      % True states at measurement points tspan only
                 ind = 1;
                 for i = 1:lents-1
-                    tspan(i:i+1)
-                    ti = estimator.refine(tspan(i:i+1),refint)
+                    ti = estimator.refine(tspan(i:i+1),refint);
+                    check_time_events(obj);
                     [~,xi] = integ(dynfun.tru,ti,xinit,options,dynarg.tru);
+                    check_state_events(obj);
                     len = length(ti);
                     tint(ind+1:ind+len-1) = ti(2:end)';
                     Xref(:,ind+1:ind+len-1) = xi(:,2:end);

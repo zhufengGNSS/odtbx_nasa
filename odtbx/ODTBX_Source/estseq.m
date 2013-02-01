@@ -208,28 +208,329 @@ classdef estseq < estimator
 
     
     properties
-%         t
-%         Xhat
-%         Phat
-%         e
-%         y
-%         Pa
-%         Pv
-%         Pw
-%         Phata
-%         Phatv
-%         Phatw
-%         Sig_sa
-%         eflag
-%         Pdy
-%         Pdyt
-%         Pm
-%         Phatm
-%         restartRecord
+        restart = 0;
+        testmode
+        demomode
+        Xmco
+        Xhatmco
+        Xo
+        Xbaro
+        Po
+        Pbaro
+        Phatmco
+        Pao
+        Pvo
+        Pwo
+        Pmo
+        Phatao
+        Phatvo
+        Phatwo
+        Phatmo
+        Sig_ao
+        dynfun
+        datfun
+        dynarg
+        datarg
+        options
+        S
+        C
+        tspan
+        upvec
+        ncases
+        niter
+        refint
+        ischmidt
+        jOptions
+        measOptions
     end
     
     methods
-        function obj = estseq()
+        function obj = estseq(varargin)
+            %% Input Parsing and Setup
+            % Parse the input list and options structure.  Pre-allocate arrays, using a
+            % cell index for the monte carlo cases, which will avoid the need for each
+            % case to have time series at common sample times.  Use an extra dimension
+            % "on the right" within each monte carlo case to accomodate the time
+            % series, which will avoid the need for conversions from cell to double for
+            % plotting.  Where it makes sense, use cell indices to partition
+            % large matrices into submatrices, to avoid the need for opaque indexing
+            % computations.
+            %
+            % This should be a subfunction, or if there is a lot of commonality with
+            % estbat's version, a private function.
+            %
+            % The full self-test has been extracted to estseq_test.m to conform to
+            % the new regression testing framework.
+            %
+            % If there are no output arguments, then plot the results of a particular
+            % input self-test as a demo.
+
+            num_args = length(varargin); % Matlab counts the incoming object in nargin, we don't want this
+            
+            if(num_args == 0)
+                error('estseq no longer supports zero-input regression testing. Please use estseq_test.');
+            end
+
+            % testmode specifies which self test to run
+            if num_args == 1,
+                obj.testmode = varargin{1};
+            else
+                obj.testmode = false;
+            end
+
+            if num_args == 2
+                obj.restart = 1;
+                obj.restartRecord = varargin{1};
+                obj.Xmco = obj.restartRecord.Xo;
+                obj.Xhatmco = obj.restartRecord.Xhato;
+                obj.Xo = obj.restartRecord.Xrefo;
+                obj.Xbaro = obj.restartRecord.Xsrefo;
+                obj.Phatmco = obj.restartRecord.Phato;
+                obj.Pao = obj.restartRecord.Pao;
+                obj.Pvo = obj.restartRecord.Pvo;
+                obj.Pwo = obj.restartRecord.Pwo;
+                obj.Pmo = obj.restartRecord.Pmo;
+                obj.Phatao = obj.restartRecord.Phatao;
+                obj.Phatvo = obj.restartRecord.Phatvo;
+                obj.Phatwo = obj.restartRecord.Phatwo;
+                obj.Phatmo = obj.restartRecord.Phatmo;
+                obj.Sig_ao = obj.restartRecord.Sig_ao;
+                obj.dynfun = obj.restartRecord.dynfun;
+                obj.datfun = obj.restartRecord.datfun;
+                obj.dynarg = obj.restartRecord.dynarg;
+                obj.datarg = obj.restartRecord.datarg;
+                obj.options = obj.restartRecord.options;
+                obj.S = obj.restartRecord.S;
+                obj.C = obj.restartRecord.C;
+                obj.tspan = varargin{2};
+                obj.tspan = obj.tspan(:)';
+            else 
+                obj.restart = 0;
+            end
+            if num_args >= 5,
+                if all(isfield(varargin{1}, {'tru','est'})),
+                    obj.dynfun = varargin{1};
+                else
+                    obj.dynfun.tru = varargin{1};
+                    obj.dynfun.est = varargin{1};
+                end
+                if all(isfield(varargin{2}, {'tru','est'})),
+                    obj.datfun = varargin{2};
+                else
+                    obj.datfun.tru = varargin{2};
+                    obj.datfun.est = varargin{2};
+                end
+                obj.tspan = varargin{3};
+                obj.tspan = obj.tspan(:)';
+                if isstruct(varargin{4}),
+                    obj.Xo = varargin{4}.Xo;
+                    obj.Xbaro = varargin{4}.Xbaro;
+                else
+                    obj.Xo = varargin{4};
+                    obj.Xbaro = varargin{4};
+                end
+                if isstruct(varargin{5}),
+                    obj.Po = varargin{5}.Po;
+                    obj.Pbaro = varargin{5}.Pbaro;
+                else
+                    obj.Po = varargin{5};
+                    obj.Pbaro = varargin{5};
+                end
+                if isempty(obj.Po) || isempty(obj.Pbaro)
+                    error('Initial covariance must be set!')
+                end
+            elseif num_args ~= 0 && num_args ~= 1 && num_args ~= 2
+                error('There must be at least 5 inputs! (dynfun,datfun,tspan,Xo,Po)')
+            end
+            if num_args >=6,
+                obj.options = varargin{6};
+            elseif num_args ~= 2
+                obj.options = setOdtbxOptions('OdeSolvOpts',odeset);
+            end
+            obj.upvec = getOdtbxOptions(obj.options,'UpdateVectorized',1);
+            obj.ncases = getOdtbxOptions(obj.options,'MonteCarloCases',1);
+            obj.niter = getOdtbxOptions(obj.options,'UpdateIterations',1); % Default is 1
+            obj.refint = getOdtbxOptions(obj.options,'refint',3);
+
+            if num_args >= 7,
+                if all(isfield(varargin{7}, {'tru','est'}))
+                    obj.dynarg = varargin{7};
+                else
+                    obj.dynarg.tru = varargin{7};
+                    obj.dynarg.est = varargin{7};
+                end
+            elseif num_args >= 5,
+                obj.dynarg.tru = [];
+                obj.dynarg.est = [];
+            end
+            if num_args >= 8,
+                if all(isfield(varargin{8}, {'tru','est'}))
+                    obj.datarg = varargin{8};
+                else
+                    obj.datarg.tru = varargin{8};
+                    obj.datarg.est = varargin{8};
+                end
+            elseif num_args >= 5,
+                obj.datarg.tru = [];
+                obj.datarg.est = [];
+            end
+            % TODO: Need to make sure having 3-D C matrix won't mess up Schmidt-Kalman option
+            if num_args >= 9,
+                if isa(varargin{9},'function_handle'),
+                    mapfun = varargin{9}; %#ok<NASGU> %TODO
+                elseif isa(varargin{9},'numeric') % constant solve-for map
+                    obj.S = varargin{9};
+                    obj.C = []; %zeros(0,0,length(tspan)); % in case C is not input, solve for all states
+                end
+            elseif num_args >= 5, % If S & C not input, solve for all states
+                obj.S = eye(size(obj.Po));
+                obj.C = []; %zeros(0,0,length(tspan));
+            end
+            if num_args >= 10, % constant consider map
+                obj.C = varargin{10}; %repmat(varargin{10},[1,1,length(tspan)]);
+            end
+            obj.ischmidt = getOdtbxOptions(obj.options,'SchmidtKalman',0);
+
+            if nargout == 0,
+                obj.demomode = true;
+            else
+                obj.demomode = false;
+            end
+
+            if obj.testmode,
+                switch obj.testmode
+                    case 1
+                        obj.dynfun.tru = @rwdyn;
+                        obj.dynfun.est = @rwdyn;
+                        obj.datfun.tru = @rwdat;
+                        obj.datfun.est = @rwdat;
+                        load('estseq_test1.mat')
+                        obj.niter = 3;
+                        obj.options = setOdtbxOptions('MonteCarloSeed',1);
+                        obj.options = setOdtbxOptions(obj.options,'EditFlag',2);
+            %             Input for this file from comments below
+            %             tspan = 1:5;
+            %             ncases = 125;
+            %             refint = 31;
+            %             S = ones(1,1,length(tint));
+            %             C = zeros(0,0,length(tint));
+            %             Po = 10;
+            %             Pbaro = 10;
+            %             Xo = 0;
+            %             Xbaro = 0;
+            %             dynarg.tru = 1; % Process Noise PSD
+            %             dynarg.est = 0; % Process Noise PSD
+            %             datarg.tru = 1; % Measurement Noise Variance
+            %             datarg.est = 1; % Measurement Noise Variance
+                    case 2 % Consider covariance
+                        obj.dynfun.tru = @irwbdyn;
+                        obj.dynfun.est = @irwdyn;
+                        obj.datfun.tru = @irwbdat;
+                        obj.datfun.est = @irwdat;
+                        load('estseq_test2.mat')
+                        obj.niter = 3;
+                        obj.options = setOdtbxOptions('MonteCarloSeed',2);
+                        obj.options = setOdtbxOptions(obj.options,'EditFlag',[2 2 2]);
+                        obj.refint = 3;
+            %             Input for this file from comments below
+            %             tspan = 1:30;
+            %             ncases = 12;
+            %             refint = 3;
+            %             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
+            %             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
+            %             Po = 1e0*eye(8);
+            %             Po(7:8,7:8) = 2e0*eye(2);
+            %             Pbaro = 2e0*eye(6);
+            %             Xo = zeros(8,1);
+            %             Xbaro = zeros(6,1);
+            %             dynarg.tru = 1e-6; % Process Noise PSD
+            %             dynarg.est = 1e-2; % Process Noise PSD
+            %             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
+            %             datarg.est = 1.0e02^2; % Measurement Noise Variance
+                    case 3 % Schmidt Kalman filter version of case 2
+                        obj.ischmidt = 1;
+                        obj.dynfun.tru = @irwbdyn;
+                        obj.dynfun.est = @irwbdyn;% Modified from test2
+                        obj.datfun.tru = @irwbdat;
+                        obj.datfun.est = @irwbdat;% Modified from test2
+                        load('estseq_test3.mat')
+                        obj.niter = 3;
+                        obj.options = setOdtbxOptions('MonteCarloSeed',3);
+                        obj.options = setOdtbxOptions(obj.options,'EditFlag',[2 2 2]);
+            %             Input for this file from comments below
+            %             tspan = 1:30;
+            %             ncases = 12;
+            %             refint = 3;
+            %             tint = estimator.refine(tspan,refint);
+            %             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
+            %             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
+            %             Po = 1e0*eye(8);
+            %             Po(7:8,7:8) = 2e0*eye(2);
+            %             Pbaro = 2e0*eye(8);    % Modified from test2
+            %             Xo = zeros(8,1);
+            %             Xbaro = zeros(8,1);    % Modified from test2
+            %             dynarg.tru = 1e-6;     % Process Noise PSD
+            %             dynarg.est = 1e-2;     % Process Noise PSD
+            %             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
+            %             datarg.est = 1.0e02^2; % Measurement Noise Variance
+                    case 4 % Estimation using JAT forces
+                        obj.dynfun.tru = @jatForces_km;
+                        obj.dynfun.est = obj.dynfun.tru;
+                        obj.datfun.tru = @gsmeas;
+                        obj.datfun.est = obj.datfun.tru;
+                        obj.jOptions    = odtbxOptions('force');
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'epoch', JATConstant('MJDJ2000') );
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'cD', 2.2);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'cR', 0.7);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'mass', 1000);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'draga', 20, 'srpArea', 20);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'earthGravityModel', '2body');
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'gravDeg', 2, 'gravOrder', 2);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'useSolarGravity', false);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'useLunarGravity', false);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'useSolarRadiationPressure', false);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'useAtmosphericDrag', false);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'atmosphereModel', 'HP');
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'nParameterForHPModel', 2);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'f107Daily', 150);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'f107Average', 150);
+                        obj.jOptions    = setOdtbxOptions(obj.jOptions, 'ap', 15);
+                        obj.dynarg.tru = createJATWorld(obj.jOptions); 
+                        obj.dynarg.est = obj.dynarg.tru;
+                        obj.S = eye(6);            % Solve-for map - solve for all 6 states
+                        obj.Xo = [6878;0.00;0.00;0.00;0.00;8.339];       % km & km/sec                     
+                        obj.Xbaro = obj.S*obj.Xo;
+                        obj.Po = diag([1e-2 1e-4 1e-1 1e-4 1e-7 1e-5].^2); % km^2 & km^2/s^2
+                        obj.Pbaro = obj.S*obj.Po*obj.S';
+                        obj.C=[];
+                        epoch   = datenum(2006,12,31,23,59,38.3);
+                        gsID    = {'ZZOD'};
+                        gsList  = createGroundStationList('DBS_NDOSL_WGS84_Mod_Example.txt');
+                        measOptions = odtbxOptions('measurement');
+                        measOptions = setOdtbxOptions(measOptions,'epoch',epoch);
+                        measOptions = setOdtbxOptions(measOptions,'useRange',true);
+                        measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
+                        measOptions = setOdtbxOptions(measOptions,'useRangerate',true);
+                        measOptions = setOdtbxOptions(measOptions,'useDoppler',false);
+                        measOptions = setOdtbxOptions(measOptions,'rSigma',[1e-3 1e-6]);
+                        measOptions = setOdtbxOptions(measOptions,'useTroposphere',false);
+                        measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
+                        measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',0);
+                        measOptions = setOdtbxOptions(measOptions,'gsList',gsList);
+                        datarg.tru  = measOptions;
+                        datarg.est  = setOdtbxOptions(datarg.tru,'rSigma',3*[1e-3 1e-6]);
+                        tspan   = 0:10:300; 
+                        options = odtbxOptions('estimator');
+                        options = setOdtbxOptions(options, 'UpdateIterations',2,'MonteCarloCases',2,...
+                            'MonteCarloSeed', 1, 'OdeSolver',@ode113,'OdeSolvOpts',...
+                            odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10));
+                        options = setOdtbxOptions(options,'EditFlag',[2 2]);
+                        options = setOdtbxOptions(options,'MonteCarloCases',2);
+                        niter = 2;
+                        load('estseq_test4.mat')
+                        refint = 3;
+                end
+            end
             
         end
         
@@ -272,291 +573,6 @@ classdef estseq < estimator
             % The following mathematical specifications were published from comments
             % embedded within the m-file.
             
-            %% Input Parsing and Setup
-            % Parse the input list and options structure.  Pre-allocate arrays, using a
-            % cell index for the monte carlo cases, which will avoid the need for each
-            % case to have time series at common sample times.  Use an extra dimension
-            % "on the right" within each monte carlo case to accomodate the time
-            % series, which will avoid the need for conversions from cell to double for
-            % plotting.  Where it makes sense, use cell indices to partition
-            % large matrices into submatrices, to avoid the need for opaque indexing
-            % computations.
-            %
-            % This should be a subfunction, or if there is a lot of commonality with
-            % estbat's version, a private function.
-            %
-            % The full self-test has been extracted to estseq_test.m to conform to
-            % the new regression testing framework.
-            %
-            % If there are no output arguments, then plot the results of a particular
-            % input self-test as a demo.
-
-            num_args = length(varargin); % Matlab counts the incoming object in nargin, we don't want this
-            
-            if(num_args == 0)
-                error('estseq no longer supports zero-input regression testing. Please use estseq_test.');
-            end
-
-            % testmode specifies which self test to run
-            if num_args == 1,
-                testmode = varargin{1};
-            else
-                testmode = false;
-            end
-
-            if num_args == 2
-                restart = 1;
-                obj.restartRecord = varargin{1};
-                Xmco = obj.restartRecord.Xo;
-                Xhatmco = obj.restartRecord.Xhato;
-                Xo = obj.restartRecord.Xrefo;
-                Xbaro = obj.restartRecord.Xsrefo;
-                Phatmco = obj.restartRecord.Phato;
-                Pao = obj.restartRecord.Pao;
-                Pvo = obj.restartRecord.Pvo;
-                Pwo = obj.restartRecord.Pwo;
-                Pmo = obj.restartRecord.Pmo;
-                Phatao = obj.restartRecord.Phatao;
-                Phatvo = obj.restartRecord.Phatvo;
-                Phatwo = obj.restartRecord.Phatwo;
-                Phatmo = obj.restartRecord.Phatmo;
-                Sig_ao = obj.restartRecord.Sig_ao;
-                dynfun = obj.restartRecord.dynfun;
-                datfun = obj.restartRecord.datfun;
-                dynarg = obj.restartRecord.dynarg;
-                datarg = obj.restartRecord.datarg;
-                options = obj.restartRecord.options;
-                S = obj.restartRecord.S;
-                C = obj.restartRecord.C;
-                tspan = varargin{2};
-                tspan = tspan(:)';
-            else 
-                restart = 0;
-            end
-            if num_args >= 5,
-                if all(isfield(varargin{1}, {'tru','est'})),
-                    dynfun = varargin{1};
-                else
-                    dynfun.tru = varargin{1};
-                    dynfun.est = varargin{1};
-                end
-                if all(isfield(varargin{2}, {'tru','est'})),
-                    datfun = varargin{2};
-                else
-                    datfun.tru = varargin{2};
-                    datfun.est = varargin{2};
-                end
-                tspan = varargin{3};
-                tspan = tspan(:)';
-                if isstruct(varargin{4}),
-                    Xo = varargin{4}.Xo;
-                    Xbaro = varargin{4}.Xbaro;
-                else
-                    Xo = varargin{4};
-                    Xbaro = varargin{4};
-                end
-                if isstruct(varargin{5}),
-                    Po = varargin{5}.Po;
-                    Pbaro = varargin{5}.Pbaro;
-                else
-                    Po = varargin{5};
-                    Pbaro = varargin{5};
-                end
-                if isempty(Po) || isempty(Pbaro)
-                    error('Initial covariance must be set!')
-                end
-            elseif num_args ~= 0 && num_args ~= 1 && num_args ~= 2
-                error('There must be at least 5 inputs! (dynfun,datfun,tspan,Xo,Po)')
-            end
-            if num_args >=6,
-                options = varargin{6};
-            elseif num_args ~= 2
-                options = setOdtbxOptions('OdeSolvOpts',odeset);
-            end
-            upvec = getOdtbxOptions(options,'UpdateVectorized',1);
-            ncases = getOdtbxOptions(options,'MonteCarloCases',1);
-            niter = getOdtbxOptions(options,'UpdateIterations',1); % Default is 1
-            refint = getOdtbxOptions(options,'refint',3);
-
-            if num_args >= 7,
-                if all(isfield(varargin{7}, {'tru','est'}))
-                    dynarg = varargin{7};
-                else
-                    dynarg.tru = varargin{7};
-                    dynarg.est = varargin{7};
-                end
-            elseif num_args >= 5,
-                dynarg.tru = [];
-                dynarg.est = [];
-            end
-            if num_args >= 8,
-                if all(isfield(varargin{8}, {'tru','est'}))
-                    datarg = varargin{8};
-                else
-                    datarg.tru = varargin{8};
-                    datarg.est = varargin{8};
-                end
-            elseif num_args >= 5,
-                datarg.tru = [];
-                datarg.est = [];
-            end
-            % TODO: Need to make sure having 3-D C matrix won't mess up Schmidt-Kalman option
-            if num_args >= 9,
-                if isa(varargin{9},'function_handle'),
-                    mapfun = varargin{9}; %#ok<NASGU> %TODO
-                elseif isa(varargin{9},'numeric') % constant solve-for map
-                    S = varargin{9};
-                    C = []; %zeros(0,0,length(tspan)); % in case C is not input, solve for all states
-                end
-            elseif num_args >= 5, % If S & C not input, solve for all states
-                S = eye(size(Po));
-                C = []; %zeros(0,0,length(tspan));
-            end
-            if num_args >= 10, % constant consider map
-                C = varargin{10}; %repmat(varargin{10},[1,1,length(tspan)]);
-            end
-            ischmidt = getOdtbxOptions(options,'SchmidtKalman',0);
-
-            if nargout == 0,
-                demomode = true;
-            else
-                demomode = false;
-            end
-
-            if testmode,
-                switch testmode
-                    case 1
-                        dynfun.tru = @rwdyn;
-                        dynfun.est = @rwdyn;
-                        datfun.tru = @rwdat;
-                        datfun.est = @rwdat;
-                        load('estseq_test1.mat')
-                        niter = 3;
-                        options = setOdtbxOptions('MonteCarloSeed',1);
-                        options = setOdtbxOptions(options,'EditFlag',2);
-            %             Input for this file from comments below
-            %             tspan = 1:5;
-            %             ncases = 125;
-            %             refint = 31;
-            %             S = ones(1,1,length(tint));
-            %             C = zeros(0,0,length(tint));
-            %             Po = 10;
-            %             Pbaro = 10;
-            %             Xo = 0;
-            %             Xbaro = 0;
-            %             dynarg.tru = 1; % Process Noise PSD
-            %             dynarg.est = 0; % Process Noise PSD
-            %             datarg.tru = 1; % Measurement Noise Variance
-            %             datarg.est = 1; % Measurement Noise Variance
-                    case 2 % Consider covariance
-                        dynfun.tru = @irwbdyn;
-                        dynfun.est = @irwdyn;
-                        datfun.tru = @irwbdat;
-                        datfun.est = @irwdat;
-                        load('estseq_test2.mat')
-                        niter = 3;
-                        options = setOdtbxOptions('MonteCarloSeed',2);
-                        options = setOdtbxOptions(options,'EditFlag',[2 2 2]);
-                        refint = 3;
-            %             Input for this file from comments below
-            %             tspan = 1:30;
-            %             ncases = 12;
-            %             refint = 3;
-            %             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
-            %             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
-            %             Po = 1e0*eye(8);
-            %             Po(7:8,7:8) = 2e0*eye(2);
-            %             Pbaro = 2e0*eye(6);
-            %             Xo = zeros(8,1);
-            %             Xbaro = zeros(6,1);
-            %             dynarg.tru = 1e-6; % Process Noise PSD
-            %             dynarg.est = 1e-2; % Process Noise PSD
-            %             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-            %             datarg.est = 1.0e02^2; % Measurement Noise Variance
-                    case 3 % Schmidt Kalman filter version of case 2
-                        ischmidt = 1;
-                        dynfun.tru = @irwbdyn;
-                        dynfun.est = @irwbdyn;% Modified from test2
-                        datfun.tru = @irwbdat;
-                        datfun.est = @irwbdat;% Modified from test2
-                        load('estseq_test3.mat')
-                        niter = 3;
-                        options = setOdtbxOptions('MonteCarloSeed',3);
-                        options = setOdtbxOptions(options,'EditFlag',[2 2 2]);
-            %             Input for this file from comments below
-            %             tspan = 1:30;
-            %             ncases = 12;
-            %             refint = 3;
-            %             tint = estimator.refine(tspan,refint);
-            %             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
-            %             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
-            %             Po = 1e0*eye(8);
-            %             Po(7:8,7:8) = 2e0*eye(2);
-            %             Pbaro = 2e0*eye(8);    % Modified from test2
-            %             Xo = zeros(8,1);
-            %             Xbaro = zeros(8,1);    % Modified from test2
-            %             dynarg.tru = 1e-6;     % Process Noise PSD
-            %             dynarg.est = 1e-2;     % Process Noise PSD
-            %             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-            %             datarg.est = 1.0e02^2; % Measurement Noise Variance
-                    case 4 % Estimation using JAT forces
-                        dynfun.tru = @jatForces_km;
-                        dynfun.est = dynfun.tru;
-                        datfun.tru = @gsmeas;
-                        datfun.est = datfun.tru;
-                        jOptions    = odtbxOptions('force');
-                        jOptions    = setOdtbxOptions(jOptions, 'epoch', JATConstant('MJDJ2000') );
-                        jOptions    = setOdtbxOptions(jOptions, 'cD', 2.2);
-                        jOptions    = setOdtbxOptions(jOptions, 'cR', 0.7);
-                        jOptions    = setOdtbxOptions(jOptions, 'mass', 1000);
-                        jOptions    = setOdtbxOptions(jOptions, 'draga', 20, 'srpArea', 20);
-                        jOptions    = setOdtbxOptions(jOptions, 'earthGravityModel', '2body');
-                        jOptions    = setOdtbxOptions(jOptions, 'gravDeg', 2, 'gravOrder', 2);
-                        jOptions    = setOdtbxOptions(jOptions, 'useSolarGravity', false);
-                        jOptions    = setOdtbxOptions(jOptions, 'useLunarGravity', false);
-                        jOptions    = setOdtbxOptions(jOptions, 'useSolarRadiationPressure', false);
-                        jOptions    = setOdtbxOptions(jOptions, 'useAtmosphericDrag', false);
-                        jOptions    = setOdtbxOptions(jOptions, 'atmosphereModel', 'HP');
-                        jOptions    = setOdtbxOptions(jOptions, 'nParameterForHPModel', 2);
-                        jOptions    = setOdtbxOptions(jOptions, 'f107Daily', 150);
-                        jOptions    = setOdtbxOptions(jOptions, 'f107Average', 150);
-                        jOptions    = setOdtbxOptions(jOptions, 'ap', 15);
-                        dynarg.tru = createJATWorld(jOptions); 
-                        dynarg.est = dynarg.tru;
-                        S = eye(6);            % Solve-for map - solve for all 6 states
-                        Xo = [6878;0.00;0.00;0.00;0.00;8.339];       % km & km/sec                     
-                        Xbaro = S*Xo;
-                        Po = diag([1e-2 1e-4 1e-1 1e-4 1e-7 1e-5].^2); % km^2 & km^2/s^2
-                        Pbaro = S*Po*S';
-                        C=[];
-                        epoch   = datenum(2006,12,31,23,59,38.3);
-                        gsID    = {'ZZOD'};
-                        gsList  = createGroundStationList('DBS_NDOSL_WGS84_Mod_Example.txt');
-                        measOptions = odtbxOptions('measurement');
-                        measOptions = setOdtbxOptions(measOptions,'epoch',epoch);
-                        measOptions = setOdtbxOptions(measOptions,'useRange',true);
-                        measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
-                        measOptions = setOdtbxOptions(measOptions,'useRangerate',true);
-                        measOptions = setOdtbxOptions(measOptions,'useDoppler',false);
-                        measOptions = setOdtbxOptions(measOptions,'rSigma',[1e-3 1e-6]);
-                        measOptions = setOdtbxOptions(measOptions,'useTroposphere',false);
-                        measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
-                        measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',0);
-                        measOptions = setOdtbxOptions(measOptions,'gsList',gsList);
-                        datarg.tru  = measOptions;
-                        datarg.est  = setOdtbxOptions(datarg.tru,'rSigma',3*[1e-3 1e-6]);
-                        tspan   = 0:10:300; 
-                        options = odtbxOptions('estimator');
-                        options = setOdtbxOptions(options, 'UpdateIterations',2,'MonteCarloCases',2,...
-                            'MonteCarloSeed', 1, 'OdeSolver',@ode113,'OdeSolvOpts',...
-                            odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10));
-                        options = setOdtbxOptions(options,'EditFlag',[2 2]);
-                        options = setOdtbxOptions(options,'MonteCarloCases',2);
-                        niter = 2;
-                        load('estseq_test4.mat')
-                        refint = 3;
-                end
-            end
 
             %% Reference Trajectory
             % Integrate the reference trajectory and associated variational equations
@@ -718,175 +734,10 @@ classdef estseq < estimator
             end
 
 
+            
             %% Monte Carlo Simulation
-            % Always perform at least one actual simulation as a check against
-            % linearization problems.  Generate random deviations from the reference as
-            % initial conditions for each monte carlo case.  Integrate each deviated
-            % case, and use this as truth for measurement simulation and estimation
-            % error generation.  Do this after plotting the covariance results, so the
-            % user can terminate the run if obvious problems occur, since the
-            % simulation may be slow, especially if a lot of monte carlo cases are
-            % running.
-
-            % First check consistency of the estimator opts
-            eopts = chkestopts(options,ncases,m);
-
-            % Pre-allocate arrays that need to be filled in forward-time order (the
-            % rest can be fully allocated when created).
-            [obj.t,X,obj.Xhat,obj.Phat,obj.y,Y,obj.e,dPhat,de,obj.eflag,obj.Pdy] = deal(cell(1,ncases));
-
-            % Minimally allocate Xmco for the parfor loop, if needed.
-            if ~restart
-                Xmco = deal(cell(1,ncases));
-            end
-
-            % Generate true states for each case
-            parfor j = 1:ncases,
-
-                % Allocate each variable cell used in the parfor initially with NaNs.
-                % (FYI, If all accesses in the parfor occur via the same X{j} then the 
-                % parfor only moves the X{j} data in and out of the parfor.)
-                X{j} = NaN(n,lenti);
-                Y{j} = NaN(m,lents);     % True measurements
-
-                for i = 1:lents,
-                    if i == 1,
-                        if restart
-                            X{j}(:,1) = Xmco(:,j);
-                        else
-                            X{j}(:,1) = Xref(:,1) + covsmpl(Po, 1, eopts.monteseed(j));
-                        end
-                    else
-                        for k = ispan(i-1):ispan(i)-1
-                            [~,xdum,~,sdum] = integ(dynfun.tru,tint(k:k+1),X{j}(:,k),options,dynarg.tru);
-                            X{j}(:,k+1) = xdum(:,end) + covsmpl(sdum(:,:,end));
-                        end
-                    end
-
-                    Y{j}(:,i) = feval(datfun.tru,tspan(i),X{j}(:,ispan(i)),datarg.tru)+covsmpl(R(:,:,i));
-
-                end
-
-            end
-
-            % Run Kalman Filter on the measurements generated above
-
-            % Minimally allocate these variables for the parfor loop, if needed.
-            if ~restart
-                Xhatmco = NaN(n,ncases);
-                Phatmco = NaN(n,n,ncases);
-            end
-
-            % Objects break the parfor "Type of First-Level Indexing" rule,
-            % so we'll have to make temporary variables to pass in and then
-            % save the variables when they come out.
-            % Consider using the preallocation above to save time?
-            Xhat = obj.Xhat;
-            Phat = obj.Phat;
-            y = obj.y;
-            eflag = obj.eflag;
-            Pdy = obj.Pdy;
+%             run_monte_carlo(obj);
             
-            parfor j = 1:ncases,
-
-                % Allocate each variable cell used in the parfor initialy with NaNs.
-                % (FYI, If all accesses in the parfor occur via the same X{j} then the 
-                % parfor only moves the X{j} data in and out of the parfor.)
-                Xhat{j} = NaN(length(Xbaro),lentr);
-                Phat{j} = NaN([size(Pbaro),lentr]);
-                y{j} = NaN(m,lentr);     % Measurement innovations
-                eflag{j} = NaN(m,lentr);
-                Pdy{j} = NaN(m,m,lentr); % Measurement innovations covariance
-
-                if restart
-                    Xhat{j}(:,1) = Xhatmco(:,j);
-                    Phat{j}(:,:,1) = Phatmco(:,:,j);
-                else
-                    Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
-                    Phat{j}(:,:,1) = Pbaro;
-                end
-
-                for i = 1:lents,
-
-                    % Time update
-                    if i == 1,
-                        thisint = 1;
-                    else
-                        thisint = iint(ispan(i-1)):iint(ispan(i))-niter; %#ok<PFBNS>
-                        [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),options,dynarg.est);%#ok<PFBNS>
-                        if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
-                            xdum = [xdum(:,1) xdum(:,end)];
-                            phidum(:,:,2) = phidum(:,:,end);
-                            sdum(:,:,2) = sdum(:,:,end);
-                        end
-                        Xhat{j}(:,thisint) = xdum;
-                        for k = 2:length(thisint)
-                            sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
-                            Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
-                            Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
-                        end
-                    end
-
-
-                    isel = 1:nmeas;
-
-                    % Do meas update niter times
-                    for k = (thisint(end)+1):iint(ispan(i)), 
-
-                        if(upvec == 1)
-
-                            if ischmidt == 1
-                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
-                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
-                                    options,eopts.eflag,eopts.eratio,datarg.est,isel,S(:,:,i),C(:,:,i));  %#ok<PFBNS>
-                            else
-                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
-                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
-                                    options,eopts.eflag,eopts.eratio,datarg.est,isel);
-                            end
-
-                        else
-
-                            Xhat_tmp = Xhat{j}(:,k-1);
-
-                            Phat_tmp = Phat{j}(:,:,k-1);
-
-                            % This assumes that there are always the same number of measurements for
-                            % all cases for all time.
-                            for bb=1:nmeas
-
-                                if ischmidt == 1
-                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
-                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
-                                        options,eopts.eflag,eopts.eratio,datarg.est,bb,S(:,:,i),C(:,:,i)); 
-                                else
-                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
-                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
-                                        options,eopts.eflag,eopts.eratio,datarg.est,bb); 
-                                end
-
-                            end
-
-                            Xhat{j}(:,k) = Xhat_tmp;
-
-                            Phat{j}(:,:,k) = Phat_tmp;
-
-                        end
-
-                    end
-
-                end
-
-            end
-            
-            % Objects break the parfor "Type of First-Level Indexing" rule,
-            % so we made temporary variables to pass in and then
-            % save the variables when they come out.
-            obj.Xhat = Xhat;
-            obj.Phat = Phat;
-            obj.y = y;
-            obj.eflag = eflag;
-            obj.Pdy = Pdy;
 
 
             %% Estimation Error Ensemble
@@ -1056,6 +907,180 @@ classdef estseq < estimator
             end
 
         end % Function
+        
+        function varargout = run_monte_carlo()
+            %% Monte Carlo Simulation
+            % Always perform at least one actual simulation as a check against
+            % linearization problems.  Generate random deviations from the reference as
+            % initial conditions for each monte carlo case.  Integrate each deviated
+            % case, and use this as truth for measurement simulation and estimation
+            % error generation.  Do this after plotting the covariance results, so the
+            % user can terminate the run if obvious problems occur, since the
+            % simulation may be slow, especially if a lot of monte carlo cases are
+            % running.
+
+            % First check consistency of the estimator opts
+            eopts = chkestopts(options,ncases,m);
+
+            % Pre-allocate arrays that need to be filled in forward-time order (the
+            % rest can be fully allocated when created).
+            [t,X,Xhat,Phat,y,Y,e,dPhat,de,eflag,Pdy] = deal(cell(1,ncases));
+
+            % Minimally allocate Xmco for the parfor loop, if needed.
+            if ~restart
+                Xmco = deal(cell(1,ncases));
+            end
+
+            % Generate true states for each case
+            parfor j = 1:ncases,
+
+                % Allocate each variable cell used in the parfor initially with NaNs.
+                % (FYI, If all accesses in the parfor occur via the same X{j} then the 
+                % parfor only moves the X{j} data in and out of the parfor.)
+                X{j} = NaN(n,lenti);
+                Y{j} = NaN(m,lents);     % True measurements
+
+                for i = 1:lents,
+                    if i == 1,
+                        if restart
+                            X{j}(:,1) = Xmco(:,j);
+                        else
+                            X{j}(:,1) = Xref(:,1) + covsmpl(Po, 1, eopts.monteseed(j));
+                        end
+                    else
+                        for k = ispan(i-1):ispan(i)-1
+                            [~,xdum,~,sdum] = integ(dynfun.tru,tint(k:k+1),X{j}(:,k),options,dynarg.tru);
+                            X{j}(:,k+1) = xdum(:,end) + covsmpl(sdum(:,:,end));
+                        end
+                    end
+
+                    Y{j}(:,i) = feval(datfun.tru,tspan(i),X{j}(:,ispan(i)),datarg.tru)+covsmpl(R(:,:,i));
+
+                end
+
+            end
+
+            % Run Kalman Filter on the measurements generated above
+
+            % Minimally allocate these variables for the parfor loop, if needed.
+            if ~restart
+                Xhatmco = NaN(n,ncases);
+                Phatmco = NaN(n,n,ncases);
+            end
+
+            % Objects break the parfor "Type of First-Level Indexing" rule,
+            % so we'll have to make temporary variables to pass in and then
+            % save the variables when they come out.
+            % Consider using the preallocation above to save time?
+%             Xhat = obj.Xhat;
+%             Phat = obj.Phat;
+%             y = obj.y;
+%             eflag = obj.eflag;
+%             Pdy = obj.Pdy;
+            
+            parfor j = 1:ncases,
+
+                % Allocate each variable cell used in the parfor initialy with NaNs.
+                % (FYI, If all accesses in the parfor occur via the same X{j} then the 
+                % parfor only moves the X{j} data in and out of the parfor.)
+                Xhat{j} = NaN(length(Xbaro),lentr);
+                Phat{j} = NaN([size(Pbaro),lentr]);
+                y{j} = NaN(m,lentr);     % Measurement innovations
+                eflag{j} = NaN(m,lentr);
+                Pdy{j} = NaN(m,m,lentr); % Measurement innovations covariance
+
+                if restart
+                    Xhat{j}(:,1) = Xhatmco(:,j);
+                    Phat{j}(:,:,1) = Phatmco(:,:,j);
+                else
+                    Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
+                    Phat{j}(:,:,1) = Pbaro;
+                end
+
+                for i = 1:lents,
+
+                    % Time update
+                    if i == 1,
+                        thisint = 1;
+                    else
+                        thisint = iint(ispan(i-1)):iint(ispan(i))-niter; %#ok<PFBNS>
+                        [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),options,dynarg.est);%#ok<PFBNS>
+                        if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
+                            xdum = [xdum(:,1) xdum(:,end)];
+                            phidum(:,:,2) = phidum(:,:,end);
+                            sdum(:,:,2) = sdum(:,:,end);
+                        end
+                        Xhat{j}(:,thisint) = xdum;
+                        for k = 2:length(thisint)
+                            sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
+                            Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
+                            Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
+                        end
+                    end
+
+
+                    isel = 1:nmeas;
+
+                    % Do meas update niter times
+                    for k = (thisint(end)+1):iint(ispan(i)), 
+
+                        if(upvec == 1)
+
+                            if ischmidt == 1
+                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
+                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
+                                    options,eopts.eflag,eopts.eratio,datarg.est,isel,S(:,:,i),C(:,:,i));  %#ok<PFBNS>
+                            else
+                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k)] = kalmup(datfun.est,...
+                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
+                                    options,eopts.eflag,eopts.eratio,datarg.est,isel);
+                            end
+
+                        else
+
+                            Xhat_tmp = Xhat{j}(:,k-1);
+
+                            Phat_tmp = Phat{j}(:,:,k-1);
+
+                            % This assumes that there are always the same number of measurements for
+                            % all cases for all time.
+                            for bb=1:nmeas
+
+                                if ischmidt == 1
+                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
+                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
+                                        options,eopts.eflag,eopts.eratio,datarg.est,bb,S(:,:,i),C(:,:,i)); 
+                                else
+                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = kalmup(datfun.est,...
+                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
+                                        options,eopts.eflag,eopts.eratio,datarg.est,bb); 
+                                end
+
+                            end
+
+                            Xhat{j}(:,k) = Xhat_tmp;
+
+                            Phat{j}(:,:,k) = Phat_tmp;
+
+                        end
+
+                    end
+
+                end
+
+            end
+            
+            % Objects break the parfor "Type of First-Level Indexing" rule,
+            % so we made temporary variables to pass in and then
+            % save the variables when they come out.
+%             obj.Xhat = Xhat;
+%             obj.Phat = Phat;
+%             obj.y = y;
+%             obj.eflag = eflag;
+%             obj.Pdy = Pdy;    
+        end % Function
+        
+        
     end % Methods
     
 end % Class

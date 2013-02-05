@@ -47,7 +47,7 @@ z = z-ic(3);
 dt = DelaunayTri(x,y,z);
 
 % Create TriRep object
-[tri Xb] = freeBoundary(dt);
+[tri, Xb] = freeBoundary(dt);
 tr = TriRep(tri, Xb);
 
 % Define body mass, volume, and density
@@ -87,9 +87,12 @@ tic
 [~,x] = ode113(@polydyn,tspan,x0,odeOpts,dynOpts);
 toc
 
+[~,A] = polydyn(0,x0,dynOpts);
+
 % Uncomment to generate regression test data
 % x_test = x;
-% save polydyn_data x_test
+% A_test = A;
+% save ./DataFiles/polydyn_data x_test A_test
 
 % Load test data
 load polydyn_data
@@ -98,12 +101,18 @@ load polydyn_data
 tol = 1e-9;
 
 dx = abs(x-x_test);
+dA = abs(A-A_test);
 
 if dx<tol
     f = 0;
 else
     f = 1;
     fprintf('POLYDYN Regression test failed! dx = %g\n\n',max(max(dx)))
+end
+
+if dA>tol
+    f = 1;
+    fprintf('POLYDYN Regression test failed! dA = %g\n\n',max(max(dA)))
 end
 
 end

@@ -139,7 +139,7 @@ tic
 myest = estseq();
 
 [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator(...
-    dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts,S,C);
+    dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts,S,C)
 toc
 
 %

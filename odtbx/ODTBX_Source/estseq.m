@@ -1,5 +1,5 @@
-function varargout = estseq_burn5(varargin)
-% ESTSEQ  Sequential Estimator.
+classdef estseq < estimator
+%   ESTSEQ  Sequential Estimator.
 %
 %   [T,X,P] = ESTSEQ(DYNFUN,DATFUN,TSPAN,X0,P0) with TSPAN = [T0 TFINAL]
 %   integrates the system of differential equations x' = f(t,x) from T0 to
@@ -170,708 +170,703 @@ function varargout = estseq_burn5(varargin)
 %                           (mostly replaced junk output with '~'). 
 %                           Added ominusc to measurement call allowing 
 %                           numerical computation of H.
+% 2013/02/06 Phillip Anderson   Converted to Object Oriented class
 
-%% ESTSEQ: Sequential Estimator
-%
-% ESTSEQ is the primary sequential estimator for OD Toolbox.  The original
-% version was a fairly slow Kalman estimator of the sort described Tapley,
-% Schutz, and Born, and other standard textbooks.  The current version is a
-% fairly significant generalization, based primarily on the work of
-% Markley, et al. (F. L. Markley, E. Seidewitz, and M. Nicholson, "A
-% General Model for Attitude Determination Error Analysis,"  _NASA
-% Conference Publication 3011: Flight Mechanics/Estimation Theory
-% Symposium_, May 1988, pp. 3-25, and F. L. Markley, E. Seidewitz, and J.
-% Deutschmann, "Attitude Determination Error Analysis: General Model and
-% Specific Application,"  _Proceedings of the CNES Space Dynamics
-% Conference_, Toulouse, France, November 1989, pp. 251-266).
-%
-% The following mathematical specifications were published from comments
-% embedded within the m-file.
-
-%% Input Parsing and Setup
-% Parse the input list and options structure.  Pre-allocate arrays, using a
-% cell index for the monte carlo cases, which will avoid the need for each
-% case to have time series at common sample times.  Use an extra dimension
-% "on the right" within each monte carlo case to accomodate the time
-% series, which will avoid the need for conversions from cell to double for
-% plotting.  Where it makes sense, use cell indices to partition
-% large matrices into submatrices, to avoid the need for opaque indexing
-% computations.
-%
-% This should be a subfunction, or if there is a lot of commonality with
-% estseq's version, a private function.
-%
-% If there are no input arguments, perform a built-in self-test.  If there
-% are no output arguments, then plot the results of the input self-test
-% number as a demo.
-
-if nargin >= 4,
-    if all(isfield(varargin{1}, {'tru','est'})),
-        dynfun = varargin{1};
-    else
-        dynfun.tru = varargin{1};
-        dynfun.est = varargin{1};
-    end
-    if all(isfield(varargin{2}, {'tru','est'})),
-        datfun = varargin{2};
-    else
-        datfun.tru = varargin{2};
-        datfun.est = varargin{2};
-    end
-    tspan = varargin{3};
-    if isstruct(varargin{4}),
-        Xo = varargin{4}.Xo;
-        Xbaro = varargin{4}.Xbaro;
-    else
-        Xo = varargin{4};
-        Xbaro = varargin{4};
-    end
-end
-if nargin >= 5,
-    if isstruct(varargin{5}),
-        Po = varargin{5}.Po;
-        Pbaro = varargin{5}.Pbaro;
-    else
-        Po = varargin{5};
-        Pbaro = varargin{5};
-    end
-    if isempty(Po)
-        Po = 1/eps*eye(size(Xo));
-    end
-    if isempty(Pbaro)
-        Pbaro = 1/eps*eye(size(Xo));
-    end
-elseif nargin >= 4,
-    Po = 1/eps*eye(size(Xo));
-    Pbaro = Po;
-end
-if nargin >=6,
-    options = varargin{6};
-else
-    options = setOdtbxOptions('OdeSolvOpts',odeset);
-end
-ncases = getOdtbxOptions(options,'MonteCarloCases',1);
-niter = getOdtbxOptions(options,'UpdateIterations',1); % Default is 1
-refint = 0; % TODO: Add to options
-
-if nargin >= 7,
-    if all(isfield(varargin{7}, {'tru','est'}))
-        dynarg = varargin{7};
-    else
-        dynarg.tru = varargin{7};
-        dynarg.est = varargin{7};
-    end
-elseif nargin >= 4,
-    dynarg.tru = [];
-    dynarg.est = [];
-end
-if nargin >= 8,
-    if all(isfield(varargin{8}, {'tru','est'}))
-        datarg = varargin{8};
-    else
-        datarg.tru = varargin{8};
-        datarg.est = varargin{8};
-    end
-elseif nargin >= 4,
-    datarg.tru = [];
-    datarg.est = [];
-end
-% TODO: Need to make sure having 3-D C matrix won't mess up Schmidt-Kalman option
-if nargin >= 9,
-    if isa(varargin{9},'function_handle'),
-        mapfun = varargin{9}; %#ok<NASGU> %TODO
-    elseif isa(varargin{9},'numeric') % constant solve-for map
-        S = varargin{9};
-        C = []; %zeros(0,0,length(tspan)); % in case C is not input, solve for all states
-    end
-elseif nargin >= 4, % If S & C not input, solve for all states
-    S = eye(size(Po));
-    C = []; %zeros(0,0,length(tspan));
-end
-if nargin >= 10, % constant consider map
-    C = varargin{10}; %repmat(varargin{10},[1,1,length(tspan)]);
-end
-ischmidt = getOdtbxOptions(options,'SchmidtKalman',0);
-
-% Acquire the UpdateVectorized flag and store it. The default value is 1,
-% which means to process measurments together in a vector.
-upvec = getOdtbxOptions(options, 'UpdateVectorized', 1);
-
-%% Time tag arrays
-% Compute a vector of time tags that account for updates (and possible
-% iterations) at each measurement time.
-
-% integrator outputs between meas. updates
-tint = refine(tspan,refint);
-lenti = length(tint);
-
-% indices within tint that point back to tspan, i.e., tint(ispan)=tspan
-ispan = 1:(refint+1):lenti;
-
-% accounts for updates/iterations
-titer = [reshape([repmat(tint(ispan(1:end-1)),niter+1,1);...
-    reshape(tint(~ismember(tint,tspan)),refint,[])],[],1);...
-    repmat(tint(ispan(end)),niter+1,1)]';
-lentr = length(titer);
-
-% Find indices within titer that point back to tint
-[~,iint] = ismember(tint,titer); clear junk 
-
-%%
-% *Solve-For and Consider Mapping*
-%
-% The mapping of the state-space into solve-for and consider subspaces is
-% defined according to
-%
-% $$ s(t) = S(t) x(t), \quad c(t) = C(t) x(t) $$
-%
-% $$ M(t) = \Bigl[ S(t);\, C(t) \Bigr], \quad
-% M^{-1}(t) = \Bigl[ \tilde{S}(t),\, \tilde{C}(t) \Bigr]$$
-%
-% $$ x(t) = \tilde{S}(t) s(t) + \tilde{C}(t) c(t) $$
-
-if ~exist('mapfun','var'),
-    ns = size(S(:,:,1),1);
-    nc = size(C(:,:,1),1);
-    if lentr > 1,
-        if size(S,3) > 1 || size(C,3) > 1,
-            disp('For time-varying S & C, ESTSEQ requires input of mapfun (currently not implemented).')
-            disp('Replicating S(:,:,1) & C(:,:,1) instead.')
-            S = S(:,:,1);
-            C = C(:,:,1);
-        end
-        S = repmat(S,[1,1,lentr]);
-        if isempty(C),
-            C = zeros(0,0,lentr);
-        else
-            C = repmat(C,[1,1,lentr]);
-        end
-    end
-else % TODO: implement mapfun
-    error('mapfun not implemented in this release')
-end
-n = ns + nc;
-Stilde=zeros(n,ns,lentr);
-Ctilde=zeros(n,nc,lentr);
-for i = lentr:-1:1,
-    Minv = inv([S(:,:,i);C(:,:,i)]);
-    Stilde(:,:,i) = Minv(:,1:ns); 
-    Ctilde(:,:,i) = Minv(:,ns+1:n); 
-end
-
-%% Monte Carlo Simulation
-% Always perform at least one actual simulation as a check against
-% linearization problems.  Generate random deviations from the reference as
-% initial conditions for each monte carlo case.  Integrate each deviated
-% case, and use this as truth for measurement simulation and estimation
-% error generation.  Do this after plotting the covariance results, so the
-% user can terminate the run if obvious problems occur, since the
-% simulation may be slow, especially if a lot of monte carlo cases are
-% running.
-
-% Pre-allocate arrays that need to be filled in forward-time order (the
-% rest can be fully allocated when created).
-lents = length(tspan);
-
-m = 14;
-
-[t,X,Xhat,Phat,y,Y,e,~,~,eflag,Pdy] = deal(cell(1,ncases));
-[X{:}] = deal(NaN(n,lenti));
-[Xhat{:}] = deal(NaN(length(Xbaro),lentr));
-[Phat{:}] = deal(NaN([size(Pbaro),lentr]));
-[y{:}] = deal(NaN(m,lentr));     % Measurement innovations
-[eflag{:}] = deal(NaN(m,lentr));
-[Y{:}] = deal(NaN(m,lents));     % True measurements
-[Pdy{:}] = deal(NaN(m,m,lentr)); % Measurement innovations covariance
-
-% Pre-allocate arrays for consider covariance analysis
-% True (total) covariance
-Pa    = NaN([n,n,lentr]);       % a-priori
-Pv    = NaN(size(Pa));          % measurement noise
-Pw    = NaN(size(Pa));          % process noise
-Pm    = NaN(size(Pa));
-P     = NaN(size(Pa));          % total
-Pdyt  = NaN(m,m,lentr);         % measurement innovations
-% Assumed covariance of solved for states only if ischmidt=0 otherwise
-% it is of all the states
-Phata = NaN([size(Pbaro),lentr]);
-Phatv = NaN(size(Phata));
-Phatw = NaN(size(Phata));
-Phatm = NaN(size(Phata));
-Phatt = NaN(size(Phata));
-% Covariance error of solved for states only
-dPa   = NaN([ns,ns,lentr]);
-dPv   = NaN(size(dPa));
-dPw   = NaN(size(dPa));
-dPm   = NaN(size(dPa));
-% Sensitivity matrix of all states to a-priori
-Sig_a = NaN(size(Pa));
-
-Href = NaN(m,size(P,2),lentr);
-Hsref = NaN(m,size(Pbaro,2),lentr);
-Rhat = NaN(m,m,lentr);
-R = NaN(m,m,lents);
-
-% Acquire the Monte Carlo Seed for the random number generator
-% if the user has specified it.
-monteseed     = getOdtbxOptions(options, 'MonteCarloSeed', NaN);
-monteseed_use = NaN(1,ncases); % Pre-allocate array
-
-if(~isnan(monteseed))
-
-    if((length(monteseed) ~= ncases) && (length(monteseed) ~= 1))
-
-        error('Number of Monte Carlo Seeds specified does not match the number of cases.');
-
-    elseif((ncases > 1) && (length(monteseed) == 1))
-
-        for bb=1:ncases
-
-            monteseed_use(bb) = monteseed + (bb-1);
-
-        end
-
-    else
-
-        monteseed_use = monteseed;
-
-    end
-
-else
-
-    for bb=1:ncases
-
-        monteseed_use(bb) = monteseed;
-
-    end
-
-end
-
-eratio = getOdtbxOptions(options, 'EditRatio', []); % Default is empty, meaning no meas. editing
-eflag_set  = getOdtbxOptions(options, 'EditFlag', []); % Default is empty (no meas. editing)
-
-% Run Kalman Filter on the measurements generated above
-for j = 1:ncases,
-
-    Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
-
-    Phat{j}(:,:,1) = Pbaro;
-
-    for i = 1:lents,
-
-        % Time update
-        if i == 1,
-            thisint = 1;
-            
-            X{j}(:,1) = Xo + covsmpl(Po, 1, monteseed_use(j));
-            
-            if j == 1
-                % True covariance
-                Pa(:,:,1) = Po;
-                Pv(:,:,1) = zeros(size(Po));
-                Pw(:,:,1) = zeros(size(Po));
-                Pm(:,:,1) = zeros(size(Po));
-                P(:,:,1) = Pa(:,:,1);
-                % Assumed covariance
-                Phata(:,:,1) = Pbaro;
-                Phatv(:,:,1) = zeros(size(Pbaro));
-                Phatw(:,:,1) = zeros(size(Pbaro));
-                Phatm(:,:,1) = zeros(size(Pbaro));
-                Sig_a(:,:,1) = [Stilde(:,:,1), Ctilde(:,:,1)];
-            end
-            
-        else
-            %% Combine into one big estimator for a combined state
-            
-            thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
-            [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),[],dynarg.est);
-            if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
-                xdum = [xdum(:,1) xdum(:,end)];
-                phidum(:,:,2) = phidum(:,:,end);
-                sdum(:,:,2) = sdum(:,:,end);
-            end
-            Xhat{j}(:,thisint) = xdum;
-            for k = 2:length(thisint)
-                sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
-                Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
-                Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
-            end
-            
-            [~,xdum,~,sdum] = integ(dynfun.tru,tint(i-1:i),X{j}(:,i-1),[],dynarg.tru);
-            X{j}(:,i) = xdum(:,end);%+covsmpl(sdum(:,:,end));
-            
-            % Replace with one big integrator for a combined state
-            
-           %%
-            
-            if j == 1
-                % True covariance
-                [Pw(:,:,thisint(2:end)),~,Phi] = covprop(dynfun.tru,...
-                    titer(thisint),Pw(:,:,thisint(1)),...
-                    X{1}(:,ispan(i-1):ispan(i)),options,dynarg.tru);
-                for k = 1:length(thisint)-1,
-                    Pa(:,:,thisint(k+1)) = Phi(:,:,k)*Pa(:,:,thisint(k))*Phi(:,:,k)';
-                    Pv(:,:,thisint(k+1)) = Phi(:,:,k)*Pv(:,:,thisint(k))*Phi(:,:,k)';
-                    Pm(:,:,thisint(k+1)) = Phi(:,:,k)*Pm(:,:,thisint(k))*Phi(:,:,k)';
-                    Sig_a(:,:,thisint(k+1)) = Phi(:,:,k)*Sig_a(:,:,thisint(k));
-                end
-                
-                % Assumed covariance
-                % If ischmidt=1, the Phiss corresponds to the full state transition
-                % matrix, and not just the solved-for states.  Similarly for Qdhat.
-                [Phatw(:,:,thisint(2:end)),~,Phiss] = covprop(dynfun.est,...
-                    titer(thisint),Phatw(:,:,thisint(1)),...
-                    Xhat{1}(:,ispan(i-1):ispan(i)),options,dynarg.est);
-                for k = 1:length(thisint)-1,
-                    Phata(:,:,thisint(k+1)) = ...
-                        Phiss(:,:,k)*Phata(:,:,thisint(k))*Phiss(:,:,k)';
-                    Phatv(:,:,thisint(k+1)) = ...
-                        Phiss(:,:,k)*Phatv(:,:,thisint(k))*Phiss(:,:,k)';
-                    Phatm(:,:,thisint(k+1)) = ...
-                        Phiss(:,:,k)*Phatm(:,:,thisint(k))*Phiss(:,:,k)';
-                end
-            end
-        end
+    properties
         
-        for k = 1:length(dynarg.est.targetBurn)
-            if tint(i) == dynarg.est.targetBurn(k)
-                v1 = Xhat{j}(10:12,thisint(end));
-                
-                v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
-                    Xhat{j}(:,thisint(end)),dynarg.tru),v1);
-                
-                dv = v1-Xhat{j}(10:12,thisint(end));
-                
-                disp('Target Burn...')
-                disp(dv)
-                
-                Xhat{j}(10:12,thisint(end)) = v1;
-                
-                dt = dynarg.tru.mass/dynarg.tru.thrust*norm(dv);
-                err = dynarg.tru.exError*norm(dv);
-                if err > 1e-6
-                    err = 1e-6;
-                end
-                
-                q = (err/dt)^2;
-                
-                I = eye(3,3);
-                
-                Qman(7:12,7:12) = q*[I*dt^3/3 I*dt^3/3;...
-                                     I*dt^2/2 I*dt];
-                
-                xerr = covsmpl(Qman);
-                                 
-                X{j}(7:12,i) = X{j}(7:12,i)+[zeros(3,1);dv] + xerr(7:12,1);
-                
-%                 v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
-%                     X{j}(:,i),dynarg.tru),v1);
-%                 
-%                 X{j}(10:12,i) = v1;
-                
-                disp('Execution Error')
-                disp(xerr(7:9,1))
-                                 
-                Phat{j}(:,:,thisint(end)) = Phat{j}(:,:,thisint(end))...
-                    + Qman;
-                
-                if j == 1
-                    Pm(1:12,1:12,thisint(end)) = Pm(1:12,1:12,thisint(end)) + Qman;
-                    Phatm(1:12,1:12,thisint(end)) = Phatm(:,:,thisint(end)) + Qman;
-                end
-            end
-        end
-        
-        if j == 1
-            % Covariance differences and formal covariance over prop interval
-            for k = thisint,
-                if ischmidt == 1 % Both the true and assumed are the same size
-                    dPa(:,:,k) = S(:,:,k)*(Pa(:,:,k) - Phata(:,:,j))*S(:,:,j)';
-                    dPv(:,:,k) = S(:,:,k)*(Pv(:,:,k) - Phatv(:,:,j))*S(:,:,j)';
-                    dPw(:,:,k) = S(:,:,k)*(Pw(:,:,k) - Phatw(:,:,j))*S(:,:,j)';
-                    dPm(:,:,k) = S(:,:,k)*(Pm(:,:,k) - Phatm(:,:,j))*S(:,:,j)';
+    end
+    
+    methods
+        function obj = estseq(varargin)
+            %% Input Parsing and Setup
+            % Parse the input list and options structure.  Pre-allocate arrays, using a
+            % cell index for the monte carlo cases, which will avoid the need for each
+            % case to have time series at common sample times.  Use an extra dimension
+            % "on the right" within each monte carlo case to accomodate the time
+            % series, which will avoid the need for conversions from cell to double for
+            % plotting.  Where it makes sense, use cell indices to partition
+            % large matrices into submatrices, to avoid the need for opaque indexing
+            % computations.
+            %
+            % This should be a subfunction, or if there is a lot of commonality with
+            % estseq's version, a private function.
+            %
+            % If there are no input arguments, perform a built-in self-test.  If there
+            % are no output arguments, then plot the results of the input self-test
+            % number as a demo.
+
+            if nargin >= 4,
+                if all(isfield(varargin{1}, {'tru','est'})),
+                    obj.dynfun = varargin{1};
                 else
-                    dPa(:,:,k) = S(:,:,k)*Pa(:,:,k)*S(:,:,k)' - Phata(:,:,k);
-                    dPv(:,:,k) = S(:,:,k)*Pv(:,:,k)*S(:,:,k)' - Phatv(:,:,k);
-                    dPw(:,:,k) = S(:,:,k)*Pw(:,:,k)*S(:,:,k)' - Phatw(:,:,k);
-                    dPm(:,:,k) = S(:,:,k)*Pm(:,:,k)*S(:,:,k)' - Phatm(:,:,k);
+                    obj.dynfun.tru = varargin{1};
+                    obj.dynfun.est = varargin{1};
                 end
-                Phatt(:,:,k) = Phata(:,:,k) + Phatv(:,:,k) + Phatw(:,:,k)+ Phatm(:,:,k);
-                P(:,:,k) = Pa(:,:,k) + Pv(:,:,k) + Pw(:,:,k)+ Pm(:,:,k);
-            end
-        end
-        
-        nmeas = size(Y{1}(:,1));
-        isel = 1:nmeas;
-        
-        Y{j}(:,i) = feval(datfun.tru,tspan(i),X{j}(:,i),datarg.tru);
-        [~,Href(:,:,i),R(:,:,i)] = ominusc(datfun.tru,tspan(i),X{1}(:,i),Y{j}(:,i),options,[],datarg.tru);
-        Y{j}(:,i) = Y{j}(:,i) + covsmpl(R(:,:,i)); 
-        
-        % Do meas update niter times
-        for k = (thisint(end)+1):iint(ispan(i)), 
-            
-            if(upvec == 1)
-                
-                if ischmidt == 1
-                    [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k),~] = kalmup(datfun.est,...
-                        tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
-                        options,eflag_set,eratio,datarg.est,isel,S(:,:,i),C(:,:,i)); 
+                if all(isfield(varargin{2}, {'tru','est'})),
+                    obj.datfun = varargin{2};
                 else
-                    [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k),~] = kalmup(datfun.est,...
-                        tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
-                        options,eflag_set,eratio,datarg.est,isel); 
+                    obj.datfun.tru = varargin{2};
+                    obj.datfun.est = varargin{2};
                 end
-
+                
+                obj.tspan = varargin{3};
+                
+                if isstruct(varargin{4}),
+                    obj.Xo = varargin{4}.Xo;
+                    obj.Xbaro = varargin{4}.Xbaro;
+                else
+                    obj.Xo = varargin{4};
+                    obj.Xbaro = varargin{4};
+                end
+            end
+            
+            if nargin >= 5,
+                if isstruct(varargin{5}),
+                    obj.Po = varargin{5}.Po;
+                    obj.Pbaro = varargin{5}.Pbaro;
+                else
+                    obj.Po = varargin{5};
+                    obj.Pbaro = varargin{5};
+                end
+                if isempty(obj.Po)
+                    obj.Po = 1/eps*eye(size(obj.Xo));
+                end
+                if isempty(obj.Pbaro)
+                    obj.Pbaro = 1/eps*eye(size(obj.Xo));
+                end
+            elseif nargin >= 4,
+                obj.Po = 1/eps*eye(size(obj.Xo));
+                obj.Pbaro = obj.Po;
+            end
+            
+            if nargin >=6,
+                obj.options = varargin{6};
             else
-                
-                Xhat_tmp = Xhat{j}(:,k-1);
-                
-                Phat_tmp = Phat{j}(:,:,k-1);
-                
-                % This assumes that there are always the same number of measurements for
-                % all cases for all time.
-                for bb=1:nmeas
-                    
-                    if ischmidt == 1
-                        [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k),~] = kalmup(datfun.est,...
-                            tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
-                            options,eflag_set,eratio,datarg.est,bb,S(:,:,i),C(:,:,i));
-                    else
-                        [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k),~] = kalmup(datfun.est,...
-                            tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
-                            options,eflag_set,eratio,datarg.est,bb);
+                obj.options = setOdtbxOptions('OdeSolvOpts',odeset);
+            end
+            
+            if nargin >= 7,
+                if all(isfield(varargin{7}, {'tru','est'}))
+                    obj.dynarg = varargin{7};
+                else
+                    obj.dynarg.tru = varargin{7};
+                    obj.dynarg.est = varargin{7};
+                end
+            elseif nargin >= 4,
+                obj.dynarg.tru = [];
+                obj.dynarg.est = [];
+            end
+            
+            if nargin >= 8,
+                if all(isfield(varargin{8}, {'tru','est'}))
+                    obj.datarg = varargin{8};
+                else
+                    obj.datarg.tru = varargin{8};
+                    obj.datarg.est = varargin{8};
+                end
+            elseif nargin >= 4,
+                obj.datarg.tru = [];
+                obj.datarg.est = [];
+            end
+            
+            % TODO: Need to make sure having 3-D C matrix won't mess up Schmidt-Kalman option
+            if nargin >= 9,
+                if isa(varargin{9},'function_handle'),
+                    obj.mapfun = varargin{9}; %#ok<NASGU> %TODO
+                elseif isa(varargin{9},'numeric') % constant solve-for map
+                    obj.S = varargin{9};
+                    obj.C = []; %zeros(0,0,length(tspan)); % in case C is not input, solve for all states
+                end
+            elseif nargin >= 4, % If S & C not input, solve for all states
+                obj.S = eye(size(obj.Po));
+                obj.C = []; %zeros(0,0,length(tspan));
+            end
+            if nargin >= 10, % constant consider map
+                obj.C = varargin{10}; %repmat(varargin{10},[1,1,length(tspan)]);
+            end
+        end
+        
+        function varargout = run_estimator(obj)
+            %% ESTSEQ: Sequential Estimator
+            %
+            % ESTSEQ is the primary sequential estimator for OD Toolbox.  The original
+            % version was a fairly slow Kalman estimator of the sort described Tapley,
+            % Schutz, and Born, and other standard textbooks.  The current version is a
+            % fairly significant generalization, based primarily on the work of
+            % Markley, et al. (F. L. Markley, E. Seidewitz, and M. Nicholson, "A
+            % General Model for Attitude Determination Error Analysis,"  _NASA
+            % Conference Publication 3011: Flight Mechanics/Estimation Theory
+            % Symposium_, May 1988, pp. 3-25, and F. L. Markley, E. Seidewitz, and J.
+            % Deutschmann, "Attitude Determination Error Analysis: General Model and
+            % Specific Application,"  _Proceedings of the CNES Space Dynamics
+            % Conference_, Toulouse, France, November 1989, pp. 251-266).
+            %
+            % The following mathematical specifications were published from comments
+            % embedded within the m-file.
+            
+            ncases = getOdtbxOptions(obj.options,'MonteCarloCases',1);
+            niter = getOdtbxOptions(obj.options,'UpdateIterations',1); % Default is 1
+            refint = getOdtbxOptions(obj.options,'refint',3);
+            ischmidt = getOdtbxOptions(obj.options,'SchmidtKalman',0);
+
+            % Acquire the UpdateVectorized flag and store it. The default value is 1,
+            % which means to process measurments together in a vector.
+            upvec = getOdtbxOptions(obj.options, 'UpdateVectorized', 1);
+
+
+            %% Time tag arrays
+            % Compute a vector of time tags that account for updates (and possible
+            % iterations) at each measurement time.
+
+            % integrator outputs between meas. updates
+            tint = refine(tspan,refint);
+            lenti = length(tint);
+
+            % indices within tint that point back to tspan, i.e., tint(ispan)=tspan
+            ispan = 1:(refint+1):lenti;
+
+            % accounts for updates/iterations
+            titer = [reshape([repmat(tint(ispan(1:end-1)),niter+1,1);...
+                reshape(tint(~ismember(tint,tspan)),refint,[])],[],1);...
+                repmat(tint(ispan(end)),niter+1,1)]';
+            lentr = length(titer);
+
+            % Find indices within titer that point back to tint
+            [~,iint] = ismember(tint,titer); clear junk 
+
+            %% Solve-For and Consider Mapping
+            %
+            % The mapping of the state-space into solve-for and consider subspaces is
+            % defined according to
+            %
+            % $$ s(t) = S(t) x(t), \quad c(t) = C(t) x(t) $$
+            %
+            % $$ M(t) = \Bigl[ S(t);\, C(t) \Bigr], \quad
+            % M^{-1}(t) = \Bigl[ \tilde{S}(t),\, \tilde{C}(t) \Bigr]$$
+            %
+            % $$ x(t) = \tilde{S}(t) s(t) + \tilde{C}(t) c(t) $$
+
+            if ~exist('mapfun','var'),
+                ns = size(obj.S(:,:,1),1);
+                nc = size(obj.C(:,:,1),1);
+                if lentr > 1,
+                    if size(obj.S,3) > 1 || size(obj.C,3) > 1,
+                        disp('For time-varying S & C, ESTSEQ requires input of mapfun (currently not implemented).')
+                        disp('Replicating S(:,:,1) & C(:,:,1) instead.')
+                        obj.S = obj.S(:,:,1);
+                        obj.C = obj.C(:,:,1);
                     end
-                    
+                    obj.S = repmat(obj.S,[1,1,lentr]);
+                    if isempty(obj.C),
+                        obj.C = zeros(0,0,lentr);
+                    else
+                        obj.C = repmat(obj.C,[1,1,lentr]);
+                    end
                 end
-                
-                Xhat{j}(:,k) = Xhat_tmp;
-                
-                Phat{j}(:,:,k) = Phat_tmp;
-                
+            else % TODO: implement mapfun
+                error('mapfun not implemented in this release')
             end
-            
-        end
-        
-        if j == 1
-            
-            k = thisint(end)+1;
-            
-            Ybar = feval(datfun.est,tspan(i),Xhat{1}(:,k-1),datarg.est);
-            [~,Hsref(:,:,i),Rhat(:,:,i)] = ominusc(datfun.est,tspan(i),Xhat{1}(:,k-1),Ybar,options,[],datarg.est);
-            
-            Pdyt(:,:,k-1) = (Href(:,:,i)*P(:,:,k-1)*Href(:,:,i)' + R(:,:,i));
-            
-            inan = isnan(Y{1}(:,i)) | isnan(Ybar);
-            Hsrefm = Hsref(~inan,:,i);
-            Hrefm = Href(~inan,:,i);
-            Rhatm = Rhat(~inan,~inan,i);
-            Rm = R(~inan,~inan,i);
-            
-            Pdyt(:,:,k-1) = NaN(size(R(:,:,i)));
-            Pdytm = (Hrefm*P(:,:,k-1)*Hrefm' + Rm);
-            
-            Pdyt(~inan,~inan,k-1) = Pdytm;
-            
-            % Compute the gains
-            K = Phatt(:,:,k-1)*Hsrefm'/...
-                (Hsrefm*Phatt(:,:,k-1)*Hsrefm' + Rhatm);
-            
-            if ischmidt == 1
-                
-                % We apply the gains only to the solve-for
-                K = S(:,:,i)*K;
-                
-                % Calling kalmup may have extra overhead but could allow it for
-                % iterative Kalman filter - need to flesh this out
-                %         [xtmp,Ptmp,efltmp,dytmp,Pdytemp,K] = kalmup(datfun.est,...
-                %             tspan(i),Xsref(:,i),Phat(:,:,k-1),Ybar(:,i),options,[],...
-                %             [],datarg.est,[],S(:,:,i),C(:,:,i))
-                
-                % Update the total asssumed covariance
-                ImSKH = eye(ns+nc) - Stilde(:,:,k-1)*K*Hsrefm;
-                Phata(:,:,k) = ImSKH*Phata(:,:,k-1)*ImSKH';
-                Phatv(:,:,k) = ImSKH*Phatv(:,:,k-1)*ImSKH' + ...
-                    Stilde(:,:,k-1)*K*Rhatm*K'*Stilde(:,:,k-1)';
-                Phatw(:,:,k) = ImSKH*Phatw(:,:,k-1)*ImSKH';
-                Phatm(:,:,k) = ImSKH*Phatm(:,:,k-1)*ImSKH';
-                
+            n = ns + nc;
+            Stilde=zeros(n,ns,lentr);
+            Ctilde=zeros(n,nc,lentr);
+            for i = lentr:-1:1,
+                Minv = inv([S(:,:,i);C(:,:,i)]);
+                Stilde(:,:,i) = Minv(:,1:ns); 
+                Ctilde(:,:,i) = Minv(:,ns+1:n); 
+            end
+
+            %% Monte Carlo Simulation
+            % Always perform at least one actual simulation as a check against
+            % linearization problems.  Generate random deviations from the reference as
+            % initial conditions for each monte carlo case.  Integrate each deviated
+            % case, and use this as truth for measurement simulation and estimation
+            % error generation.  Do this after plotting the covariance results, so the
+            % user can terminate the run if obvious problems occur, since the
+            % simulation may be slow, especially if a lot of monte carlo cases are
+            % running.
+
+            % Pre-allocate arrays that need to be filled in forward-time order (the
+            % rest can be fully allocated when created).
+            lents = length(tspan);
+
+            m = 14;
+
+            [t,X,Xhat,Phat,y,Y,e,~,~,eflag,Pdy] = deal(cell(1,ncases));
+            [X{:}] = deal(NaN(n,lenti));
+            [Xhat{:}] = deal(NaN(length(Xbaro),lentr));
+            [Phat{:}] = deal(NaN([size(Pbaro),lentr]));
+            [y{:}] = deal(NaN(m,lentr));     % Measurement innovations
+            [eflag{:}] = deal(NaN(m,lentr));
+            [Y{:}] = deal(NaN(m,lents));     % True measurements
+            [Pdy{:}] = deal(NaN(m,m,lentr)); % Measurement innovations covariance
+
+            % Pre-allocate arrays for consider covariance analysis
+            % True (total) covariance
+            Pa    = NaN([n,n,lentr]);       % a-priori
+            Pv    = NaN(size(Pa));          % measurement noise
+            Pw    = NaN(size(Pa));          % process noise
+            Pm    = NaN(size(Pa));
+            P     = NaN(size(Pa));          % total
+            Pdyt  = NaN(m,m,lentr);         % measurement innovations
+            % Assumed covariance of solved for states only if ischmidt=0 otherwise
+            % it is of all the states
+            Phata = NaN([size(Pbaro),lentr]);
+            Phatv = NaN(size(Phata));
+            Phatw = NaN(size(Phata));
+            Phatm = NaN(size(Phata));
+            Phatt = NaN(size(Phata));
+            % Covariance error of solved for states only
+            dPa   = NaN([ns,ns,lentr]);
+            dPv   = NaN(size(dPa));
+            dPw   = NaN(size(dPa));
+            dPm   = NaN(size(dPa));
+            % Sensitivity matrix of all states to a-priori
+            Sig_a = NaN(size(Pa));
+
+            Href = NaN(m,size(P,2),lentr);
+            Hsref = NaN(m,size(Pbaro,2),lentr);
+            Rhat = NaN(m,m,lentr);
+            R = NaN(m,m,lents);
+
+            % Acquire the Monte Carlo Seed for the random number generator
+            % if the user has specified it.
+            monteseed     = getOdtbxOptions(options, 'MonteCarloSeed', NaN);
+            monteseed_use = NaN(1,ncases); % Pre-allocate array
+
+            if(~isnan(monteseed))
+
+                if((length(monteseed) ~= ncases) && (length(monteseed) ~= 1))
+
+                    error('Number of Monte Carlo Seeds specified does not match the number of cases.');
+
+                elseif((ncases > 1) && (length(monteseed) == 1))
+
+                    for bb=1:ncases
+
+                        monteseed_use(bb) = monteseed + (bb-1);
+
+                    end
+
+                else
+
+                    monteseed_use = monteseed;
+
+                end
+
             else
-                
-                % Update the asssumed covariance
-                ImKH = eye(ns) - K*Hsrefm;
-                Phata(:,:,k) = ImKH*Phata(:,:,k-1)*ImKH';
-                Phatv(:,:,k) = ImKH*Phatv(:,:,k-1)*ImKH' + K*Rhatm*K';
-                Phatw(:,:,k) = ImKH*Phatw(:,:,k-1)*ImKH';
-                Phatm(:,:,k) = ImKH*Phatm(:,:,k-1)*ImKH';
-                
+
+                for bb=1:ncases
+
+                    monteseed_use(bb) = monteseed;
+
+                end
+
             end
-            
-            % Update the true covariance. Assign measurement noise only to
-            % measurement noise partitions of the total covariance
-            ImSKH = eye(ns+nc) - Stilde(:,:,k-1)*K*Hrefm;
-            Pa(:,:,k) = ImSKH*Pa(:,:,k-1)*ImSKH';
-            Pv(:,:,k) = ImSKH*Pv(:,:,k-1)*ImSKH' ...
-                + Stilde(:,:,k-1)*K*Rm*K'*Stilde(:,:,k-1)';
-            Pw(:,:,k) = ImSKH*Pw(:,:,k-1)*ImSKH';
-            Pm(:,:,k) = ImSKH*Pm(:,:,k-1)*ImSKH';
-            P(:,:,k) = Pa(:,:,k) + Pv(:,:,k) + Pw(:,:,k)+ Pm(:,:,k);
-            
-            % Update the sensitivity matrix to apriori
-            Sig_a(:,:,k) = ImSKH*Sig_a(:,:,k-1);
-            
-            if ischmidt == 1
-                
-                % Post-update covariance differences and formal covariance
-                dPa(:,:,k) = S(:,:,j)*(Pa(:,:,k) - Phata(:,:,k))*S(:,:,j)';
-                dPv(:,:,k) = S(:,:,j)*(Pv(:,:,k) - Phatv(:,:,k))*S(:,:,j)';
-                dPw(:,:,k) = S(:,:,j)*(Pw(:,:,k) - Phatw(:,:,k))*S(:,:,j)';
-                dPw(:,:,m) = S(:,:,j)*(Pm(:,:,k) - Phatm(:,:,k))*S(:,:,j)';
-                
+
+            eratio = getOdtbxOptions(options, 'EditRatio', []); % Default is empty, meaning no meas. editing
+            eflag_set  = getOdtbxOptions(options, 'EditFlag', []); % Default is empty (no meas. editing)
+
+            % Run Kalman Filter on the measurements generated above
+            for j = 1:ncases,
+
+                Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
+
+                Phat{j}(:,:,1) = Pbaro;
+
+                for i = 1:lents,
+
+                    % Time update
+                    if i == 1,
+                        thisint = 1;
+
+                        X{j}(:,1) = Xo + covsmpl(Po, 1, monteseed_use(j));
+
+                        if j == 1
+                            % True covariance
+                            Pa(:,:,1) = Po;
+                            Pv(:,:,1) = zeros(size(Po));
+                            Pw(:,:,1) = zeros(size(Po));
+                            Pm(:,:,1) = zeros(size(Po));
+                            P(:,:,1) = Pa(:,:,1);
+                            % Assumed covariance
+                            Phata(:,:,1) = Pbaro;
+                            Phatv(:,:,1) = zeros(size(Pbaro));
+                            Phatw(:,:,1) = zeros(size(Pbaro));
+                            Phatm(:,:,1) = zeros(size(Pbaro));
+                            Sig_a(:,:,1) = [Stilde(:,:,1), Ctilde(:,:,1)];
+                        end
+
+                    else
+                        %% Combine into one big estimator for a combined state
+
+                        thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
+                        [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),[],dynarg.est);
+                        if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
+                            xdum = [xdum(:,1) xdum(:,end)];
+                            phidum(:,:,2) = phidum(:,:,end);
+                            sdum(:,:,2) = sdum(:,:,end);
+                        end
+                        Xhat{j}(:,thisint) = xdum;
+                        for k = 2:length(thisint)
+                            sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
+                            Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
+                            Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
+                        end
+
+                        [~,xdum,~,sdum] = integ(dynfun.tru,tint(i-1:i),X{j}(:,i-1),[],dynarg.tru);
+                        X{j}(:,i) = xdum(:,end);%+covsmpl(sdum(:,:,end));
+
+                        % Replace with one big integrator for a combined state
+
+                       %%
+
+                        if j == 1
+                            % True covariance
+                            [Pw(:,:,thisint(2:end)),~,Phi] = covprop(dynfun.tru,...
+                                titer(thisint),Pw(:,:,thisint(1)),...
+                                X{1}(:,ispan(i-1):ispan(i)),options,dynarg.tru);
+                            for k = 1:length(thisint)-1,
+                                Pa(:,:,thisint(k+1)) = Phi(:,:,k)*Pa(:,:,thisint(k))*Phi(:,:,k)';
+                                Pv(:,:,thisint(k+1)) = Phi(:,:,k)*Pv(:,:,thisint(k))*Phi(:,:,k)';
+                                Pm(:,:,thisint(k+1)) = Phi(:,:,k)*Pm(:,:,thisint(k))*Phi(:,:,k)';
+                                Sig_a(:,:,thisint(k+1)) = Phi(:,:,k)*Sig_a(:,:,thisint(k));
+                            end
+
+                            % Assumed covariance
+                            % If ischmidt=1, the Phiss corresponds to the full state transition
+                            % matrix, and not just the solved-for states.  Similarly for Qdhat.
+                            [Phatw(:,:,thisint(2:end)),~,Phiss] = covprop(dynfun.est,...
+                                titer(thisint),Phatw(:,:,thisint(1)),...
+                                Xhat{1}(:,ispan(i-1):ispan(i)),options,dynarg.est);
+                            for k = 1:length(thisint)-1,
+                                Phata(:,:,thisint(k+1)) = ...
+                                    Phiss(:,:,k)*Phata(:,:,thisint(k))*Phiss(:,:,k)';
+                                Phatv(:,:,thisint(k+1)) = ...
+                                    Phiss(:,:,k)*Phatv(:,:,thisint(k))*Phiss(:,:,k)';
+                                Phatm(:,:,thisint(k+1)) = ...
+                                    Phiss(:,:,k)*Phatm(:,:,thisint(k))*Phiss(:,:,k)';
+                            end
+                        end
+                    end
+
+                    for k = 1:length(dynarg.est.targetBurn)
+                        if tint(i) == dynarg.est.targetBurn(k)
+                            v1 = Xhat{j}(10:12,thisint(end));
+
+                            v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
+                                Xhat{j}(:,thisint(end)),dynarg.tru),v1);
+
+                            dv = v1-Xhat{j}(10:12,thisint(end));
+
+                            disp('Target Burn...')
+                            disp(dv)
+
+                            Xhat{j}(10:12,thisint(end)) = v1;
+
+                            dt = dynarg.tru.mass/dynarg.tru.thrust*norm(dv);
+                            err = dynarg.tru.exError*norm(dv);
+                            if err > 1e-6
+                                err = 1e-6;
+                            end
+
+                            q = (err/dt)^2;
+
+                            I = eye(3,3);
+
+                            Qman(7:12,7:12) = q*[I*dt^3/3 I*dt^3/3;...
+                                                 I*dt^2/2 I*dt];
+
+                            xerr = covsmpl(Qman);
+
+                            X{j}(7:12,i) = X{j}(7:12,i)+[zeros(3,1);dv] + xerr(7:12,1);
+
+            %                 v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
+            %                     X{j}(:,i),dynarg.tru),v1);
+            %                 
+            %                 X{j}(10:12,i) = v1;
+
+                            disp('Execution Error')
+                            disp(xerr(7:9,1))
+
+                            Phat{j}(:,:,thisint(end)) = Phat{j}(:,:,thisint(end))...
+                                + Qman;
+
+                            if j == 1
+                                Pm(1:12,1:12,thisint(end)) = Pm(1:12,1:12,thisint(end)) + Qman;
+                                Phatm(1:12,1:12,thisint(end)) = Phatm(:,:,thisint(end)) + Qman;
+                            end
+                        end
+                    end
+
+                    if j == 1
+                        % Covariance differences and formal covariance over prop interval
+                        for k = thisint,
+                            if ischmidt == 1 % Both the true and assumed are the same size
+                                dPa(:,:,k) = S(:,:,k)*(Pa(:,:,k) - Phata(:,:,j))*S(:,:,j)';
+                                dPv(:,:,k) = S(:,:,k)*(Pv(:,:,k) - Phatv(:,:,j))*S(:,:,j)';
+                                dPw(:,:,k) = S(:,:,k)*(Pw(:,:,k) - Phatw(:,:,j))*S(:,:,j)';
+                                dPm(:,:,k) = S(:,:,k)*(Pm(:,:,k) - Phatm(:,:,j))*S(:,:,j)';
+                            else
+                                dPa(:,:,k) = S(:,:,k)*Pa(:,:,k)*S(:,:,k)' - Phata(:,:,k);
+                                dPv(:,:,k) = S(:,:,k)*Pv(:,:,k)*S(:,:,k)' - Phatv(:,:,k);
+                                dPw(:,:,k) = S(:,:,k)*Pw(:,:,k)*S(:,:,k)' - Phatw(:,:,k);
+                                dPm(:,:,k) = S(:,:,k)*Pm(:,:,k)*S(:,:,k)' - Phatm(:,:,k);
+                            end
+                            Phatt(:,:,k) = Phata(:,:,k) + Phatv(:,:,k) + Phatw(:,:,k)+ Phatm(:,:,k);
+                            P(:,:,k) = Pa(:,:,k) + Pv(:,:,k) + Pw(:,:,k)+ Pm(:,:,k);
+                        end
+                    end
+
+                    nmeas = size(Y{1}(:,1));
+                    isel = 1:nmeas;
+
+                    Y{j}(:,i) = feval(datfun.tru,tspan(i),X{j}(:,i),datarg.tru);
+                    [~,Href(:,:,i),R(:,:,i)] = ominusc(datfun.tru,tspan(i),X{1}(:,i),Y{j}(:,i),options,[],datarg.tru);
+                    Y{j}(:,i) = Y{j}(:,i) + covsmpl(R(:,:,i)); 
+
+                    % Do meas update niter times
+                    for k = (thisint(end)+1):iint(ispan(i)), 
+
+                        if(upvec == 1)
+
+                            if ischmidt == 1
+                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k),~] = kalmup(datfun.est,...
+                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
+                                    options,eflag_set,eratio,datarg.est,isel,S(:,:,i),C(:,:,i)); 
+                            else
+                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k),~] = kalmup(datfun.est,...
+                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
+                                    options,eflag_set,eratio,datarg.est,isel); 
+                            end
+
+                        else
+
+                            Xhat_tmp = Xhat{j}(:,k-1);
+
+                            Phat_tmp = Phat{j}(:,:,k-1);
+
+                            % This assumes that there are always the same number of measurements for
+                            % all cases for all time.
+                            for bb=1:nmeas
+
+                                if ischmidt == 1
+                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k),~] = kalmup(datfun.est,...
+                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
+                                        options,eflag_set,eratio,datarg.est,bb,S(:,:,i),C(:,:,i));
+                                else
+                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k),~] = kalmup(datfun.est,...
+                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
+                                        options,eflag_set,eratio,datarg.est,bb);
+                                end
+
+                            end
+
+                            Xhat{j}(:,k) = Xhat_tmp;
+
+                            Phat{j}(:,:,k) = Phat_tmp;
+
+                        end
+
+                    end
+
+                    if j == 1
+
+                        k = thisint(end)+1;
+
+                        Ybar = feval(datfun.est,tspan(i),Xhat{1}(:,k-1),datarg.est);
+                        [~,Hsref(:,:,i),Rhat(:,:,i)] = ominusc(datfun.est,tspan(i),Xhat{1}(:,k-1),Ybar,options,[],datarg.est);
+
+                        Pdyt(:,:,k-1) = (Href(:,:,i)*P(:,:,k-1)*Href(:,:,i)' + R(:,:,i));
+
+                        inan = isnan(Y{1}(:,i)) | isnan(Ybar);
+                        Hsrefm = Hsref(~inan,:,i);
+                        Hrefm = Href(~inan,:,i);
+                        Rhatm = Rhat(~inan,~inan,i);
+                        Rm = R(~inan,~inan,i);
+
+                        Pdyt(:,:,k-1) = NaN(size(R(:,:,i)));
+                        Pdytm = (Hrefm*P(:,:,k-1)*Hrefm' + Rm);
+
+                        Pdyt(~inan,~inan,k-1) = Pdytm;
+
+                        % Compute the gains
+                        K = Phatt(:,:,k-1)*Hsrefm'/...
+                            (Hsrefm*Phatt(:,:,k-1)*Hsrefm' + Rhatm);
+
+                        if ischmidt == 1
+
+                            % We apply the gains only to the solve-for
+                            K = S(:,:,i)*K;
+
+                            % Calling kalmup may have extra overhead but could allow it for
+                            % iterative Kalman filter - need to flesh this out
+                            %         [xtmp,Ptmp,efltmp,dytmp,Pdytemp,K] = kalmup(datfun.est,...
+                            %             tspan(i),Xsref(:,i),Phat(:,:,k-1),Ybar(:,i),options,[],...
+                            %             [],datarg.est,[],S(:,:,i),C(:,:,i))
+
+                            % Update the total asssumed covariance
+                            ImSKH = eye(ns+nc) - Stilde(:,:,k-1)*K*Hsrefm;
+                            Phata(:,:,k) = ImSKH*Phata(:,:,k-1)*ImSKH';
+                            Phatv(:,:,k) = ImSKH*Phatv(:,:,k-1)*ImSKH' + ...
+                                Stilde(:,:,k-1)*K*Rhatm*K'*Stilde(:,:,k-1)';
+                            Phatw(:,:,k) = ImSKH*Phatw(:,:,k-1)*ImSKH';
+                            Phatm(:,:,k) = ImSKH*Phatm(:,:,k-1)*ImSKH';
+
+                        else
+
+                            % Update the asssumed covariance
+                            ImKH = eye(ns) - K*Hsrefm;
+                            Phata(:,:,k) = ImKH*Phata(:,:,k-1)*ImKH';
+                            Phatv(:,:,k) = ImKH*Phatv(:,:,k-1)*ImKH' + K*Rhatm*K';
+                            Phatw(:,:,k) = ImKH*Phatw(:,:,k-1)*ImKH';
+                            Phatm(:,:,k) = ImKH*Phatm(:,:,k-1)*ImKH';
+
+                        end
+
+                        % Update the true covariance. Assign measurement noise only to
+                        % measurement noise partitions of the total covariance
+                        ImSKH = eye(ns+nc) - Stilde(:,:,k-1)*K*Hrefm;
+                        Pa(:,:,k) = ImSKH*Pa(:,:,k-1)*ImSKH';
+                        Pv(:,:,k) = ImSKH*Pv(:,:,k-1)*ImSKH' ...
+                            + Stilde(:,:,k-1)*K*Rm*K'*Stilde(:,:,k-1)';
+                        Pw(:,:,k) = ImSKH*Pw(:,:,k-1)*ImSKH';
+                        Pm(:,:,k) = ImSKH*Pm(:,:,k-1)*ImSKH';
+                        P(:,:,k) = Pa(:,:,k) + Pv(:,:,k) + Pw(:,:,k)+ Pm(:,:,k);
+
+                        % Update the sensitivity matrix to apriori
+                        Sig_a(:,:,k) = ImSKH*Sig_a(:,:,k-1);
+
+                        if ischmidt == 1
+
+                            % Post-update covariance differences and formal covariance
+                            dPa(:,:,k) = S(:,:,j)*(Pa(:,:,k) - Phata(:,:,k))*S(:,:,j)';
+                            dPv(:,:,k) = S(:,:,j)*(Pv(:,:,k) - Phatv(:,:,k))*S(:,:,j)';
+                            dPw(:,:,k) = S(:,:,j)*(Pw(:,:,k) - Phatw(:,:,k))*S(:,:,j)';
+                            dPw(:,:,m) = S(:,:,j)*(Pm(:,:,k) - Phatm(:,:,k))*S(:,:,j)';
+
+                        else
+
+                            % Post-update covariance differences and formal covariance
+                            dPa(:,:,k) = S(:,:,k)*Pa(:,:,k)*S(:,:,k)' - Phata(:,:,k);
+                            dPv(:,:,k) = S(:,:,k)*Pv(:,:,k)*S(:,:,k)' - Phatv(:,:,k);
+                            dPw(:,:,k) = S(:,:,k)*Pw(:,:,k)*S(:,:,k)' - Phatw(:,:,k);
+                            dPm(:,:,k) = S(:,:,k)*Pm(:,:,k)*S(:,:,k)' - Phatm(:,:,k);
+
+                        end
+
+                        Phatt(:,:,k) = Phata(:,:,k) + Phatv(:,:,k) + Phatw(:,:,k)+ Phatm(:,:,k);
+
+                        % Now copy the data if necessary to fill in for any iterations below.
+                        % Zero-order hold
+                        for z = (k+1):iint(ispan(i)),
+                            Pa(:,:,z) = Pa(:,:,k);
+                            Pv(:,:,z) = Pv(:,:,k);
+                            Pw(:,:,z) = Pw(:,:,k);
+                            Pm(:,:,z) = Pm(:,:,k);
+                            Phata(:,:,z) = Phata(:,:,k);
+                            Phatv(:,:,z) = Phatv(:,:,k);
+                            Phatw(:,:,z) = Phatw(:,:,k);
+                            Phatm(:,:,z) = Phatm(:,:,k);
+                            dPa(:,:,z) = dPa(:,:,k);
+                            dPv(:,:,z) = dPv(:,:,k);
+                            dPw(:,:,z) = dPw(:,:,k);
+                            dPm(:,:,z) = dPm(:,:,k);
+                            Phatt(:,:,z) = Phatt(:,:,k);
+                            P(:,:,z) = P(:,:,k);
+                            Sig_a(:,:,z) = Sig_a(:,:,k);
+                        end
+
+                    end
+
+                end
+
+            end
+
+            %% Estimation Error Ensemble
+            % Generate the time series of estimation errors for each
+            % case.  Use estval to plot these data if no output arguments are supplied.
+
+            if ischmidt==1
+                [e{:}] = deal(NaN(n,lenti));
             else
-                
-                % Post-update covariance differences and formal covariance
-                dPa(:,:,k) = S(:,:,k)*Pa(:,:,k)*S(:,:,k)' - Phata(:,:,k);
-                dPv(:,:,k) = S(:,:,k)*Pv(:,:,k)*S(:,:,k)' - Phatv(:,:,k);
-                dPw(:,:,k) = S(:,:,k)*Pw(:,:,k)*S(:,:,k)' - Phatw(:,:,k);
-                dPm(:,:,k) = S(:,:,k)*Pm(:,:,k)*S(:,:,k)' - Phatm(:,:,k);
-                
+                [e{:}] = deal(NaN(ns,lenti));
             end
-            
-            Phatt(:,:,k) = Phata(:,:,k) + Phatv(:,:,k) + Phatw(:,:,k)+ Phatm(:,:,k);
-            
-            % Now copy the data if necessary to fill in for any iterations below.
-            % Zero-order hold
-            for z = (k+1):iint(ispan(i)),
-                Pa(:,:,z) = Pa(:,:,k);
-                Pv(:,:,z) = Pv(:,:,k);
-                Pw(:,:,z) = Pw(:,:,k);
-                Pm(:,:,z) = Pm(:,:,k);
-                Phata(:,:,z) = Phata(:,:,k);
-                Phatv(:,:,z) = Phatv(:,:,k);
-                Phatw(:,:,z) = Phatw(:,:,k);
-                Phatm(:,:,z) = Phatm(:,:,k);
-                dPa(:,:,z) = dPa(:,:,k);
-                dPv(:,:,z) = dPv(:,:,k);
-                dPw(:,:,z) = dPw(:,:,k);
-                dPm(:,:,z) = dPm(:,:,k);
-                Phatt(:,:,z) = Phatt(:,:,k);
-                P(:,:,z) = P(:,:,k);
-                Sig_a(:,:,z) = Sig_a(:,:,k);
+            for j = ncases:-1:1,
+                t{j} = titer;
+                Phat{j} = scrunch(Phat{j}); % Need to look at solve for only
+                for i = lenti:-1:1,
+                    % This misses any update iterations
+                    if ischmidt == 1
+                        e{j}(:,iint(i)) = Xhat{j}(:,iint(i)) - X{j}(:,i); 
+                    else
+                        e{j}(:,iint(i)) = Xhat{j}(:,iint(i)) - S(:,:,iint(i))*X{j}(:,i); 
+                    end
+                    % Fill in iterations if required
+                    if i == 1,
+                        thisint = 2:iint(i)-1;
+                    else
+                        thisint = iint(i-1)+1:iint(i)-1;
+                    end
+                    for k = thisint,
+                        if ischmidt == 1
+                            e{j}(:,k) = Xhat{j}(:,k) - X{j}(:,i); 
+                        else
+                            e{j}(:,k) = Xhat{j}(:,k) - S(:,:,k)*X{j}(:,i); 
+                        end
+                    end
+                end
             end
-            
-        end
-        
-    end
 
-end
+            %% Sensitivity Mosaics
+            % Generate "sensitivity mosaics," which are checkerboard plots of the
+            % sensitivity matrices.  For some reason, Matlab's pcolor function does not
+            % plot the final row and column, so append an extra row and column to get
+            % the correct plot.  Initially plot the sensitivity at the final time,
+            % and put up a slider that lets the user scan through sensitivities over
+            % the time span.
 
-%% Estimation Error Ensemble
-% Generate the time series of estimation errors for each
-% case.  Use estval to plot these data if no output arguments are supplied.
-
-if ischmidt==1
-    [e{:}] = deal(NaN(n,lenti));
-else
-    [e{:}] = deal(NaN(ns,lenti));
-end
-for j = ncases:-1:1,
-    t{j} = titer;
-    Phat{j} = scrunch(Phat{j}); % Need to look at solve for only
-    for i = lenti:-1:1,
-        % This misses any update iterations
-        if ischmidt == 1
-            e{j}(:,iint(i)) = Xhat{j}(:,iint(i)) - X{j}(:,i); 
-        else
-            e{j}(:,iint(i)) = Xhat{j}(:,iint(i)) - S(:,:,iint(i))*X{j}(:,i); 
-        end
-        % Fill in iterations if required
-        if i == 1,
-            thisint = 2:iint(i)-1;
-        else
-            thisint = iint(i-1)+1:iint(i)-1;
-        end
-        for k = thisint,
-            if ischmidt == 1
-                e{j}(:,k) = Xhat{j}(:,k) - X{j}(:,i); 
-            else
-                e{j}(:,k) = Xhat{j}(:,k) - S(:,:,k)*X{j}(:,i); 
+            % First map the full sensitivities to the solve-for state space:
+            Sig_sa = NaN(ns,n,lentr);
+            for j = lentr:-1:1,
+                Sig_sa(:,:,j) = S(:,:,j)*Sig_a(:,:,j); 
             end
-        end
-    end
-end
 
-%% Sensitivity Mosaics
-% Generate "sensitivity mosaics," which are checkerboard plots of the
-% sensitivity matrices.  For some reason, Matlab's pcolor function does not
-% plot the final row and column, so append an extra row and column to get
-% the correct plot.  Initially plot the sensitivity at the final time,
-% and put up a slider that lets the user scan through sensitivities over
-% the time span.
+            if nargout >= 3,
+                varargout{1} = t;
+                varargout{2} = Xhat;
+                varargout{3} = Phat;
+            end
+            if nargout >= 4,
+                varargout{4} = e;
+            end
+            if nargout >= 5,
+                varargout{5} = y;
+            end
+            if nargout >= 6,
+                varargout{6} = Pa;
+                varargout{7} = Pv;
+                varargout{8} = Pw;
+                varargout{9} = Phata;
+                varargout{10} = Phatv;
+                varargout{11} = Phatw;
+            end
+            if nargout >= 12,
+                varargout{12} = Sig_sa;
+            end
+            if(nargout >= 13)
+                varargout{13} = eflag;
+            end
+            if nargout >= 14,
+                varargout{14} = Pdy;
+            end
+            if nargout >= 15,
+                varargout{15} = Pdyt;
+            end
+            if nargout >= 16
+                varargout{16} = Pm;
+                varargout{17} = Phatm;
+            end
 
-% First map the full sensitivities to the solve-for state space:
-Sig_sa = NaN(ns,n,lentr);
-for j = lentr:-1:1,
-    Sig_sa(:,:,j) = S(:,:,j)*Sig_a(:,:,j); 
-end
-
-if nargout >= 3,
-    varargout{1} = t;
-    varargout{2} = Xhat;
-    varargout{3} = Phat;
-end
-if nargout >= 4,
-    varargout{4} = e;
-end
-if nargout >= 5,
-    varargout{5} = y;
-end
-if nargout >= 6,
-    varargout{6} = Pa;
-    varargout{7} = Pv;
-    varargout{8} = Pw;
-    varargout{9} = Phata;
-    varargout{10} = Phatv;
-    varargout{11} = Phatw;
-end
-if nargout >= 12,
-    varargout{12} = Sig_sa;
-end
-if(nargout >= 13)
-    varargout{13} = eflag;
-end
-if nargout >= 14,
-    varargout{14} = Pdy;
-end
-if nargout >= 15,
-    varargout{15} = Pdyt;
-end
-if nargout >= 16
-    varargout{16} = Pm;
-    varargout{17} = Phatm;
-end
-
-end % function
-
-% ESTSEQ helper functions
-function y = refine(u,refine)
-y = [reshape([u(1:end-1);repmat(u(1:end-1),refine,1)+...
-    cumsum(repmat(diff(u)/(refine+1),refine,1))],[],1);u(end)]';
-end
-
-function x = rk4(ode,tspan,x0,dynarg)
-x = NaN(length(x0),length(tspan));
-x(:,1) = x0;
-dt = diff(tspan);
-for i = 2:length(tspan),
-    dx = feval(ode,tspan(i-1),x(:,i-1),dynarg);
-    k1 = dt(i-1) * dx;
-    dx = feval(ode,tspan(i-1),x(:,i-1)+k1/2,dynarg);
-    k2 = dt(i-1) * dx;
-    dx = feval(ode,tspan(i-1),x(:,i-1)+k2/2,dynarg);
-    k3 = dt(i-1) * dx;
-    dx = feval(ode,tspan(i-1),x(:,i-1)+k3,dynarg);
-    k4 = dt(i-1) * dx;
-    x(:,i) = x(:,i-1) + (k1 + 2*k2 + 2*k3 + k4)/6;
-end
-end
+        end % run_estimator Function
+    end % Methods
+end % Class

@@ -5,6 +5,20 @@ classdef estimator < handle
     %   coding.
     
     properties
+        % In
+        dynfun
+        datfun
+        tspan
+        Xo
+        Xbaro
+        Po
+        Pbaro
+        options
+        mapfun
+        S
+        C
+        
+        % Out
         t
         Xhat
         Phat
@@ -38,7 +52,7 @@ classdef estimator < handle
             obj.eflag = {};
         end
         
-        function varargout = run_estimator(obj,varargin)
+        function varargout = run_estimator(obj)
             % This is a dummy function. Subclasses of estimator should
             % overwrite this function with the function that will run the
             % estimator.
@@ -127,6 +141,24 @@ classdef estimator < handle
             y = [reshape([u(1:end-1);repmat(u(1:end-1),refine,1)+...
             cumsum(repmat(diff(u)/(refine+1),refine,1),1)],[],1);u(end)]';
         end
+
+        function x = rk4(ode,tspan,x0,dynarg)
+            x = NaN(length(x0),length(tspan));
+            x(:,1) = x0;
+            dt = diff(tspan);
+            for i = 2:length(tspan),
+                dx = feval(ode,tspan(i-1),x(:,i-1),dynarg);
+                k1 = dt(i-1) * dx;
+                dx = feval(ode,tspan(i-1),x(:,i-1)+k1/2,dynarg);
+                k2 = dt(i-1) * dx;
+                dx = feval(ode,tspan(i-1),x(:,i-1)+k2/2,dynarg);
+                k3 = dt(i-1) * dx;
+                dx = feval(ode,tspan(i-1),x(:,i-1)+k3,dynarg);
+                k4 = dt(i-1) * dx;
+                x(:,i) = x(:,i-1) + (k1 + 2*k2 + 2*k3 + k4)/6;
+            end
+        end
+        
     end % Methods (Static)
 end % Class
 

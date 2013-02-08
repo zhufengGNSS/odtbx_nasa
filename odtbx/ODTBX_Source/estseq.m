@@ -319,7 +319,7 @@ classdef estseq < estimator
             % iterations) at each measurement time.
 
             % integrator outputs between meas. updates
-            tint = refine(tspan,refint);
+            tint = refine(obj.tspan,refint);
             lenti = length(tint);
 
             % indices within tint that point back to tspan, i.e., tint(ispan)=tspan
@@ -391,46 +391,46 @@ classdef estseq < estimator
 
             m = 14;
 
-            [t,X,Xhat,Phat,y,Y,e,~,~,eflag,Pdy] = deal(cell(1,ncases));
-            [X{:}] = deal(NaN(n,lenti));
-            [Xhat{:}] = deal(NaN(length(Xbaro),lentr));
-            [Phat{:}] = deal(NaN([size(Pbaro),lentr]));
-            [y{:}] = deal(NaN(m,lentr));     % Measurement innovations
-            [eflag{:}] = deal(NaN(m,lentr));
-            [Y{:}] = deal(NaN(m,lents));     % True measurements
-            [Pdy{:}] = deal(NaN(m,m,lentr)); % Measurement innovations covariance
+            [obj.t,obj.X,obj.Xhat,obj.Phat,obj.y,obj.Y,obj.e,~,~,obj.eflag,obj.Pdy] = deal(cell(1,ncases));
+            [obj.X{:}] = deal(NaN(n,lenti));
+            [obj.Xhat{:}] = deal(NaN(length(obj.Xbaro),lentr));
+            [obj.Phat{:}] = deal(NaN([size(obj.Pbaro),lentr]));
+            [obj.y{:}] = deal(NaN(m,lentr));     % Measurement innovations
+            [obj.eflag{:}] = deal(NaN(m,lentr));
+            [obj.Y{:}] = deal(NaN(m,lents));     % True measurements
+            [obj.Pdy{:}] = deal(NaN(m,m,lentr)); % Measurement innovations covariance
 
             % Pre-allocate arrays for consider covariance analysis
             % True (total) covariance
-            Pa    = NaN([n,n,lentr]);       % a-priori
-            Pv    = NaN(size(Pa));          % measurement noise
-            Pw    = NaN(size(Pa));          % process noise
-            Pm    = NaN(size(Pa));
-            P     = NaN(size(Pa));          % total
-            Pdyt  = NaN(m,m,lentr);         % measurement innovations
+            obj.Pa    = NaN([n,n,lentr]);       % a-priori
+            obj.Pv    = NaN(size(Pa));          % measurement noise
+            obj.Pw    = NaN(size(Pa));          % process noise
+            obj.Pm    = NaN(size(Pa));
+            obj.P     = NaN(size(Pa));          % total
+            obj.Pdyt  = NaN(m,m,lentr);         % measurement innovations
             % Assumed covariance of solved for states only if ischmidt=0 otherwise
             % it is of all the states
-            Phata = NaN([size(Pbaro),lentr]);
-            Phatv = NaN(size(Phata));
-            Phatw = NaN(size(Phata));
-            Phatm = NaN(size(Phata));
-            Phatt = NaN(size(Phata));
+            obj.Phata = NaN([size(obj.Pbaro),lentr]);
+            obj.Phatv = NaN(size(obj.Phata));
+            obj.Phatw = NaN(size(obj.Phata));
+            obj.Phatm = NaN(size(obj.Phata));
+            obj.Phatt = NaN(size(obj.Phata));
             % Covariance error of solved for states only
             dPa   = NaN([ns,ns,lentr]);
             dPv   = NaN(size(dPa));
             dPw   = NaN(size(dPa));
             dPm   = NaN(size(dPa));
             % Sensitivity matrix of all states to a-priori
-            Sig_a = NaN(size(Pa));
+            Sig_a = NaN(size(obj.Pa));
 
-            Href = NaN(m,size(P,2),lentr);
-            Hsref = NaN(m,size(Pbaro,2),lentr);
+            Href = NaN(m,size(obj.P,2),lentr);
+            Hsref = NaN(m,size(obj.Pbaro,2),lentr);
             Rhat = NaN(m,m,lentr);
             R = NaN(m,m,lents);
 
             % Acquire the Monte Carlo Seed for the random number generator
             % if the user has specified it.
-            monteseed     = getOdtbxOptions(options, 'MonteCarloSeed', NaN);
+            monteseed     = getOdtbxOptions(obj.options, 'MonteCarloSeed', NaN);
             monteseed_use = NaN(1,ncases); % Pre-allocate array
 
             if(~isnan(monteseed))
@@ -463,15 +463,15 @@ classdef estseq < estimator
 
             end
 
-            eratio = getOdtbxOptions(options, 'EditRatio', []); % Default is empty, meaning no meas. editing
-            eflag_set  = getOdtbxOptions(options, 'EditFlag', []); % Default is empty (no meas. editing)
+            eratio = getOdtbxOptions(obj.options, 'EditRatio', []); % Default is empty, meaning no meas. editing
+            eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []); % Default is empty (no meas. editing)
 
             % Run Kalman Filter on the measurements generated above
             for j = 1:ncases,
 
-                Xhat{j}(:,1) = Xbaro;    % The filter i.c. is always the same
+                obj.Xhat{j}(:,1) = obj.Xbaro;    % The filter i.c. is always the same
 
-                Phat{j}(:,:,1) = Pbaro;
+                obj.Phat{j}(:,:,1) = obj.Pbaro;
 
                 for i = 1:lents,
 
@@ -479,20 +479,20 @@ classdef estseq < estimator
                     if i == 1,
                         thisint = 1;
 
-                        X{j}(:,1) = Xo + covsmpl(Po, 1, monteseed_use(j));
+                        obj.X{j}(:,1) = obj.Xo + covsmpl(obj.Po, 1, monteseed_use(j));
 
                         if j == 1
                             % True covariance
-                            Pa(:,:,1) = Po;
-                            Pv(:,:,1) = zeros(size(Po));
-                            Pw(:,:,1) = zeros(size(Po));
-                            Pm(:,:,1) = zeros(size(Po));
-                            P(:,:,1) = Pa(:,:,1);
+                            obj.Pa(:,:,1) = obj.Po;
+                            obj.Pv(:,:,1) = zeros(size(obj.Po));
+                            obj.Pw(:,:,1) = zeros(size(obj.Po));
+                            obj.Pm(:,:,1) = zeros(size(obj.Po));
+                            obj.P(:,:,1) = obj.Pa(:,:,1);
                             % Assumed covariance
-                            Phata(:,:,1) = Pbaro;
-                            Phatv(:,:,1) = zeros(size(Pbaro));
-                            Phatw(:,:,1) = zeros(size(Pbaro));
-                            Phatm(:,:,1) = zeros(size(Pbaro));
+                            obj.Phata(:,:,1) = obj.Pbaro;
+                            obj.Phatv(:,:,1) = zeros(size(obj.Pbaro));
+                            obj.Phatw(:,:,1) = zeros(size(obj.Pbaro));
+                            obj.Phatm(:,:,1) = zeros(size(obj.Pbaro));
                             Sig_a(:,:,1) = [Stilde(:,:,1), Ctilde(:,:,1)];
                         end
 
@@ -500,21 +500,26 @@ classdef estseq < estimator
                         %% Combine into one big estimator for a combined state
 
                         thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
-                        [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),[],dynarg.est);
-                        if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
-                            xdum = [xdum(:,1) xdum(:,end)];
-                            phidum(:,:,2) = phidum(:,:,end);
-                            sdum(:,:,2) = sdum(:,:,end);
-                        end
-                        Xhat{j}(:,thisint) = xdum;
-                        for k = 2:length(thisint)
-                            sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
-                            Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
-                            Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
-                        end
-
-                        [~,xdum,~,sdum] = integ(dynfun.tru,tint(i-1:i),X{j}(:,i-1),[],dynarg.tru);
-                        X{j}(:,i) = xdum(:,end);%+covsmpl(sdum(:,:,end));
+                        BigX = [obj.Xhat{j}(:,thisint(1)); obj.X{j}(:,i-1)];
+                        wrapper = @obj.wrapperdyn;
+                        [~,xdum,phidum,sdum] = integ(wrapper,titer(thisint),BigX,[],obj.dynarg)
+                        
+%                         thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
+%                         [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),[],dynarg.est);
+%                         if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
+%                             xdum = [xdum(:,1) xdum(:,end)];
+%                             phidum(:,:,2) = phidum(:,:,end);
+%                             sdum(:,:,2) = sdum(:,:,end);
+%                         end
+%                         Xhat{j}(:,thisint) = xdum;
+%                         for k = 2:length(thisint)
+%                             sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
+%                             Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
+%                             Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
+%                         end
+% 
+%                         [~,xdum,~,sdum] = integ(dynfun.tru,tint(i-1:i),X{j}(:,i-1),[],dynarg.tru);
+%                         X{j}(:,i) = xdum(:,end);%+covsmpl(sdum(:,:,end));
 
                         % Replace with one big integrator for a combined state
 
@@ -522,49 +527,50 @@ classdef estseq < estimator
 
                         if j == 1
                             % True covariance
-                            [Pw(:,:,thisint(2:end)),~,Phi] = covprop(dynfun.tru,...
-                                titer(thisint),Pw(:,:,thisint(1)),...
-                                X{1}(:,ispan(i-1):ispan(i)),options,dynarg.tru);
+                            [obj.Pw(:,:,thisint(2:end)),~,Phi] = covprop(obj.dynfun.tru,...
+                                titer(thisint),obj.Pw(:,:,thisint(1)),...
+                                obj.X{1}(:,ispan(i-1):ispan(i)),obj.options,obj.dynarg.tru);
                             for k = 1:length(thisint)-1,
-                                Pa(:,:,thisint(k+1)) = Phi(:,:,k)*Pa(:,:,thisint(k))*Phi(:,:,k)';
-                                Pv(:,:,thisint(k+1)) = Phi(:,:,k)*Pv(:,:,thisint(k))*Phi(:,:,k)';
-                                Pm(:,:,thisint(k+1)) = Phi(:,:,k)*Pm(:,:,thisint(k))*Phi(:,:,k)';
+                                obj.Pa(:,:,thisint(k+1)) = Phi(:,:,k)*obj.Pa(:,:,thisint(k))*Phi(:,:,k)';
+                                obj.Pv(:,:,thisint(k+1)) = Phi(:,:,k)*obj.Pv(:,:,thisint(k))*Phi(:,:,k)';
+                                obj.Pm(:,:,thisint(k+1)) = Phi(:,:,k)*obj.Pm(:,:,thisint(k))*Phi(:,:,k)';
                                 Sig_a(:,:,thisint(k+1)) = Phi(:,:,k)*Sig_a(:,:,thisint(k));
                             end
 
                             % Assumed covariance
                             % If ischmidt=1, the Phiss corresponds to the full state transition
                             % matrix, and not just the solved-for states.  Similarly for Qdhat.
-                            [Phatw(:,:,thisint(2:end)),~,Phiss] = covprop(dynfun.est,...
-                                titer(thisint),Phatw(:,:,thisint(1)),...
-                                Xhat{1}(:,ispan(i-1):ispan(i)),options,dynarg.est);
+                            [obj.Phatw(:,:,thisint(2:end)),~,Phiss] = covprop(obj.dynfun.est,...
+                                titer(thisint),obj.Phatw(:,:,thisint(1)),...
+                                obj.Xhat{1}(:,ispan(i-1):ispan(i)),obj.options,obj.dynarg.est);
                             for k = 1:length(thisint)-1,
-                                Phata(:,:,thisint(k+1)) = ...
-                                    Phiss(:,:,k)*Phata(:,:,thisint(k))*Phiss(:,:,k)';
-                                Phatv(:,:,thisint(k+1)) = ...
-                                    Phiss(:,:,k)*Phatv(:,:,thisint(k))*Phiss(:,:,k)';
-                                Phatm(:,:,thisint(k+1)) = ...
-                                    Phiss(:,:,k)*Phatm(:,:,thisint(k))*Phiss(:,:,k)';
+                                obj.Phata(:,:,thisint(k+1)) = ...
+                                    Phiss(:,:,k)*obj.Phata(:,:,thisint(k))*Phiss(:,:,k)';
+                                obj.Phatv(:,:,thisint(k+1)) = ...
+                                    Phiss(:,:,k)*obj.Phatv(:,:,thisint(k))*Phiss(:,:,k)';
+                                obj.Phatm(:,:,thisint(k+1)) = ...
+                                    Phiss(:,:,k)*obj.Phatm(:,:,thisint(k))*Phiss(:,:,k)';
                             end
                         end
                     end
 
-                    for k = 1:length(dynarg.est.targetBurn)
-                        if tint(i) == dynarg.est.targetBurn(k)
-                            v1 = Xhat{j}(10:12,thisint(end));
+                    %% Burn
+                    for k = 1:length(obj.dynarg.est.targetBurn)
+                        if tint(i) == obj.dynarg.est.targetBurn(k)
+                            v1 = obj.Xhat{j}(10:12,thisint(end));
 
                             v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
-                                Xhat{j}(:,thisint(end)),dynarg.tru),v1);
+                                obj.Xhat{j}(:,thisint(end)),dynarg.tru),v1);
 
-                            dv = v1-Xhat{j}(10:12,thisint(end));
+                            dv = v1-obj.Xhat{j}(10:12,thisint(end));
 
                             disp('Target Burn...')
                             disp(dv)
 
-                            Xhat{j}(10:12,thisint(end)) = v1;
+                            obj.Xhat{j}(10:12,thisint(end)) = v1;
 
-                            dt = dynarg.tru.mass/dynarg.tru.thrust*norm(dv);
-                            err = dynarg.tru.exError*norm(dv);
+                            dt = obj.dynarg.tru.mass/obj.dynarg.tru.thrust*norm(dv);
+                            err = obj.dynarg.tru.exError*norm(dv);
                             if err > 1e-6
                                 err = 1e-6;
                             end
@@ -578,7 +584,7 @@ classdef estseq < estimator
 
                             xerr = covsmpl(Qman);
 
-                            X{j}(7:12,i) = X{j}(7:12,i)+[zeros(3,1);dv] + xerr(7:12,1);
+                            obj.X{j}(7:12,i) = obj.X{j}(7:12,i)+[zeros(3,1);dv] + xerr(7:12,1);
 
             %                 v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
             %                     X{j}(:,i),dynarg.tru),v1);
@@ -588,12 +594,12 @@ classdef estseq < estimator
                             disp('Execution Error')
                             disp(xerr(7:9,1))
 
-                            Phat{j}(:,:,thisint(end)) = Phat{j}(:,:,thisint(end))...
+                            obj.Phat{j}(:,:,thisint(end)) = obj.Phat{j}(:,:,thisint(end))...
                                 + Qman;
 
                             if j == 1
-                                Pm(1:12,1:12,thisint(end)) = Pm(1:12,1:12,thisint(end)) + Qman;
-                                Phatm(1:12,1:12,thisint(end)) = Phatm(:,:,thisint(end)) + Qman;
+                                obj.Pm(1:12,1:12,thisint(end)) = obj.Pm(1:12,1:12,thisint(end)) + Qman;
+                                obj.Phatm(1:12,1:12,thisint(end)) = obj.Phatm(:,:,thisint(end)) + Qman;
                             end
                         end
                     end
@@ -602,27 +608,27 @@ classdef estseq < estimator
                         % Covariance differences and formal covariance over prop interval
                         for k = thisint,
                             if ischmidt == 1 % Both the true and assumed are the same size
-                                dPa(:,:,k) = S(:,:,k)*(Pa(:,:,k) - Phata(:,:,j))*S(:,:,j)';
-                                dPv(:,:,k) = S(:,:,k)*(Pv(:,:,k) - Phatv(:,:,j))*S(:,:,j)';
-                                dPw(:,:,k) = S(:,:,k)*(Pw(:,:,k) - Phatw(:,:,j))*S(:,:,j)';
-                                dPm(:,:,k) = S(:,:,k)*(Pm(:,:,k) - Phatm(:,:,j))*S(:,:,j)';
+                                dPa(:,:,k) = obj.S(:,:,k)*(obj.Pa(:,:,k) - obj.Phata(:,:,j))*obj.S(:,:,j)';
+                                dPv(:,:,k) = obj.S(:,:,k)*(obj.Pv(:,:,k) - obj.Phatv(:,:,j))*obj.S(:,:,j)';
+                                dPw(:,:,k) = obj.S(:,:,k)*(obj.Pw(:,:,k) - obj.Phatw(:,:,j))*obj.S(:,:,j)';
+                                dPm(:,:,k) = obj.S(:,:,k)*(obj.Pm(:,:,k) - obj.Phatm(:,:,j))*obj.S(:,:,j)';
                             else
-                                dPa(:,:,k) = S(:,:,k)*Pa(:,:,k)*S(:,:,k)' - Phata(:,:,k);
-                                dPv(:,:,k) = S(:,:,k)*Pv(:,:,k)*S(:,:,k)' - Phatv(:,:,k);
-                                dPw(:,:,k) = S(:,:,k)*Pw(:,:,k)*S(:,:,k)' - Phatw(:,:,k);
-                                dPm(:,:,k) = S(:,:,k)*Pm(:,:,k)*S(:,:,k)' - Phatm(:,:,k);
+                                dPa(:,:,k) = obj.S(:,:,k)*obj.Pa(:,:,k)*obj.S(:,:,k)' - obj.Phata(:,:,k);
+                                dPv(:,:,k) = obj.S(:,:,k)*obj.Pv(:,:,k)*obj.S(:,:,k)' - obj.Phatv(:,:,k);
+                                dPw(:,:,k) = obj.S(:,:,k)*obj.Pw(:,:,k)*obj.S(:,:,k)' - obj.Phatw(:,:,k);
+                                dPm(:,:,k) = obj.S(:,:,k)*obj.Pm(:,:,k)*obj.S(:,:,k)' - obj.Phatm(:,:,k);
                             end
-                            Phatt(:,:,k) = Phata(:,:,k) + Phatv(:,:,k) + Phatw(:,:,k)+ Phatm(:,:,k);
-                            P(:,:,k) = Pa(:,:,k) + Pv(:,:,k) + Pw(:,:,k)+ Pm(:,:,k);
+                            obj.Phatt(:,:,k) = obj.Phata(:,:,k) + obj.Phatv(:,:,k) + obj.Phatw(:,:,k)+ obj.Phatm(:,:,k);
+                            obj.P(:,:,k) = obj.Pa(:,:,k) + obj.Pv(:,:,k) + obj.Pw(:,:,k)+ obj.Pm(:,:,k);
                         end
                     end
 
-                    nmeas = size(Y{1}(:,1));
+                    nmeas = size(obj.Y{1}(:,1));
                     isel = 1:nmeas;
 
-                    Y{j}(:,i) = feval(datfun.tru,tspan(i),X{j}(:,i),datarg.tru);
-                    [~,Href(:,:,i),R(:,:,i)] = ominusc(datfun.tru,tspan(i),X{1}(:,i),Y{j}(:,i),options,[],datarg.tru);
-                    Y{j}(:,i) = Y{j}(:,i) + covsmpl(R(:,:,i)); 
+                    obj.Y{j}(:,i) = feval(obj.datfun.tru,tspan(i),obj.X{j}(:,i),obj.datarg.tru);
+                    [~,Href(:,:,i),R(:,:,i)] = ominusc(obj.datfun.tru,tspan(i),obj.X{1}(:,i),obj.Y{j}(:,i),obj.options,[],obj.datarg.tru);
+                    obj.Y{j}(:,i) = obj.Y{j}(:,i) + covsmpl(R(:,:,i)); 
 
                     % Do meas update niter times
                     for k = (thisint(end)+1):iint(ispan(i)), 
@@ -630,40 +636,40 @@ classdef estseq < estimator
                         if(upvec == 1)
 
                             if ischmidt == 1
-                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k),~] = kalmup(datfun.est,...
-                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
-                                    options,eflag_set,eratio,datarg.est,isel,S(:,:,i),C(:,:,i)); 
+                                [obj.Xhat{j}(:,k),obj.Phat{j}(:,:,k),obj.eflag{j}(isel,k),obj.y{j}(isel,k),obj.Pdy{j}(isel,isel,k),~] = kalmup(obj.datfun.est,...
+                                    obj.tspan(i),obj.Xhat{j}(:,k-1),obj.Phat{j}(:,:,k-1),obj.Y{j}(:,i),...
+                                    obj.options,eflag_set,eratio,obj.datarg.est,isel,obj.S(:,:,i),obj.C(:,:,i)); 
                             else
-                                [Xhat{j}(:,k),Phat{j}(:,:,k),eflag{j}(isel,k),y{j}(isel,k),Pdy{j}(isel,isel,k),~] = kalmup(datfun.est,...
-                                    tspan(i),Xhat{j}(:,k-1),Phat{j}(:,:,k-1),Y{j}(:,i),...
-                                    options,eflag_set,eratio,datarg.est,isel); 
+                                [obj.Xhat{j}(:,k),obj.Phat{j}(:,:,k),obj.eflag{j}(isel,k),obj.y{j}(isel,k),obj.Pdy{j}(isel,isel,k),~] = kalmup(obj.datfun.est,...
+                                    obj.tspan(i),obj.Xhat{j}(:,k-1),obj.Phat{j}(:,:,k-1),obj.Y{j}(:,i),...
+                                    obj.options,eflag_set,eratio,obj.datarg.est,isel); 
                             end
 
                         else
 
-                            Xhat_tmp = Xhat{j}(:,k-1);
+                            Xhat_tmp = obj.Xhat{j}(:,k-1);
 
-                            Phat_tmp = Phat{j}(:,:,k-1);
+                            Phat_tmp = obj.Phat{j}(:,:,k-1);
 
                             % This assumes that there are always the same number of measurements for
                             % all cases for all time.
                             for bb=1:nmeas
 
                                 if ischmidt == 1
-                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k),~] = kalmup(datfun.est,...
-                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
-                                        options,eflag_set,eratio,datarg.est,bb,S(:,:,i),C(:,:,i));
+                                    [Xhat_tmp,Phat_tmp,obj.eflag{j}(bb,k),obj.y{j}(bb,k),obj.Pdy{j}(bb,bb,k),~] = kalmup(obj.datfun.est,...
+                                        obj.tspan(i),Xhat_tmp,Phat_tmp,obj.Y{j}(:,i),...
+                                        obj.options,eflag_set,eratio,obj.datarg.est,bb,obj.S(:,:,i),obj.C(:,:,i));
                                 else
-                                    [Xhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k),~] = kalmup(datfun.est,...
-                                        tspan(i),Xhat_tmp,Phat_tmp,Y{j}(:,i),...
-                                        options,eflag_set,eratio,datarg.est,bb);
+                                    [Xhat_tmp,Phat_tmp,obj.eflag{j}(bb,k),obj.y{j}(bb,k),obj.Pdy{j}(bb,bb,k),~] = kalmup(obj.datfun.est,...
+                                        obj.tspan(i),Xhat_tmp,Phat_tmp,obj.Y{j}(:,i),...
+                                        obj.options,eflag_set,eratio,obj.datarg.est,bb);
                                 end
 
                             end
 
-                            Xhat{j}(:,k) = Xhat_tmp;
+                            obj.Xhat{j}(:,k) = Xhat_tmp;
 
-                            Phat{j}(:,:,k) = Phat_tmp;
+                            obj.Phat{j}(:,:,k) = Phat_tmp;
 
                         end
 
@@ -673,21 +679,21 @@ classdef estseq < estimator
 
                         k = thisint(end)+1;
 
-                        Ybar = feval(datfun.est,tspan(i),Xhat{1}(:,k-1),datarg.est);
-                        [~,Hsref(:,:,i),Rhat(:,:,i)] = ominusc(datfun.est,tspan(i),Xhat{1}(:,k-1),Ybar,options,[],datarg.est);
+                        Ybar = feval(obj.datfun.est,obj.tspan(i),obj.Xhat{1}(:,k-1),obj.datarg.est);
+                        [~,Hsref(:,:,i),Rhat(:,:,i)] = ominusc(obj.datfun.est,obj.tspan(i),obj.Xhat{1}(:,k-1),Ybar,obj.options,[],obj.datarg.est);
 
-                        Pdyt(:,:,k-1) = (Href(:,:,i)*P(:,:,k-1)*Href(:,:,i)' + R(:,:,i));
+                        obj.Pdyt(:,:,k-1) = (Href(:,:,i)*obj.P(:,:,k-1)*Href(:,:,i)' + R(:,:,i));
 
-                        inan = isnan(Y{1}(:,i)) | isnan(Ybar);
+                        inan = isnan(obj.Y{1}(:,i)) | isnan(Ybar);
                         Hsrefm = Hsref(~inan,:,i);
                         Hrefm = Href(~inan,:,i);
                         Rhatm = Rhat(~inan,~inan,i);
                         Rm = R(~inan,~inan,i);
 
-                        Pdyt(:,:,k-1) = NaN(size(R(:,:,i)));
+                        obj.Pdyt(:,:,k-1) = NaN(size(R(:,:,i)));
                         Pdytm = (Hrefm*P(:,:,k-1)*Hrefm' + Rm);
 
-                        Pdyt(~inan,~inan,k-1) = Pdytm;
+                        obj.Pdyt(~inan,~inan,k-1) = Pdytm;
 
                         % Compute the gains
                         K = Phatt(:,:,k-1)*Hsrefm'/...
@@ -696,7 +702,7 @@ classdef estseq < estimator
                         if ischmidt == 1
 
                             % We apply the gains only to the solve-for
-                            K = S(:,:,i)*K;
+                            K = obj.S(:,:,i)*K;
 
                             % Calling kalmup may have extra overhead but could allow it for
                             % iterative Kalman filter - need to flesh this out
@@ -706,32 +712,32 @@ classdef estseq < estimator
 
                             % Update the total asssumed covariance
                             ImSKH = eye(ns+nc) - Stilde(:,:,k-1)*K*Hsrefm;
-                            Phata(:,:,k) = ImSKH*Phata(:,:,k-1)*ImSKH';
-                            Phatv(:,:,k) = ImSKH*Phatv(:,:,k-1)*ImSKH' + ...
+                            obj.Phata(:,:,k) = ImSKH*obj.Phata(:,:,k-1)*ImSKH';
+                            obj.Phatv(:,:,k) = ImSKH*obj.Phatv(:,:,k-1)*ImSKH' + ...
                                 Stilde(:,:,k-1)*K*Rhatm*K'*Stilde(:,:,k-1)';
-                            Phatw(:,:,k) = ImSKH*Phatw(:,:,k-1)*ImSKH';
-                            Phatm(:,:,k) = ImSKH*Phatm(:,:,k-1)*ImSKH';
+                            obj.Phatw(:,:,k) = ImSKH*obj.Phatw(:,:,k-1)*ImSKH';
+                            obj.Phatm(:,:,k) = ImSKH*obj.Phatm(:,:,k-1)*ImSKH';
 
                         else
 
                             % Update the asssumed covariance
                             ImKH = eye(ns) - K*Hsrefm;
-                            Phata(:,:,k) = ImKH*Phata(:,:,k-1)*ImKH';
-                            Phatv(:,:,k) = ImKH*Phatv(:,:,k-1)*ImKH' + K*Rhatm*K';
-                            Phatw(:,:,k) = ImKH*Phatw(:,:,k-1)*ImKH';
-                            Phatm(:,:,k) = ImKH*Phatm(:,:,k-1)*ImKH';
+                            obj.Phata(:,:,k) = ImKH*obj.Phata(:,:,k-1)*ImKH';
+                            obj.Phatv(:,:,k) = ImKH*obj.Phatv(:,:,k-1)*ImKH' + K*Rhatm*K';
+                            obj.Phatw(:,:,k) = ImKH*obj.Phatw(:,:,k-1)*ImKH';
+                            obj.Phatm(:,:,k) = ImKH*obj.Phatm(:,:,k-1)*ImKH';
 
                         end
 
                         % Update the true covariance. Assign measurement noise only to
                         % measurement noise partitions of the total covariance
                         ImSKH = eye(ns+nc) - Stilde(:,:,k-1)*K*Hrefm;
-                        Pa(:,:,k) = ImSKH*Pa(:,:,k-1)*ImSKH';
-                        Pv(:,:,k) = ImSKH*Pv(:,:,k-1)*ImSKH' ...
+                        obj.Pa(:,:,k) = ImSKH*obj.Pa(:,:,k-1)*ImSKH';
+                        obj.Pv(:,:,k) = ImSKH*obj.Pv(:,:,k-1)*ImSKH' ...
                             + Stilde(:,:,k-1)*K*Rm*K'*Stilde(:,:,k-1)';
-                        Pw(:,:,k) = ImSKH*Pw(:,:,k-1)*ImSKH';
-                        Pm(:,:,k) = ImSKH*Pm(:,:,k-1)*ImSKH';
-                        P(:,:,k) = Pa(:,:,k) + Pv(:,:,k) + Pw(:,:,k)+ Pm(:,:,k);
+                        obj.Pw(:,:,k) = ImSKH*obj.Pw(:,:,k-1)*ImSKH';
+                        obj.Pm(:,:,k) = ImSKH*obj.Pm(:,:,k-1)*ImSKH';
+                        obj.P(:,:,k) = obj.Pa(:,:,k) + obj.Pv(:,:,k) + obj.Pw(:,:,k)+ obj.Pm(:,:,k);
 
                         % Update the sensitivity matrix to apriori
                         Sig_a(:,:,k) = ImSKH*Sig_a(:,:,k-1);
@@ -739,40 +745,40 @@ classdef estseq < estimator
                         if ischmidt == 1
 
                             % Post-update covariance differences and formal covariance
-                            dPa(:,:,k) = S(:,:,j)*(Pa(:,:,k) - Phata(:,:,k))*S(:,:,j)';
-                            dPv(:,:,k) = S(:,:,j)*(Pv(:,:,k) - Phatv(:,:,k))*S(:,:,j)';
-                            dPw(:,:,k) = S(:,:,j)*(Pw(:,:,k) - Phatw(:,:,k))*S(:,:,j)';
-                            dPw(:,:,m) = S(:,:,j)*(Pm(:,:,k) - Phatm(:,:,k))*S(:,:,j)';
+                            dPa(:,:,k) = obj.S(:,:,j)*(obj.Pa(:,:,k) - obj.Phata(:,:,k))*obj.S(:,:,j)';
+                            dPv(:,:,k) = obj.S(:,:,j)*(obj.Pv(:,:,k) - obj.Phatv(:,:,k))*obj.S(:,:,j)';
+                            dPw(:,:,k) = obj.S(:,:,j)*(obj.Pw(:,:,k) - obj.Phatw(:,:,k))*obj.S(:,:,j)';
+                            dPw(:,:,m) = obj.S(:,:,j)*(obj.Pm(:,:,k) - obj.Phatm(:,:,k))*obj.S(:,:,j)';
 
                         else
 
                             % Post-update covariance differences and formal covariance
-                            dPa(:,:,k) = S(:,:,k)*Pa(:,:,k)*S(:,:,k)' - Phata(:,:,k);
-                            dPv(:,:,k) = S(:,:,k)*Pv(:,:,k)*S(:,:,k)' - Phatv(:,:,k);
-                            dPw(:,:,k) = S(:,:,k)*Pw(:,:,k)*S(:,:,k)' - Phatw(:,:,k);
-                            dPm(:,:,k) = S(:,:,k)*Pm(:,:,k)*S(:,:,k)' - Phatm(:,:,k);
+                            dPa(:,:,k) = obj.S(:,:,k)*obj.Pa(:,:,k)*obj.S(:,:,k)' - obj.Phata(:,:,k);
+                            dPv(:,:,k) = obj.S(:,:,k)*obj.Pv(:,:,k)*obj.S(:,:,k)' - obj.Phatv(:,:,k);
+                            dPw(:,:,k) = obj.S(:,:,k)*obj.Pw(:,:,k)*obj.S(:,:,k)' - obj.Phatw(:,:,k);
+                            dPm(:,:,k) = obj.S(:,:,k)*obj.Pm(:,:,k)*obj.S(:,:,k)' - obj.Phatm(:,:,k);
 
                         end
 
-                        Phatt(:,:,k) = Phata(:,:,k) + Phatv(:,:,k) + Phatw(:,:,k)+ Phatm(:,:,k);
+                        obj.Phatt(:,:,k) = obj.Phata(:,:,k) + obj.Phatv(:,:,k) + obj.Phatw(:,:,k) + obj.Phatm(:,:,k);
 
                         % Now copy the data if necessary to fill in for any iterations below.
                         % Zero-order hold
                         for z = (k+1):iint(ispan(i)),
-                            Pa(:,:,z) = Pa(:,:,k);
-                            Pv(:,:,z) = Pv(:,:,k);
-                            Pw(:,:,z) = Pw(:,:,k);
-                            Pm(:,:,z) = Pm(:,:,k);
-                            Phata(:,:,z) = Phata(:,:,k);
-                            Phatv(:,:,z) = Phatv(:,:,k);
-                            Phatw(:,:,z) = Phatw(:,:,k);
-                            Phatm(:,:,z) = Phatm(:,:,k);
+                            obj.Pa(:,:,z) = obj.Pa(:,:,k);
+                            obj.Pv(:,:,z) = obj.Pv(:,:,k);
+                            obj.Pw(:,:,z) = obj.Pw(:,:,k);
+                            obj.Pm(:,:,z) = obj.Pm(:,:,k);
+                            obj.Phata(:,:,z) = obj.Phata(:,:,k);
+                            obj.Phatv(:,:,z) = obj.Phatv(:,:,k);
+                            obj.Phatw(:,:,z) = obj.Phatw(:,:,k);
+                            obj.Phatm(:,:,z) = obj.Phatm(:,:,k);
                             dPa(:,:,z) = dPa(:,:,k);
                             dPv(:,:,z) = dPv(:,:,k);
                             dPw(:,:,z) = dPw(:,:,k);
                             dPm(:,:,z) = dPm(:,:,k);
-                            Phatt(:,:,z) = Phatt(:,:,k);
-                            P(:,:,z) = P(:,:,k);
+                            obj.Phatt(:,:,z) = obj.Phatt(:,:,k);
+                            obj.P(:,:,z) = obj.P(:,:,k);
                             Sig_a(:,:,z) = Sig_a(:,:,k);
                         end
 
@@ -787,19 +793,19 @@ classdef estseq < estimator
             % case.  Use estval to plot these data if no output arguments are supplied.
 
             if ischmidt==1
-                [e{:}] = deal(NaN(n,lenti));
+                [obj.e{:}] = deal(NaN(n,lenti));
             else
-                [e{:}] = deal(NaN(ns,lenti));
+                [obj.e{:}] = deal(NaN(ns,lenti));
             end
             for j = ncases:-1:1,
-                t{j} = titer;
-                Phat{j} = scrunch(Phat{j}); % Need to look at solve for only
+                obj.t{j} = titer;
+                obj.Phat{j} = scrunch(obj.Phat{j}); % Need to look at solve for only
                 for i = lenti:-1:1,
                     % This misses any update iterations
                     if ischmidt == 1
-                        e{j}(:,iint(i)) = Xhat{j}(:,iint(i)) - X{j}(:,i); 
+                        obj.e{j}(:,iint(i)) = obj.Xhat{j}(:,iint(i)) - obj.X{j}(:,i); 
                     else
-                        e{j}(:,iint(i)) = Xhat{j}(:,iint(i)) - S(:,:,iint(i))*X{j}(:,i); 
+                        obj.e{j}(:,iint(i)) = obj.Xhat{j}(:,iint(i)) - obj.S(:,:,iint(i))*obj.X{j}(:,i); 
                     end
                     % Fill in iterations if required
                     if i == 1,
@@ -809,9 +815,9 @@ classdef estseq < estimator
                     end
                     for k = thisint,
                         if ischmidt == 1
-                            e{j}(:,k) = Xhat{j}(:,k) - X{j}(:,i); 
+                            obj.e{j}(:,k) = obj.Xhat{j}(:,k) - obj.X{j}(:,i); 
                         else
-                            e{j}(:,k) = Xhat{j}(:,k) - S(:,:,k)*X{j}(:,i); 
+                            obj.e{j}(:,k) = obj.Xhat{j}(:,k) - obj.S(:,:,k)*obj.X{j}(:,i); 
                         end
                     end
                 end
@@ -826,47 +832,62 @@ classdef estseq < estimator
             % the time span.
 
             % First map the full sensitivities to the solve-for state space:
-            Sig_sa = NaN(ns,n,lentr);
+            obj.Sig_sa = NaN(ns,n,lentr);
             for j = lentr:-1:1,
-                Sig_sa(:,:,j) = S(:,:,j)*Sig_a(:,:,j); 
+                obj.Sig_sa(:,:,j) = obj.S(:,:,j)*Sig_a(:,:,j); 
             end
 
+            
+            %% Output results
             if nargout >= 3,
-                varargout{1} = t;
-                varargout{2} = Xhat;
-                varargout{3} = Phat;
+                varargout{1} = obj.t;
+                varargout{2} = obj.Xhat;
+                varargout{3} = obj.Phat;
             end
             if nargout >= 4,
-                varargout{4} = e;
+                varargout{4} = obj.e;
             end
             if nargout >= 5,
-                varargout{5} = y;
+                varargout{5} = obj.y;
             end
             if nargout >= 6,
-                varargout{6} = Pa;
-                varargout{7} = Pv;
-                varargout{8} = Pw;
-                varargout{9} = Phata;
-                varargout{10} = Phatv;
-                varargout{11} = Phatw;
+                varargout{6} = obj.Pa;
+                varargout{7} = obj.Pv;
+                varargout{8} = obj.Pw;
+                varargout{9} = obj.Phata;
+                varargout{10} = obj.Phatv;
+                varargout{11} = obj.Phatw;
             end
             if nargout >= 12,
-                varargout{12} = Sig_sa;
+                varargout{12} = obj.Sig_sa;
             end
             if(nargout >= 13)
-                varargout{13} = eflag;
+                varargout{13} = obj.eflag;
             end
             if nargout >= 14,
-                varargout{14} = Pdy;
+                varargout{14} = obj.Pdy;
             end
             if nargout >= 15,
-                varargout{15} = Pdyt;
+                varargout{15} = obj.Pdyt;
             end
             if nargout >= 16
-                varargout{16} = Pm;
-                varargout{17} = Phatm;
+                varargout{16} = obj.Pm;
+                varargout{17} = obj.Phatm;
             end
 
         end % run_estimator Function
+        
+        
+        function [xdot,A,Q] = wrapperdyn(obj,t,X,opts)
+
+            [xdot1,A1,Q1] = feval(obj.dynfun.est,t,X(1:6),opts.est);
+            [xdot2,A2,Q2] = feval(obj.dynfun.tru,t,X(7:12),opts.tru);
+
+            xdot = [xdot1;xdot2];
+            A = blkdiag(A1,A2);
+            Q = blkdiag(Q1,Q2);
+
+        end
+        
     end % Methods
 end % Class

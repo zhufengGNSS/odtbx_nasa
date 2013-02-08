@@ -8,6 +8,7 @@ classdef estimator < handle
         % In
         dynfun
         datfun
+        datarg
         tspan
         Xo
         Xbaro
@@ -20,23 +21,27 @@ classdef estimator < handle
         
         % Out
         t
+        X
         Xhat
         Phat
         e
         y
+        Y
         Pa
         Pv
         Pw
         Phata
         Phatv
         Phatw
+        Phatm % new estseq
+        Phatt % new estseq
         Sigma_a % estbat
         Sig_sa % estseq
         eflag % estseq
+        P
         Pdy
         Pdyt
         Pm % estseq
-        Phatm % estseq
         restartRecord % estseq
     end
     

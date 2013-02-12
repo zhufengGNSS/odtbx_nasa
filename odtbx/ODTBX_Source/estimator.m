@@ -7,6 +7,7 @@ classdef estimator < handle
     properties
         % In
         dynfun
+        dynarg
         datfun
         datarg
         tspan
@@ -50,9 +51,11 @@ classdef estimator < handle
             % Preallocate these variables are cells (makes it faster?)
             obj.t = {}; 
             obj.Xhat = {};
+            obj.X = {};
             obj.Phat = {};
             obj.e = {};
             obj.y = {};
+            obj.Y = {};
             obj.Pdy = {};
             obj.eflag = {};
         end

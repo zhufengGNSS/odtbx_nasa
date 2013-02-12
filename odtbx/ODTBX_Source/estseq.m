@@ -313,13 +313,12 @@ classdef estseq < estimator
             % which means to process measurments together in a vector.
             upvec = getOdtbxOptions(obj.options, 'UpdateVectorized', 1);
 
-
             %% Time tag arrays
             % Compute a vector of time tags that account for updates (and possible
             % iterations) at each measurement time.
 
             % integrator outputs between meas. updates
-            tint = refine(obj.tspan,refint);
+            tint = estimator.refine(obj.tspan,refint);
             lenti = length(tint);
 
             % indices within tint that point back to tspan, i.e., tint(ispan)=tspan
@@ -327,12 +326,16 @@ classdef estseq < estimator
 
             % accounts for updates/iterations
             titer = [reshape([repmat(tint(ispan(1:end-1)),niter+1,1);...
-                reshape(tint(~ismember(tint,tspan)),refint,[])],[],1);...
+                reshape(tint(~ismember(tint,obj.tspan)),refint,[])],[],1);...
                 repmat(tint(ispan(end)),niter+1,1)]';
             lentr = length(titer);
 
             % Find indices within titer that point back to tint
             [~,iint] = ismember(tint,titer); clear junk 
+            
+%             [~,Xsref] = integ(obj.dynfun.est,tint,obj.Xbaro,obj.options,obj.dynarg.est);
+%             Ybar = feval(obj.datfun.est,obj.tspan,Xsref(:,ispan),obj.datarg.est);
+%             m = size(Ybar,1)
 
             %% Solve-For and Consider Mapping
             %
@@ -370,7 +373,7 @@ classdef estseq < estimator
             Stilde=zeros(n,ns,lentr);
             Ctilde=zeros(n,nc,lentr);
             for i = lentr:-1:1,
-                Minv = inv([S(:,:,i);C(:,:,i)]);
+                Minv = inv([obj.S(:,:,i);obj.C(:,:,i)]);
                 Stilde(:,:,i) = Minv(:,1:ns); 
                 Ctilde(:,:,i) = Minv(:,ns+1:n); 
             end
@@ -387,7 +390,7 @@ classdef estseq < estimator
 
             % Pre-allocate arrays that need to be filled in forward-time order (the
             % rest can be fully allocated when created).
-            lents = length(tspan);
+            lents = length(obj.tspan);
 
             m = 14;
 
@@ -403,10 +406,10 @@ classdef estseq < estimator
             % Pre-allocate arrays for consider covariance analysis
             % True (total) covariance
             obj.Pa    = NaN([n,n,lentr]);       % a-priori
-            obj.Pv    = NaN(size(Pa));          % measurement noise
-            obj.Pw    = NaN(size(Pa));          % process noise
-            obj.Pm    = NaN(size(Pa));
-            obj.P     = NaN(size(Pa));          % total
+            obj.Pv    = NaN(size(obj.Pa));          % measurement noise
+            obj.Pw    = NaN(size(obj.Pa));          % process noise
+            obj.Pm    = NaN(size(obj.Pa));
+            obj.P     = NaN(size(obj.Pa));          % total
             obj.Pdyt  = NaN(m,m,lentr);         % measurement innovations
             % Assumed covariance of solved for states only if ischmidt=0 otherwise
             % it is of all the states
@@ -499,27 +502,28 @@ classdef estseq < estimator
                     else
                         %% Combine into one big estimator for a combined state
 
-                        thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
-                        BigX = [obj.Xhat{j}(:,thisint(1)); obj.X{j}(:,i-1)];
-                        wrapper = @obj.wrapperdyn;
-                        [~,xdum,phidum,sdum] = integ(wrapper,titer(thisint),BigX,[],obj.dynarg)
-                        
 %                         thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
-%                         [~,xdum,phidum,sdum] = integ(dynfun.est,titer(thisint),Xhat{j}(:,thisint(1)),[],dynarg.est);
-%                         if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
-%                             xdum = [xdum(:,1) xdum(:,end)];
-%                             phidum(:,:,2) = phidum(:,:,end);
-%                             sdum(:,:,2) = sdum(:,:,end);
-%                         end
-%                         Xhat{j}(:,thisint) = xdum;
-%                         for k = 2:length(thisint)
-%                             sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
-%                             Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
-%                             Phat{j}(:,:,thisint(k)) = (Phat{j}(:,:,thisint(k)) + Phat{j}(:,:,thisint(k))')/2;
-%                         end
-% 
-%                         [~,xdum,~,sdum] = integ(dynfun.tru,tint(i-1:i),X{j}(:,i-1),[],dynarg.tru);
-%                         X{j}(:,i) = xdum(:,end);%+covsmpl(sdum(:,:,end));
+%                         BigX = [obj.Xhat{j}(:,thisint(1)); obj.X{j}(:,i-1)]
+%                         wrapper = @obj.wrapperdyn;
+%                         opts = odeset('Event',@obj.event);
+%                         [~,xdum,phidum,sdum] = integ(wrapper,titer(thisint),BigX,opts,obj.dynarg)
+                        
+                        thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
+                        [~,xdum,phidum,sdum] = integ(obj.dynfun.est,titer(thisint),obj.Xhat{j}(:,thisint(1)),[],obj.dynarg.est);
+                        if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
+                            xdum = [xdum(:,1) xdum(:,end)];
+                            phidum(:,:,2) = phidum(:,:,end);
+                            sdum(:,:,2) = sdum(:,:,end);
+                        end
+                        obj.Xhat{j}(:,thisint) = xdum;
+                        for k = 2:length(thisint)
+                            sdum(:,:,k) = (sdum(:,:,k) + sdum(:,:,k)')/2;
+                            obj.Phat{j}(:,:,thisint(k)) = phidum(:,:,k)*obj.Phat{j}(:,:,thisint(1))*phidum(:,:,k)' + sdum(:,:,k);
+                            obj.Phat{j}(:,:,thisint(k)) = (obj.Phat{j}(:,:,thisint(k)) + obj.Phat{j}(:,:,thisint(k))')/2;
+                        end
+
+                        [~,xdum,~,sdum] = integ(obj.dynfun.tru,tint(i-1:i),obj.X{j}(:,i-1),[],obj.dynarg.tru);
+                        obj.X{j}(:,i) = xdum(:,end);%+covsmpl(sdum(:,:,end));
 
                         % Replace with one big integrator for a combined state
 
@@ -555,51 +559,53 @@ classdef estseq < estimator
                     end
 
                     %% Burn
-                    for k = 1:length(obj.dynarg.est.targetBurn)
-                        if tint(i) == obj.dynarg.est.targetBurn(k)
-                            v1 = obj.Xhat{j}(10:12,thisint(end));
+                    if (isfield(obj.dynarg.est,'targetBurn'))
+                        for k = 1:length(obj.dynarg.est.targetBurn)
+                            if tint(i) == obj.dynarg.est.targetBurn(k)
+                                v1 = obj.Xhat{j}(10:12,thisint(end));
 
-                            v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
-                                obj.Xhat{j}(:,thisint(end)),dynarg.tru),v1);
+                                v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
+                                    obj.Xhat{j}(:,thisint(end)),dynarg.tru),v1);
 
-                            dv = v1-obj.Xhat{j}(10:12,thisint(end));
+                                dv = v1-obj.Xhat{j}(10:12,thisint(end));
 
-                            disp('Target Burn...')
-                            disp(dv)
+                                disp('Target Burn...')
+                                disp(dv)
 
-                            obj.Xhat{j}(10:12,thisint(end)) = v1;
+                                obj.Xhat{j}(10:12,thisint(end)) = v1;
 
-                            dt = obj.dynarg.tru.mass/obj.dynarg.tru.thrust*norm(dv);
-                            err = obj.dynarg.tru.exError*norm(dv);
-                            if err > 1e-6
-                                err = 1e-6;
-                            end
+                                dt = obj.dynarg.tru.mass/obj.dynarg.tru.thrust*norm(dv);
+                                err = obj.dynarg.tru.exError*norm(dv);
+                                if err > 1e-6
+                                    err = 1e-6;
+                                end
 
-                            q = (err/dt)^2;
+                                q = (err/dt)^2;
 
-                            I = eye(3,3);
+                                I = eye(3,3);
 
-                            Qman(7:12,7:12) = q*[I*dt^3/3 I*dt^3/3;...
-                                                 I*dt^2/2 I*dt];
+                                Qman(7:12,7:12) = q*[I*dt^3/3 I*dt^3/3;...
+                                                     I*dt^2/2 I*dt];
 
-                            xerr = covsmpl(Qman);
+                                xerr = covsmpl(Qman);
 
-                            obj.X{j}(7:12,i) = obj.X{j}(7:12,i)+[zeros(3,1);dv] + xerr(7:12,1);
+                                obj.X{j}(7:12,i) = obj.X{j}(7:12,i)+[zeros(3,1);dv] + xerr(7:12,1);
 
-            %                 v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
-            %                     X{j}(:,i),dynarg.tru),v1);
-            %                 
-            %                 X{j}(10:12,i) = v1;
+                %                 v1 = fminunc(@(v) findTargetBurn(v,[tint(i) tint(end)],...
+                %                     X{j}(:,i),dynarg.tru),v1);
+                %                 
+                %                 X{j}(10:12,i) = v1;
 
-                            disp('Execution Error')
-                            disp(xerr(7:9,1))
+                                disp('Execution Error')
+                                disp(xerr(7:9,1))
 
-                            obj.Phat{j}(:,:,thisint(end)) = obj.Phat{j}(:,:,thisint(end))...
-                                + Qman;
+                                obj.Phat{j}(:,:,thisint(end)) = obj.Phat{j}(:,:,thisint(end))...
+                                    + Qman;
 
-                            if j == 1
-                                obj.Pm(1:12,1:12,thisint(end)) = obj.Pm(1:12,1:12,thisint(end)) + Qman;
-                                obj.Phatm(1:12,1:12,thisint(end)) = obj.Phatm(:,:,thisint(end)) + Qman;
+                                if j == 1
+                                    obj.Pm(1:12,1:12,thisint(end)) = obj.Pm(1:12,1:12,thisint(end)) + Qman;
+                                    obj.Phatm(1:12,1:12,thisint(end)) = obj.Phatm(:,:,thisint(end)) + Qman;
+                                end
                             end
                         end
                     end
@@ -625,9 +631,17 @@ classdef estseq < estimator
 
                     nmeas = size(obj.Y{1}(:,1));
                     isel = 1:nmeas;
+                    
+%                     size(obj.Y{j}(:,i))
+%                     obj.Y{j}(:,i)
+%                     size(feval(obj.datfun.tru,obj.tspan(i),obj.X{j}(:,i),obj.datarg.tru))
+%                     feval(obj.datfun.tru,obj.tspan(i),obj.X{j}(:,i),obj.datarg.tru)
 
-                    obj.Y{j}(:,i) = feval(obj.datfun.tru,tspan(i),obj.X{j}(:,i),obj.datarg.tru);
-                    [~,Href(:,:,i),R(:,:,i)] = ominusc(obj.datfun.tru,tspan(i),obj.X{1}(:,i),obj.Y{j}(:,i),obj.options,[],obj.datarg.tru);
+%                     R(:,:,i)
+%                     covsmpl(R(:,:,i))
+
+                    obj.Y{j}(:,i) = feval(obj.datfun.tru,obj.tspan(i),obj.X{j}(:,i),obj.datarg.tru);
+                    [~,Href(:,:,i),R(:,:,i)] = ominusc(obj.datfun.tru,obj.tspan(i),obj.X{1}(:,i),obj.Y{j}(:,i),obj.options,[],obj.datarg.tru);
                     obj.Y{j}(:,i) = obj.Y{j}(:,i) + covsmpl(R(:,:,i)); 
 
                     % Do meas update niter times
@@ -691,13 +705,13 @@ classdef estseq < estimator
                         Rm = R(~inan,~inan,i);
 
                         obj.Pdyt(:,:,k-1) = NaN(size(R(:,:,i)));
-                        Pdytm = (Hrefm*P(:,:,k-1)*Hrefm' + Rm);
+                        Pdytm = (Hrefm*obj.P(:,:,k-1)*Hrefm' + Rm);
 
                         obj.Pdyt(~inan,~inan,k-1) = Pdytm;
 
                         % Compute the gains
-                        K = Phatt(:,:,k-1)*Hsrefm'/...
-                            (Hsrefm*Phatt(:,:,k-1)*Hsrefm' + Rhatm);
+                        K = obj.Phatt(:,:,k-1)*Hsrefm'/...
+                            (Hsrefm*obj.Phatt(:,:,k-1)*Hsrefm' + Rhatm);
 
                         if ischmidt == 1
 

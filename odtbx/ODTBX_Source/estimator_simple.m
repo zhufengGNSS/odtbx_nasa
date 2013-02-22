@@ -18,6 +18,7 @@ classdef estimator_simple < handle
         options
         
         % Out
+        X_state
         t
         X
         Xhat

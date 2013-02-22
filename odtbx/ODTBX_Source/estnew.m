@@ -106,8 +106,9 @@ classdef estnew < estimator_simple
             state_component_length = length(obj.Xo);
             num_time_steps = length(obj.tspan);
             
-            obj.X = NaN(state_component_length,num_time_steps);
-%             obj.Xhat = NaN(length(obj.Xbaro),lentr);
+            X_state = NaN(state_component_length*2,1);
+            obj.X = NaN(state_component_length,num_time_steps); % X and Xhat could just be consolidated into X_state, but that makes for some long, ugly code whenever you have to access them
+            obj.Xhat = NaN(state_component_length,num_time_steps);
 %             obj.Phat = NaN([size(obj.Pbaro),lentr]);
 %             obj.y = NaN(state_component_length,lentr);     % Measurement innovations
 %             obj.eflag = NaN(state_component_length,lentr);
@@ -122,8 +123,8 @@ classdef estnew < estimator_simple
             for sim_time_ind = 1:length(obj.tspan)
                 if (sim_time_ind == 1)
                     % Filter initial conditions
-                    obj.X_state(1:state_component_length,1) = obj.Xbaro;
-                    obj.X_state(state_component_length+1:state_component_length*2,1) = obj.Xo;
+                    obj.Xhat(:,1) = obj.Xbaro;
+                    obj.X(:,1) = obj.Xo;
                     obj.Phat(:,:,1) = obj.Pbaro;
                     
                     % True covariance
@@ -141,23 +142,16 @@ classdef estnew < estimator_simple
 %                     obj.X(:,1) = obj.Xo + covsmpl(obj.Po, 1, monteseed_use);
                     
                 end
-                
-                % Prepare for propagation
-                done = false;
-                opts = odeset('Event',@obj.events);
-                prop_begin_time = obj.tspan(sim_time_ind);
-                prop_end_time = obj.tspan(sim_time_ind+1);
-                X_state_begin = obj.X_state(:,sim_time_ind);
-                
+                              
                 % Calculate true/estimated measurement at tspan(sim_time_ind)
                 Yref = ...
-                    feval(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X_state(state_component_length+1:state_component_length*2,sim_time_ind),obj.datarg.tru);
+                    feval(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X(:,sim_time_ind),obj.datarg.tru);
                 Ybar = ...
-                    feval(obj.datfun.est,obj.tspan(sim_time_ind),obj.X_state(1:state_component_length,sim_time_ind),obj.datarg.est);
-                [~,Href(:,:,sim_time_ind),R(:,:,sim_time_ind)] = ...
-                    ominusc(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X_state(state_component_length+1:state_component_length*2,sim_time_ind),Yref,obj.options,[],obj.datarg.tru);
-                [~,Hsref(:,:,sim_time_ind),Rhat(:,:,sim_time_ind)] = ...
-                    ominusc(obj.datfun.est,obj.tspan(sim_time_ind),obj.X_state(1:state_component_length,sim_time_ind),Ybar,obj.options,[],obj.datarg.est);
+                    feval(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.datarg.est);
+                [~,Href(:,:),R(:,:)] = ...
+                    ominusc(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X(:,sim_time_ind),Yref,obj.options,[],obj.datarg.tru);
+                [~,Hsref(:,:),Rhat(:,:)] = ...
+                    ominusc(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),Ybar,obj.options,[],obj.datarg.est);
 %                 if (sim_time_ind == 1) % Make Y the right size
 %                     obj.Y = NaN(size(Yref),num_time_steps);
 %                 end
@@ -168,7 +162,18 @@ classdef estnew < estimator_simple
                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.eflag(isel,sim_time_ind),obj.y(isel,sim_time_ind),obj.Pdy(isel,isel,sim_time_ind),~] = ...
                     kalmup(obj.datfun.est, obj.tspan(sim_time_ind),obj.Xhat(:,k-1),obj.Phat(:,:,k-1),obj.Y(:,sim_time_ind),...
                     obj.options,eflag_set,eratio,obj.datarg.est,isel); 
-                                
+                           
+                % Prepare for propagation
+                done = false;
+                opts = odeset('Event',@obj.events);
+                
+                % Define the time range and starting state for propagation
+                prop_begin_time = obj.tspan(sim_time_ind);
+                prop_end_time = obj.tspan(sim_time_ind+1);
+                X_state(:,1) = [obj.Xhat(:,sim_time_ind); obj.X(:,sim_time_ind)];
+                X_state_begin = X_state(:,1);
+                
+                % Propagation loop
                 while ~done
                     % Propagation
                     time_span = [prop_begin_time, prop_end_time];
@@ -176,7 +181,9 @@ classdef estnew < estimator_simple
 
                     % Check to see if it was propagated fully
                     if (time_prop(end) == time_span(end))
-                        obj.X_state(:,sim_time+1) = X_state_prop(:,end);
+                        % Save the final propagated state back to the state
+                        % (will be saved to time sim_time_ind+1)
+                        X_state(:,1) = X_state_prop(:,end);
                         done = true;
                     else
                         % Adjust state/covariance based on user-supplied function
@@ -188,6 +195,10 @@ classdef estnew < estimator_simple
                     end
 
                 end
+                
+                % Pull the variables out of the state
+                obj.X = X_state(state_component_length+1:state_component_length*2,sim_time_ind+1);
+                obj.Xhat = X_state(1:state_component_length,sim_time_ind+1);
                 
             end
 

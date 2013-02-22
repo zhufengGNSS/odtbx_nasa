@@ -74,8 +74,10 @@ opts = setOdtbxOptions('MonteCarloCases',10,'UpdateIterations',2);
 % Now run (and time) the sequential estimator:
 %
 tic
-[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,eflg,Pdy,Pdyt]=estseq(...
-    dynfun,datfun,tspan,Xnot,Pnot,opts,dynarg,datarg,S,C);
+
+myest = estnew(dynfun,datfun,tspan,Xnot,Pnot,opts,dynarg,datarg);
+
+[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,eflg,Pdy,Pdyt]=myest.run_estimator();
 toc
 %
 % Plot estimator error, measurment innovations, and variance sandpiles in

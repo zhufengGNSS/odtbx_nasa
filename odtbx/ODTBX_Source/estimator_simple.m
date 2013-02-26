@@ -18,7 +18,7 @@ classdef estimator_simple < handle
         options
         
         % Out
-        X_state
+%         X_state
         t
         X
         Xhat
@@ -46,6 +46,16 @@ classdef estimator_simple < handle
     
     methods
         function obj = estimator()
+            dynfun = [];
+            dynarg = [];
+            datfun = [];
+            datarg = [];
+            tspan = [];
+            Xo = [];
+            Xbaro = [];
+            Po = [];
+            Pbaro = [];
+            options = [];
 
         end
         

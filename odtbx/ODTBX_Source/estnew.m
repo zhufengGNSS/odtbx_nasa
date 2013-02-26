@@ -109,15 +109,18 @@ classdef estnew < estimator_simple
             X_state = NaN(state_component_length*2,1);
             obj.X = NaN(state_component_length,num_time_steps); % X and Xhat could just be consolidated into X_state, but that makes for some long, ugly code whenever you have to access them
             obj.Xhat = NaN(state_component_length,num_time_steps);
-%             obj.Phat = NaN([size(obj.Pbaro),lentr]);
-%             obj.y = NaN(state_component_length,lentr);     % Measurement innovations
-%             obj.eflag = NaN(state_component_length,lentr);
+            obj.Phat = NaN([size(obj.Pbaro),num_time_steps]);
+            obj.y = NaN(state_component_length,num_time_steps);     % Measurement innovations
+            obj.eflag = NaN(state_component_length*2,num_time_steps);
 %             obj.Y = NaN(state_component_length,num_time_steps);     % True measurements
-%             obj.Pdy = NaN(state_component_length,state_component_length,lentr); % Measurement innovations covariance
+            obj.Pdy = NaN(state_component_length,state_component_length,num_time_steps); % Measurement innovations covariance
             
 %             monteseed = getOdtbxOptions(obj.options, 'MonteCarloSeed', NaN);
 %             monteseed_use = NaN(1,1); % Pre-allocate array
 %             monteseed_use = monteseed;
+
+%             eratio = getOdtbxOptions(obj.options, 'EditRatio', []) % Default is empty, meaning no meas. editing
+%             eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []) % Default is empty (no meas. editing)
 
 
             for sim_time_ind = 1:length(obj.tspan)
@@ -156,12 +159,16 @@ classdef estnew < estimator_simple
 %                     obj.Y = NaN(size(Yref),num_time_steps);
 %                 end
 %                 covsmpl(R(:,:,sim_time_ind))
-%                 obj.Y(:,sim_time_ind) = Y + covsmpl(R(:,:,sim_time_ind)); 
+                obj.Y(:,sim_time_ind) = Yref + covsmpl(R(:,:));
+                num_measurements = size(obj.Y(:,1));
+                isel = 1:num_measurements;
                 
                 % Perform measurement update
-                [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.eflag(isel,sim_time_ind),obj.y(isel,sim_time_ind),obj.Pdy(isel,isel,sim_time_ind),~] = ...
-                    kalmup(obj.datfun.est, obj.tspan(sim_time_ind),obj.Xhat(:,k-1),obj.Phat(:,:,k-1),obj.Y(:,sim_time_ind),...
-                    obj.options,eflag_set,eratio,obj.datarg.est,isel); 
+%                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.eflag(isel,sim_time_ind),obj.y(isel,sim_time_ind),obj.Pdy(isel,isel,sim_time_ind),~] = ...
+%                     kalmup(obj.datfun.est, obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind),...
+%                     obj.options,eflag_set,eratio,obj.datarg.est,isel); 
+%                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind)] = ...
+                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind))
                            
                 % Prepare for propagation
                 done = false;
@@ -179,7 +186,7 @@ classdef estnew < estimator_simple
                     time_span = [prop_begin_time, prop_end_time];
                     [time_prop, X_state_prop] = integ(obj.wrapperdyn,time_span,X_state_begin,opts,obj.dynarg);
 
-                    % Check to see if it was propagated fully
+                    % Check for full propagation
                     if (time_prop(end) == time_span(end))
                         % Save the final propagated state back to the state
                         % (will be saved to time sim_time_ind+1)

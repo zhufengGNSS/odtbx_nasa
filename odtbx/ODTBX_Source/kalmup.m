@@ -170,45 +170,48 @@ end
 process(isnan(dy)) = false;
 
 % Perform measurement editing
-[process,eflag] = editmeas(process,dy,Pdy,eflag,eratio);
+if(exist('eflag', 'var'))
 
-ikeep = find(process == true);
+    [process,eflag] = editmeas(process,dy,Pdy,eflag,eratio);
 
-if ~isempty(ikeep)
-    
-    H = H(ikeep,:);
-    R = R(ikeep,ikeep);
-    
-    PHt = P*H';
-    
-    K = S*PHt/Pdy(ikeep,ikeep);
-    
-    % Solved-for states
-    xs = S*x;
-    % Apply the gain on the solved-for states only
-    xs = xs + K*dy(ikeep);
-    % Combine with the consider states that are unchanged
-    if ns < nx
-        x = Stilde*xs + Ctilde*C*x;
-    else
-        x=xs;
+    ikeep = find(process == true);
+
+    if ~isempty(ikeep)
+
+        H = H(ikeep,:);
+        R = R(ikeep,ikeep);
+
+        PHt = P*H';
+
+        K = S*PHt/Pdy(ikeep,ikeep);
+
+        % Solved-for states
+        xs = S*x;
+        % Apply the gain on the solved-for states only
+        xs = xs + K*dy(ikeep);
+        % Combine with the consider states that are unchanged
+        if ns < nx
+            x = Stilde*xs + Ctilde*C*x;
+        else
+            x=xs;
+        end
+        ImKH = eye(length(x)) - Stilde*K*H;
+        P = ImKH*P*ImKH' + Stilde*K*R*K'*Stilde';
+        P = (P+P')/2;
+        % TODO: Need to replace above with the following for consider (possibly
+        % do this in a new update function):
+        % Hs = H*Stilde;
+        % ImKH = eye(length(s)) - K*Hs;
+        % Phatssa = ImKH*Phatssa*ImKH';
+        % Phatssv = ImKH*Phatssv*ImKH' + K*Rhat*K';
+        % Phatssw = ImKH*Phatssw*ImKH';
+        % ImSKH = eye(length(x)) - Stilde*K*H;
+        % Pa = ImSKH*Pa*ImSKH';
+        % Pv = ImSKH*Pv*ImSKH' + Stilde*K*R*K'*Stilde';
+        % Pw = ImSKH*Pw*ImSKH';
+        % Phatss = Phatssa + Phatssv + Phatssw;
+        % dPssa = S*Pa*S' - Phatssa;
+        % dPssv = S*Pv*S' - Phatssv;
+
     end
-    ImKH = eye(length(x)) - Stilde*K*H;
-    P = ImKH*P*ImKH' + Stilde*K*R*K'*Stilde';
-    P = (P+P')/2;
-    % TODO: Need to replace above with the following for consider (possibly
-    % do this in a new update function):
-    % Hs = H*Stilde;
-    % ImKH = eye(length(s)) - K*Hs;
-    % Phatssa = ImKH*Phatssa*ImKH';
-    % Phatssv = ImKH*Phatssv*ImKH' + K*Rhat*K';
-    % Phatssw = ImKH*Phatssw*ImKH';
-    % ImSKH = eye(length(x)) - Stilde*K*H;
-    % Pa = ImSKH*Pa*ImSKH';
-    % Pv = ImSKH*Pv*ImSKH' + Stilde*K*R*K'*Stilde';
-    % Pw = ImSKH*Pw*ImSKH';
-    % Phatss = Phatssa + Phatssv + Phatssw;
-    % dPssa = S*Pa*S' - Phatssa;
-    % dPssv = S*Pv*S' - Phatssv;
 end
-

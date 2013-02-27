@@ -100,6 +100,7 @@ classdef estnew < estimator_simple
             end
         end
     
+        
         function varargout = run_estimator(obj)
             
             % Preallocate variables
@@ -123,7 +124,7 @@ classdef estnew < estimator_simple
 %             eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []) % Default is empty (no meas. editing)
 
 
-            for sim_time_ind = 1:length(obj.tspan)-1
+            for sim_time_ind = 1:length(obj.tspan)
                 if (sim_time_ind == 1)
                     % Filter initial conditions
                     obj.Xhat(:,1) = obj.Xbaro;
@@ -155,65 +156,65 @@ classdef estnew < estimator_simple
                     ominusc(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X(:,sim_time_ind),Yref,obj.options,[],obj.datarg.tru);
                 [~,Hsref(:,:),Rhat(:,:)] = ...
                     ominusc(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),Ybar,obj.options,[],obj.datarg.est);
-%                 if (sim_time_ind == 1) % Make Y the right size
-%                     obj.Y = NaN(size(Yref),num_time_steps);
-%                 end
-%                 covsmpl(R(:,:,sim_time_ind))
+
                 obj.Y(:,sim_time_ind) = Yref + covsmpl(R(:,:));
                 num_measurements = size(obj.Y(:,1));
-                isel = 1:num_measurements;
+%                 isel = 1:num_measurements;
                 
                 % Perform measurement update
 %                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.eflag(isel,sim_time_ind),obj.y(isel,sim_time_ind),obj.Pdy(isel,isel,sim_time_ind),~] = ...
 %                     kalmup(obj.datfun.est, obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind),...
 %                     obj.options,eflag_set,eratio,obj.datarg.est,isel); 
                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind)] = ...
-                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind)); 
+                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind));
                            
                 % Prepare for propagation
                 done = false;
-                opts = odeset('Event',@obj.events);
+%                 opts = odeset('Event',@obj.events);
                 
-                % Define the time range and starting state for propagation
-                prop_begin_time = obj.tspan(sim_time_ind);
-                prop_end_time = obj.tspan(sim_time_ind+1);
-                X_state(:,1) = [obj.Xhat(:,sim_time_ind); obj.X(:,sim_time_ind)];
-                X_state_begin = X_state(:,1);
-                
-                % Propagation loop
-                while ~done
-                    % Propagation
-                    time_span = [prop_begin_time, prop_end_time];
-                    [time_prop, X_state_prop, time_event, X_event] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@estnew.events)
+                if (sim_time_ind ~= length(obj.tspan)) % Only propagates when there's something left to propagate
 
-                    % Check for full propagation
-                    if (time_prop(end) == time_span(end))
-                        % Save the final propagated state back to the state
-                        % (will be saved to time sim_time_ind+1)
-                        X_state(:,1) = X_state_prop(:,end);
-                        done = true;
-                        disp "Complete"
-                    else
-                        % Adjust state/covariance based on user-supplied function
-                        disp "Incomplete"
-                        X_new = X_event;
-                        
-                        % Repropagate from where the loop ended (where
-                        % the event occurred)
-                        prop_begin_time = time_event(end);
-                        X_state_begin = X_new;
+                    % Define the time range and starting state for propagation
+                    prop_begin_time = obj.tspan(sim_time_ind);
+                    prop_end_time = obj.tspan(sim_time_ind+1);
+                    X_state(:,1) = [obj.Xhat(:,sim_time_ind); obj.X(:,sim_time_ind)];
+                    X_state_begin = X_state(:,1);
+
+                    % Propagation loop
+                    while ~done
+                        % Propagation
+                        time_span = [prop_begin_time, prop_end_time];
+                        [time_prop, X_state_prop, time_event, X_event] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@estnew.events);
+
+                        % Check for full propagation
+                        if (time_prop(end) == time_span(end))
+                            % Save the final propagated state back to the state
+                            % (will be saved to time sim_time_ind+1)
+                            X_state(:,1) = X_state_prop(:,end);
+                            done = true;
+                        else
+                            % Adjust state/covariance based on user-supplied function
+                            X_new = X_event;
+
+                            % Repropagate from where the loop ended (where
+                            % the event occurred)
+                            prop_begin_time = time_event(end);
+                            X_state_begin = X_new;
+                        end
+
                     end
 
+                    % Pull the variables out of the state, save to object
+                    obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
+                    obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
+                    obj.t(sim_time_ind+1,1) = time_prop(end);
                 end
-                
-                % Pull the variables out of the state
-                obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
-                obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
-                
             end
 
 %             Calculate errors, package data, and output results (state errors,
 %             covariance, residuals, etc)
+            obj.e = obj.Xhat(:,:) - obj.X(:,:);
+
 
             %% Output results
             if nargout >= 3,
@@ -258,8 +259,6 @@ classdef estnew < estimator_simple
         
         function [xdot,A,Q] = wrapperdyn(obj,t,X,opts)
 
-            X
-            
             [xdot1,A1,Q1] = feval(obj.dynfun.est,t,X(1:6),opts.est);
             [xdot2,A2,Q2] = feval(obj.dynfun.tru,t,X(7:12),opts.tru);
 
@@ -273,6 +272,8 @@ classdef estnew < estimator_simple
     
     methods(Static)
         function [value,isterminal,direction] = events(t,X,varargin)
+            % See header in integev.m for details on event function formats
+            
             % Consider using functions for conditions
 
             % Event 1:

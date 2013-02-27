@@ -82,6 +82,6 @@ toc
 %
 % Plot estimator error, measurment innovations, and variance sandpiles in
 % terms of meters
-plot_results(t,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,Pdy,Pdyt,S,1e3);
+% plot_results(t,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,Pdy,Pdyt,S,1e3);
 %
 echo off

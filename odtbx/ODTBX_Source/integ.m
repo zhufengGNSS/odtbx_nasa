@@ -1,4 +1,4 @@
-function [t,x,Phi,S] = integ(dynfun,tspan,x0,options,dynarg)
+function [t,x,te,xe,Phi,S] = integ(dynfun,tspan,x0,options,dynarg)
 % INTEG  Integration of state, and possibly STM and process noise.
 %   [T,X] = INTEG(DYNFUN,TSPAN,X0,OPTIONS) uses the supplied dynamics
 %   function DYNFUN to integrate the ordinary differential equation,
@@ -78,4 +78,8 @@ switch nargout
         [t,x,~,~,Phi] = integev(dynfun,tspan,x0,options,dynarg);
     case 4
         [t,x,~,~,Phi,~,S] = integev(dynfun,tspan,x0,options,dynarg);
+    case 5
+        [t,x,te,xe,Phi] = integev(dynfun,tspan,x0,options,dynarg);
+    case 6
+        [t,x,te,xe,Phi,~,S] = integev(dynfun,tspan,x0,options,dynarg);
 end

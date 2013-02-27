@@ -123,7 +123,7 @@ classdef estnew < estimator_simple
 %             eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []) % Default is empty (no meas. editing)
 
 
-            for sim_time_ind = 1:length(obj.tspan)
+            for sim_time_ind = 1:length(obj.tspan)-1
                 if (sim_time_ind == 1)
                     % Filter initial conditions
                     obj.Xhat(:,1) = obj.Xbaro;
@@ -167,8 +167,8 @@ classdef estnew < estimator_simple
 %                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.eflag(isel,sim_time_ind),obj.y(isel,sim_time_ind),obj.Pdy(isel,isel,sim_time_ind),~] = ...
 %                     kalmup(obj.datfun.est, obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind),...
 %                     obj.options,eflag_set,eratio,obj.datarg.est,isel); 
-%                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind)] = ...
-                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind))
+                [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind)] = ...
+                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind)); 
                            
                 % Prepare for propagation
                 done = false;
@@ -184,7 +184,7 @@ classdef estnew < estimator_simple
                 while ~done
                     % Propagation
                     time_span = [prop_begin_time, prop_end_time];
-                    [time_prop, X_state_prop] = integ(obj.wrapperdyn,time_span,X_state_begin,opts,obj.dynarg);
+                    [time_prop, X_state_prop, time_event, X_event] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@estnew.events)
 
                     % Check for full propagation
                     if (time_prop(end) == time_span(end))
@@ -192,20 +192,23 @@ classdef estnew < estimator_simple
                         % (will be saved to time sim_time_ind+1)
                         X_state(:,1) = X_state_prop(:,end);
                         done = true;
+                        disp "Complete"
                     else
                         % Adjust state/covariance based on user-supplied function
-
+                        disp "Incomplete"
+                        X_new = X_event;
+                        
                         % Repropagate from where the loop ended (where
                         % the event occurred)
-                        prop_begin_time = time_prop(end);
-                        X_state_begin = X_state_prop(end);
+                        prop_begin_time = time_event(end);
+                        X_state_begin = X_new;
                     end
 
                 end
                 
                 % Pull the variables out of the state
-                obj.X = X_state(state_component_length+1:state_component_length*2,sim_time_ind+1);
-                obj.Xhat = X_state(1:state_component_length,sim_time_ind+1);
+                obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
+                obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
                 
             end
 
@@ -255,6 +258,8 @@ classdef estnew < estimator_simple
         
         function [xdot,A,Q] = wrapperdyn(obj,t,X,opts)
 
+            X
+            
             [xdot1,A1,Q1] = feval(obj.dynfun.est,t,X(1:6),opts.est);
             [xdot2,A2,Q2] = feval(obj.dynfun.tru,t,X(7:12),opts.tru);
 
@@ -264,18 +269,20 @@ classdef estnew < estimator_simple
 
         end % wrapperdyn
         
-        
-        function [value,isterminal,direction] = events(obj,t,X)
+    end % Methods
+    
+    methods(Static)
+        function [value,isterminal,direction] = events(t,X,varargin)
             % Consider using functions for conditions
-            
+
             % Event 1:
-            condition1 = X; %  We chan change this to be anything related to t or y
+            condition1 = X(1); %  We can change this to be anything related to t or X
             terminal1 = 0;
             direction1 = 0;
             
             % Event 2:
-            condition2 = t; %  We chan change this to be anything related to t or y
-            terminal2 = 0;
+            condition2 = t - 295; %  We can change this to be anything related to t or X
+            terminal2 = 1;
             direction2 = 0;
                         
             % Put all the values together to be returned
@@ -284,7 +291,7 @@ classdef estnew < estimator_simple
             direction = [direction1; direction2]; % Is there a direction involved?
         end % events
         
-    end % Methods
+    end % Static methods
     
 end % Class
 

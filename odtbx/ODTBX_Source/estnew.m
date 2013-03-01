@@ -172,7 +172,8 @@ classdef estnew < estimator_simple
                 done = false;
 %                 opts = odeset('Event',@obj.events);
                 
-                if (sim_time_ind ~= length(obj.tspan)) % Only propagates when there's something left to propagate
+                if (sim_time_ind ~= length(obj.tspan))
+                    % Only propagates when there's something left to propagate
 
                     % Define the time range and starting state for propagation
                     prop_begin_time = obj.tspan(sim_time_ind);
@@ -184,13 +185,15 @@ classdef estnew < estimator_simple
                     while ~done
                         % Propagation
                         time_span = [prop_begin_time, prop_end_time];
-                        [time_prop, X_state_prop, time_event, X_event] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@estnew.events);
-
+                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, phie, S_state_prop, se] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@estnew.events);
+             
                         % Check for full propagation
                         if (time_prop(end) == time_span(end))
                             % Save the final propagated state back to the state
                             % (will be saved to time sim_time_ind+1)
                             X_state(:,1) = X_state_prop(:,end);
+                            Phi_state(:,:,1) = Phi_state_prop(1:state_component_length,1:state_component_length,end);
+                            S_state(:,:,1) = S_state_prop(1:state_component_length,1:state_component_length,end);
                             done = true;
                         else
                             % Adjust state/covariance based on user-supplied function
@@ -208,6 +211,12 @@ classdef estnew < estimator_simple
                     obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
                     obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
                     obj.t(sim_time_ind+1,1) = time_prop(end);
+                    
+                    S_state(:,:,1) = (S_state(:,:,1) + S_state(:,:,1)')/2;
+                    obj.Phat(:,:,sim_time_ind+1) = Phi_state(:,:,1)*obj.Phat(:,:,sim_time_ind)*Phi_state(:,:,1)' + S_state(:,:,1);
+                    obj.Phat(:,:,sim_time_ind+1) = (obj.Phat(:,:,sim_time_ind+1) + obj.Phat(:,:,sim_time_ind+1)')/2;
+                    
+%                     obj.Phat(:,:,sim_time_ind+1) = Phi_state(1:state_component_length,1:state_component_length,1);
                 end
             end
 

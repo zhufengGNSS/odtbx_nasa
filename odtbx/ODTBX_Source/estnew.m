@@ -275,20 +275,20 @@ classdef estnew < estimator_simple
             
             % Consider using functions for conditions
 
-            % Event 1:
-            condition1 = X(1); %  We can change this to be anything related to t or X
-            terminal1 = 0;
-            direction1 = 0;
-            
-            % Event 2:
-            condition2 = t - 295; %  We can change this to be anything related to t or X
-            terminal2 = 1;
-            direction2 = 0;
+%             % Event 1:
+%             condition1 = X(1); %  We can change this to be anything related to t or X
+%             terminal1 = 0;
+%             direction1 = 0;
+%             
+%             % Event 2:
+%             condition2 = t - 295; %  We can change this to be anything related to t or X
+%             terminal2 = 1;
+%             direction2 = 0;
                         
             % Put all the values together to be returned
-            value = [condition1; condition2]; % Condition to look for
-            isterminal = [terminal1; terminal2]; % Do we need to end the integration at this point?
-            direction = [direction1; direction2]; % Is there a direction involved?
+            value = [0; 0]; % Condition to look for
+            isterminal = [0; 0]; % Do we need to end the integration at this point?
+            direction = [0; 0]; % Is there a direction involved?
         end % events
         
         

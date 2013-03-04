@@ -20,6 +20,17 @@ classdef est_control < handle
         end
         
         
+        function set_controllers(obj,varargin)
+            if nargin >= 2,
+                obj.myest.events_fcn = varargin{1};
+                obj.myest.control_events_fcn = varargin{2};
+            else
+                obj.myest.events_fcn = @obj.events;
+                obj.myest.control_events_fcn = @obj.control_events;
+            end
+        end
+        
+        
         function varargout = run_sim(obj)
             [t,Xhat,Phat,e,Y] = obj.myest.run_estimator();
             if nargout >= 3,
@@ -37,7 +48,7 @@ classdef est_control < handle
         
         function [value,isterminal,direction] = events(obj,t,X,varargin)
             % See header in integev.m for details on event function formats
-            
+%             disp "Controller"
             % Consider using functions for conditions
 
             % Event 1:
@@ -58,6 +69,7 @@ classdef est_control < handle
         
         
         function [X_state_mod, Phi_mod] = control_events(obj,t,X,Phi,varargin)
+%             disp "Controller"
             X_state_mod = X;
             Phi_mod = Phi;
             

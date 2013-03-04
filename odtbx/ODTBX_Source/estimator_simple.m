@@ -16,6 +16,8 @@ classdef estimator_simple < handle
         Po
         Pbaro
         options
+        events_fcn
+        control_events_fcn
         
         % Out
 %         X_state

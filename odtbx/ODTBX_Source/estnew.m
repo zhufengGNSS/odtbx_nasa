@@ -98,6 +98,18 @@ classdef estnew < estimator_simple
                 obj.datarg.tru = [];
                 obj.datarg.est = [];
             end
+            
+            if nargin >= 9,
+                obj.events_fcn = varargin{9};
+            else
+                obj.events_fcn = @obj.events_default;
+            end
+            
+            if nargin >= 10,
+                obj.control_events_fcn = varargin{10};
+            else
+                obj.control_events_fcn = @obj.control_events_default;
+            end
         end
     
         
@@ -162,7 +174,7 @@ classdef estnew < estimator_simple
                     while ~done
                         % Propagation
                         time_span = [prop_begin_time, prop_end_time];
-                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, se] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events);
+                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, se] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
              
                         % Check for full propagation
                         if (time_prop(end) == time_span(end))
@@ -174,7 +186,7 @@ classdef estnew < estimator_simple
                             done = true;
                         else
                             % Adjust state/covariance based on user-supplied function
-                            [X_new, P_new] = feval(@obj.control_events, time_event(:,end), X_event(:,end), Phi_event(:,end));
+                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phi_event(:,end));
 
                             % What do we need to do with the new P? Use it
                             % to update Xhat?
@@ -284,7 +296,7 @@ classdef estnew < estimator_simple
         % like. These should be overwritten by functions of the same name
         % in a class that does controls.
         
-        function [value,isterminal,direction] = events(obj,t,X,varargin)
+        function [value,isterminal,direction] = events_default(obj,t,X,varargin)
             % See header in integev.m for details on event function formats
             
             % Consider using functions for conditions
@@ -306,7 +318,7 @@ classdef estnew < estimator_simple
         end % events
         
         
-        function [X_state_mod, Phi_mod] = control_events(obj,t,X,Phi,varargin)
+        function [X_state_mod, Phi_mod] = control_events_default(obj,t,X,Phi,varargin)
             X_state_mod = X;
             Phi_mod = Phi;
             

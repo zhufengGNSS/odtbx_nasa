@@ -227,33 +227,8 @@ classdef estnew < estimator_simple
                 varargout{4} = obj.e;
             end
             if nargout >= 5,
-                varargout{5} = obj.y;
+                varargout{5} = obj.Y;
             end
-            if nargout >= 6,
-                varargout{6} = obj.Pa;
-                varargout{7} = obj.Pv;
-                varargout{8} = obj.Pw;
-                varargout{9} = obj.Phata;
-                varargout{10} = obj.Phatv;
-                varargout{11} = obj.Phatw;
-            end
-            if nargout >= 12,
-                varargout{12} = obj.Sig_sa;
-            end
-            if(nargout >= 13)
-                varargout{13} = obj.eflag;
-            end
-            if nargout >= 14,
-                varargout{14} = obj.Pdy;
-            end
-            if nargout >= 15,
-                varargout{15} = obj.Pdyt;
-            end
-            if nargout >= 16
-                varargout{16} = obj.Pm;
-                varargout{17} = obj.Phatm;
-            end
-
 
         end % run_estimator
         
@@ -293,8 +268,7 @@ classdef estnew < estimator_simple
         
         %% Examples
         % These are what event functions and control functions should look
-        % like. These should be overwritten by functions of the same name
-        % in a class that does controls.
+        % like. 
         
         function [value,isterminal,direction] = events_default(obj,t,X,varargin)
             % See header in integev.m for details on event function formats

@@ -74,10 +74,16 @@ opts = setOdtbxOptions('MonteCarloCases',10,'UpdateIterations',2);
 % Now run (and time) the sequential estimator:
 %
 tic
+% % Run estimator without controls
+% myest = estnew(dynfun,datfun,tspan,Xnot,Pnot,opts,dynarg,datarg);
+% 
+% [t,xhat,P,e,Y]=myest.run_estimator();
 
-myest = estnew(dynfun,datfun,tspan,Xnot,Pnot,opts,dynarg,datarg);
+% Run estimator with controls
+mysim = est_control('estnew',dynfun,datfun,tspan,Xnot,Pnot,opts,dynarg,datarg);
 
-[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,eflg,Pdy,Pdyt]=myest.run_estimator();
+[t,xhat,P,e,Y] = mysim.run_sim();
+
 toc
 %
 % Plot estimator error, measurment innovations, and variance sandpiles in

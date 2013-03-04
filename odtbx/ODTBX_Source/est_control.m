@@ -12,10 +12,6 @@ classdef est_control < handle
         
         function obj = est_control(varargin)
             if nargin >= 1,
-                disp "First"
-                varargin{1}
-                disp "Rest"
-                varargin{2:end}
                 obj.est_type = varargin{1};
                 obj.myest = feval(obj.est_type, varargin{2:end});
             else

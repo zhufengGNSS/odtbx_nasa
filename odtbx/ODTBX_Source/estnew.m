@@ -116,9 +116,8 @@ classdef estnew < estimator_simple
 %             obj.Y = NaN(state_component_length,num_time_steps);     % True measurements
             obj.Pdy = NaN(state_component_length,state_component_length,num_time_steps); % Measurement innovations covariance
             
-%             monteseed = getOdtbxOptions(obj.options, 'MonteCarloSeed', NaN);
-%             monteseed_use = NaN(1,1); % Pre-allocate array
-%             monteseed_use = monteseed;
+            monteseed = getOdtbxOptions(obj.options, 'MonteCarloSeed', NaN);
+            monteseed_use = monteseed;
 
 %             eratio = getOdtbxOptions(obj.options, 'EditRatio', []) % Default is empty, meaning no meas. editing
 %             eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []) % Default is empty (no meas. editing)
@@ -128,52 +127,30 @@ classdef estnew < estimator_simple
                 if (sim_time_ind == 1)
                     % Filter initial conditions
                     obj.Xhat(:,1) = obj.Xbaro;
-                    obj.X(:,1) = obj.Xo;
+                    obj.X(:,1) = obj.Xo + covsmpl(obj.Po, 1, monteseed_use);
                     obj.Phat(:,:,1) = obj.Pbaro;
                     
-                    % True covariance
-                    obj.Pa(:,:,1) = obj.Po;
-                    obj.Pv(:,:,1) = zeros(size(obj.Po));
-                    obj.Pw(:,:,1) = zeros(size(obj.Po));
-                    obj.Pm(:,:,1) = zeros(size(obj.Po));
-                    obj.P(:,:,1) = obj.Pa(:,:,1);
-                    % Assumed covariance
-                    obj.Phata(:,:,1) = obj.Pbaro;
-                    obj.Phatv(:,:,1) = zeros(size(obj.Pbaro));
-                    obj.Phatw(:,:,1) = zeros(size(obj.Pbaro));
-                    obj.Phatm(:,:,1) = zeros(size(obj.Pbaro));
-                    
-%                     obj.X(:,1) = obj.Xo + covsmpl(obj.Po, 1, monteseed_use);
-                    
+                    Y_size = length(feval(obj.datfun.tru,obj.tspan(sim_time_ind), ...
+                        X_state(:,sim_time_ind),obj.datarg.tru));
+                    R = NaN(2*Y_size);
                 end
-                              
+                          
                 % Calculate true/estimated measurement at tspan(sim_time_ind)
-                Yref = ...
-                    feval(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X(:,sim_time_ind),obj.datarg.tru);
-                Ybar = ...
-                    feval(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.datarg.est);
-                [~,Href(:,:),R(:,:)] = ...
-                    ominusc(obj.datfun.tru,obj.tspan(sim_time_ind),obj.X(:,sim_time_ind),Yref,obj.options,[],obj.datarg.tru);
-                [~,Hsref(:,:),Rhat(:,:)] = ...
-                    ominusc(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),Ybar,obj.options,[],obj.datarg.est);
-
-                obj.Y(:,sim_time_ind) = Yref + covsmpl(R(:,:));
-                num_measurements = size(obj.Y(:,1));
-%                 isel = 1:num_measurements;
+                [Y_state(1:Y_size*2,1),R(:,:)] = ...
+                    estnew.wrappermeas(obj.datfun,obj.tspan(sim_time_ind), ...
+                    X_state(:,1),obj.datarg,obj.options);
+                
+                obj.Y(:,sim_time_ind) = Y_state(Y_size+1:Y_size*2,1) + ...
+                    covsmpl(R(Y_size+1:Y_size*2,Y_size+1:Y_size*2));
                 
                 % Perform measurement update
-%                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.eflag(isel,sim_time_ind),obj.y(isel,sim_time_ind),obj.Pdy(isel,isel,sim_time_ind),~] = ...
-%                     kalmup(obj.datfun.est, obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind),...
-%                     obj.options,eflag_set,eratio,obj.datarg.est,isel); 
                 [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind)] = ...
                     kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind));
                            
                 % Prepare for propagation
                 done = false;
-%                 opts = odeset('Event',@obj.events);
                 
-                if (sim_time_ind ~= length(obj.tspan))
-                    % Only propagates when there's something left to propagate
+                if (sim_time_ind ~= length(obj.tspan)) % Only propagates when there's something left to propagate
 
                     % Define the time range and starting state for propagation
                     prop_begin_time = obj.tspan(sim_time_ind);
@@ -266,10 +243,10 @@ classdef estnew < estimator_simple
         end % run_estimator
         
         
-        function [xdot,A,Q] = wrapperdyn(obj,t,X,opts)
+        function [xdot,A,Q] = wrapperdyn(obj,time,X,opts)
 
-            [xdot1,A1,Q1] = feval(obj.dynfun.est,t,X(1:6),opts.est);
-            [xdot2,A2,Q2] = feval(obj.dynfun.tru,t,X(7:12),opts.tru);
+            [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:6),opts.est);
+            [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(7:12),opts.tru);
 
             xdot = [xdot1;xdot2];
             A = blkdiag(A1,A2);
@@ -280,6 +257,28 @@ classdef estnew < estimator_simple
     end % Methods
     
     methods(Static)
+        
+        function [Y,R] = wrappermeas(datfun, time, X_state, datarg, options)
+            state_size = length(X_state);
+            % Ybar
+            Ybar = feval(datfun.est,time,X_state(1:state_size/2),datarg.est);
+            
+            % Yref
+            Yref = feval(datfun.tru,time,X_state(state_size/2+1:state_size),datarg.tru);
+            
+            [~,Hsref(:,:),Rhat(:,:)] = ominusc(datfun.est,time,...
+                X_state(1:state_size/2),Ybar,options,[],datarg.est);
+            
+            [~,Href(:,:),Rref(:,:)] = ominusc(datfun.tru,time,...
+                X_state(state_size/2+1:state_size),Yref,options,[],datarg.tru);
+            
+            % Combine
+            Y = [Ybar;Yref];
+            R = blkdiag(Rhat,Rref);
+            
+        end % wrappermeas
+        
+        
         function [value,isterminal,direction] = events(t,X,varargin)
             % See header in integev.m for details on event function formats
             

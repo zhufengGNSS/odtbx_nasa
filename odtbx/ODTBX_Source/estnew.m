@@ -107,21 +107,17 @@ classdef estnew < estimator_simple
             state_component_length = length(obj.Xo);
             num_time_steps = length(obj.tspan);
             
+            % X and Xhat could just be consolidated into X_state, 
+            % but that makes for some long, ugly code whenever you have 
+            % to access them. We use a hybrid approach: Inputs and outputs
+            % to the class will be broken down
             X_state = NaN(state_component_length*2,1);
-            obj.X = NaN(state_component_length,num_time_steps); % X and Xhat could just be consolidated into X_state, but that makes for some long, ugly code whenever you have to access them
+            obj.X = NaN(state_component_length,num_time_steps); 
             obj.Xhat = NaN(state_component_length,num_time_steps);
             obj.Phat = NaN([size(obj.Pbaro),num_time_steps]);
-            obj.y = NaN(state_component_length,num_time_steps);     % Measurement innovations
-            obj.eflag = NaN(state_component_length*2,num_time_steps);
-%             obj.Y = NaN(state_component_length,num_time_steps);     % True measurements
-            obj.Pdy = NaN(state_component_length,state_component_length,num_time_steps); % Measurement innovations covariance
-            
+                        
             monteseed = getOdtbxOptions(obj.options, 'MonteCarloSeed', NaN);
             monteseed_use = monteseed;
-
-%             eratio = getOdtbxOptions(obj.options, 'EditRatio', []) % Default is empty, meaning no meas. editing
-%             eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []) % Default is empty (no meas. editing)
-
 
             for sim_time_ind = 1:length(obj.tspan)
                 if (sim_time_ind == 1)
@@ -130,6 +126,9 @@ classdef estnew < estimator_simple
                     obj.X(:,1) = obj.Xo + covsmpl(obj.Po, 1, monteseed_use);
                     obj.Phat(:,:,1) = obj.Pbaro;
                     
+                    X_state = [obj.Xhat(:,sim_time_ind); obj.X(:,sim_time_ind)];
+                    
+                    % Find size of measurements
                     Y_size = length(feval(obj.datfun.tru,obj.tspan(sim_time_ind), ...
                         X_state(:,sim_time_ind),obj.datarg.tru));
                     R = NaN(2*Y_size);
@@ -137,9 +136,10 @@ classdef estnew < estimator_simple
                           
                 % Calculate true/estimated measurement at tspan(sim_time_ind)
                 [Y_state(1:Y_size*2,1),R(:,:)] = ...
-                    estnew.wrappermeas(obj.datfun,obj.tspan(sim_time_ind), ...
+                    obj.wrappermeas(obj.datfun,obj.tspan(sim_time_ind), ...
                     X_state(:,1),obj.datarg,obj.options);
                 
+                % Apply measurement errors
                 obj.Y(:,sim_time_ind) = Y_state(Y_size+1:Y_size*2,1) + ...
                     covsmpl(R(Y_size+1:Y_size*2,Y_size+1:Y_size*2));
                 
@@ -162,7 +162,7 @@ classdef estnew < estimator_simple
                     while ~done
                         % Propagation
                         time_span = [prop_begin_time, prop_end_time];
-                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, phie, S_state_prop, se] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@estnew.events);
+                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, se] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events);
              
                         % Check for full propagation
                         if (time_prop(end) == time_span(end))
@@ -174,17 +174,21 @@ classdef estnew < estimator_simple
                             done = true;
                         else
                             % Adjust state/covariance based on user-supplied function
-                            X_new = X_event;
+                            [X_new, P_new] = feval(@obj.control_events, time_event(:,end), X_event(:,end), Phi_event(:,end));
 
+                            % What do we need to do with the new P? Use it
+                            % to update Xhat?
+                            
                             % Repropagate from where the loop ended (where
                             % the event occurred)
                             prop_begin_time = time_event(end);
                             X_state_begin = X_new;
+                            
                         end
 
                     end
 
-                    % Pull the variables out of the state, save to object
+                    % Pull the variables out of the state to save to object
                     obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
                     obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
                     obj.t(sim_time_ind+1,1) = time_prop(end);
@@ -193,7 +197,6 @@ classdef estnew < estimator_simple
                     obj.Phat(:,:,sim_time_ind+1) = Phi_state(:,:,1)*obj.Phat(:,:,sim_time_ind)*Phi_state(:,:,1)' + S_state(:,:,1);
                     obj.Phat(:,:,sim_time_ind+1) = (obj.Phat(:,:,sim_time_ind+1) + obj.Phat(:,:,sim_time_ind+1)')/2;
                     
-%                     obj.Phat(:,:,sim_time_ind+1) = Phi_state(1:state_component_length,1:state_component_length,1);
                 end
             end
 
@@ -244,7 +247,7 @@ classdef estnew < estimator_simple
         
         
         function [xdot,A,Q] = wrapperdyn(obj,time,X,opts)
-
+            
             [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:6),opts.est);
             [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(7:12),opts.tru);
 
@@ -253,12 +256,9 @@ classdef estnew < estimator_simple
             Q = blkdiag(Q1,Q2);
 
         end % wrapperdyn
+      
         
-    end % Methods
-    
-    methods(Static)
-        
-        function [Y,R] = wrappermeas(datfun, time, X_state, datarg, options)
+        function [Y,R] = wrappermeas(obj, datfun, time, X_state, datarg, options)
             state_size = length(X_state);
             % Ybar
             Ybar = feval(datfun.est,time,X_state(1:state_size/2),datarg.est);
@@ -279,7 +279,12 @@ classdef estnew < estimator_simple
         end % wrappermeas
         
         
-        function [value,isterminal,direction] = events(t,X,varargin)
+        %% Examples
+        % These are what event functions and control functions should look
+        % like. These should be overwritten by functions of the same name
+        % in a class that does controls.
+        
+        function [value,isterminal,direction] = events(obj,t,X,varargin)
             % See header in integev.m for details on event function formats
             
             % Consider using functions for conditions
@@ -300,7 +305,14 @@ classdef estnew < estimator_simple
             direction = [direction1; direction2]; % Is there a direction involved?
         end % events
         
-    end % Static methods
+        
+        function [X_state_mod, Phi_mod] = control_events(obj,t,X,Phi,varargin)
+            X_state_mod = X;
+            Phi_mod = Phi;
+            
+        end
+        
+    end % Methods
     
 end % Class
 

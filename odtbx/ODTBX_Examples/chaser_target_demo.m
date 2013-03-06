@@ -40,7 +40,6 @@ echo on
 %% Define Initial State & Covariance
 % Define all scenario-specific variables and ODTBX options.
 %
-pause % Hit RET to continue
 
 % Define the Target Vehicle state and convert to a direction cosine matrix.
 Xss = [5426.510869339219;
@@ -90,7 +89,6 @@ epoch = datenum('13 DEC 2010 00:00:0.000');
 %
 %% Define estimator-specific options
 %
-pause % Hit RET to continue
 
 % Use the same dynamics model for the truth and the estimator.
 dynfun.tru = @dualIADyn;
@@ -136,15 +134,17 @@ opts = setOdtbxOptions(opts,'EditRatio',9*ones(35,1));
 
 tic
 
-myest = estseq(dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts,S,C);
+% myest = estseq(dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts,S,C);
+% 
+% [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator()
 
-[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator()
+mysim = est_control('estnew',dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts);
+[t,xhat,P,e,Y] = mysim.run_sim();
 
 toc
 
 %
 %% Rotate to RIC
-pause % Hit RET to continue
 
 for i=length(xhat):-1:1
     x_tru{i} = xhat{i} - e{i};
@@ -177,13 +177,11 @@ end
 
 %
 %% Plot estimation errors using estval
-pause % Hit RET to continue
 
 estval(t,e_ric_rel,P_ric_rel)
 
 %
 %% Plot sensitivity mosaic
-pause % Hit RET to continue
 
 ns = 6;
 n = 12;
@@ -206,7 +204,6 @@ hold on
 
 %
 %% Plot Varpiles
-pause % Hit RET to continue
 
 for i=size(Pa,3):-1:1
     Par(:,:,i) = S*Pa(:,:,i)*S';

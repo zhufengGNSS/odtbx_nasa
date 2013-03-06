@@ -3,6 +3,7 @@ classdef estnew < estimator_simple
     %   Detailed explanation goes here
     
     properties
+        
     end
     
     methods
@@ -99,17 +100,19 @@ classdef estnew < estimator_simple
                 obj.datarg.est = [];
             end
             
-            if nargin >= 9,
-                obj.events_fcn = varargin{9};
-            else
-                obj.events_fcn = @obj.events_default;
-            end
-            
-            if nargin >= 10,
-                obj.control_events_fcn = varargin{10};
-            else
-                obj.control_events_fcn = @obj.control_events_default;
-            end
+%             if nargin >= 9,
+%                 obj.events_fcn = varargin{9};
+%             else
+%                 obj.events_fcn = @obj.events_default;
+%             end
+%             
+%             if nargin >= 10,
+%                 obj.control_events_fcn = varargin{10};
+%             else
+%                 obj.control_events_fcn = @obj.control_events_default;
+%             end
+            obj.events_fcn = @obj.events_default;
+            obj.control_events_fcn = @obj.control_events_default;
         end
     
         
@@ -271,6 +274,11 @@ classdef estnew < estimator_simple
         % like. 
         
         function [value,isterminal,direction] = events_default(obj,t,X,varargin)
+            % This function is used to kick the integrator out of its loop
+            % at a certain point (as determined by time or state
+            % conditions) in order to perform an action desginated by
+            % control_events.
+            
             % See header in integev.m for details on event function formats
             
             % Consider using functions for conditions
@@ -293,6 +301,8 @@ classdef estnew < estimator_simple
         
         
         function [X_state_mod, Phi_mod] = control_events_default(obj,t,X,Phi,varargin)
+            % This function is used to change the state/covariance once a
+            % condition has been detected.
             X_state_mod = X;
             Phi_mod = Phi;
             

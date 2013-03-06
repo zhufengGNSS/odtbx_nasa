@@ -81,7 +81,7 @@ tic
 
 % Run estimator with controls
 mysim = est_control('estnew',dynfun,datfun,tspan,Xnot,Pnot,opts,dynarg,datarg);
-mysim.set_controllers();
+% mysim.set_controllers();
 [t,xhat,P,e,Y] = mysim.run_sim();
 
 toc

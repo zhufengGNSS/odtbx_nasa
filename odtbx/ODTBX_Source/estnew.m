@@ -25,7 +25,8 @@ classdef estnew < estimator_simple
             % If there are no input arguments, perform a built-in self-test.  If there
             % are no output arguments, then plot the results of the input self-test
             % number as a demo.
-
+            varargin
+            
             if nargin >= 4,
                 if all(isfield(varargin{1}, {'tru','est'})),
                     obj.dynfun = varargin{1};
@@ -100,17 +101,7 @@ classdef estnew < estimator_simple
                 obj.datarg.est = [];
             end
             
-%             if nargin >= 9,
-%                 obj.events_fcn = varargin{9};
-%             else
-%                 obj.events_fcn = @obj.events_default;
-%             end
-%             
-%             if nargin >= 10,
-%                 obj.control_events_fcn = varargin{10};
-%             else
-%                 obj.control_events_fcn = @obj.control_events_default;
-%             end
+            
             obj.events_fcn = @obj.events_default;
             obj.control_events_fcn = @obj.control_events_default;
         end
@@ -133,6 +124,9 @@ classdef estnew < estimator_simple
                         
             monteseed = getOdtbxOptions(obj.options, 'MonteCarloSeed', NaN);
             monteseed_use = monteseed;
+            
+            eratio = getOdtbxOptions(obj.options, 'EditRatio', []); % Default is empty, meaning no meas. editing
+            eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []); % Default is empty (no meas. editing)
 
             for sim_time_ind = 1:length(obj.tspan)
                 if (sim_time_ind == 1)
@@ -159,8 +153,11 @@ classdef estnew < estimator_simple
                     covsmpl(R(Y_size+1:Y_size*2,Y_size+1:Y_size*2));
                 
                 % Perform measurement update
-                [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind)] = ...
-                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),obj.Y(:,sim_time_ind));
+                [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind), eflag_set] = ...
+                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),...
+                    obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),...
+                    obj.Y(:,sim_time_ind),obj.options, eflag_set, eratio,...
+                    obj.datarg.est);
                            
                 % Prepare for propagation
                 done = false;
@@ -237,9 +234,12 @@ classdef estnew < estimator_simple
         
         
         function [xdot,A,Q] = wrapperdyn(obj,time,X,opts)
+%             
+%             [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:6,1),opts.est);
+%             [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(7:12,1),opts.tru);
             
-            [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:6),opts.est);
-            [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(7:12),opts.tru);
+            [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X,opts.est);
+            [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X,opts.tru);
 
             xdot = [xdot1;xdot2];
             A = blkdiag(A1,A2);

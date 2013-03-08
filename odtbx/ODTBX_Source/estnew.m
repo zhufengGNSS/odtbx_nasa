@@ -25,7 +25,6 @@ classdef estnew < estimator_simple
             % If there are no input arguments, perform a built-in self-test.  If there
             % are no output arguments, then plot the results of the input self-test
             % number as a demo.
-            varargin
             
             if nargin >= 4,
                 if all(isfield(varargin{1}, {'tru','est'})),

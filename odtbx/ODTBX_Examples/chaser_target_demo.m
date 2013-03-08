@@ -139,39 +139,37 @@ tic
 % [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator()
 
 mysim = est_control('estnew',dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts);
-[t,xhat,P,e,Y] = mysim.run_sim();
+[t{1},xhat{1},P{1},e{1},Y{1}] = mysim.run_sim();
 
 toc
 
 %
 %% Rotate to RIC
 
-for i=length(xhat):-1:1
-    x_tru{i} = xhat{i} - e{i};
-    x_rel{i} = x_tru{i}(1:3,:)-x_tru{i}(7:9,:);
-    C_IR{i} = dcm('ric',x_tru{i}(7:9,:),x_tru{i}(10:12,:));
-end
+x_tru{1} = xhat{1} - e{1};
+x_rel{1} = x_tru{1}(1:3,:)-x_tru{1}(7:9,:);
+C_IR{1} = dcm('ric',x_tru{1}(7:9,:),x_tru{1}(10:12,:));
 
 S = [eye(6,6) -eye(6,6)];
 
-for j=length(xhat):-1:1
-    for i=size(x_tru{1},2):-1:1
+for j=length(xhat{j}):-1:1
+    for i=size(x_tru{j},2):-1:1
         x_rel_ric{j}(:,i) = C_IR{j}(:,:,i)'*x_rel{j}(:,i);
-        A = blkdiag(C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i));
+        A{j} = blkdiag(C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i));
         
-        e_ric{j}(:,i) = A*e{j}(:,i);
+        e_ric{j}(:,i) = A{j}*e{j}(:,i);
         e_ric_rel{j}(:,i) = S*e_ric{j}(:,i);
         
-        temp = unscrunch(P{j}(:,i));
-        temp = A*temp*A';
+        temp = P{j}(:,:,i);%unscrunch(P(:,i));
+        temp = A{j}*temp*A{j}';
         
         temp2 = S*temp*S';
         
         P_ric{j}(:,i) = scrunch(temp);
         P_ric_rel{j}(:,i) = scrunch(temp2);
         
-        sigsa_ric(:,:,i) = A*sigsa(:,:,i)*A';
-        sigsa_rel_ric(:,:,i) = S*sigsa_ric(:,:,i);
+%         sigsa_ric(:,:,i) = A*sigsa(:,:,i)*A';
+%         sigsa_rel_ric(:,:,i) = S*sigsa_ric(:,:,i);
     end
 end
 

@@ -146,22 +146,25 @@ toc
 %
 %% Rotate to RIC
 
-x_tru{1} = xhat{1} - e{1};
-x_rel{1} = x_tru{1}(1:3,:)-x_tru{1}(7:9,:);
-C_IR{1} = dcm('ric',x_tru{1}(7:9,:),x_tru{1}(10:12,:));
+for i=length(xhat):-1:1
+    x_tru{i} = xhat{i} - e{i};
+    x_rel{i} = x_tru{i}(1:3,:)-x_tru{i}(7:9,:);
+    C_IR{i} = dcm('ric',x_tru{i}(7:9,:),x_tru{i}(10:12,:));
+end
 
 S = [eye(6,6) -eye(6,6)];
 
-for j=length(xhat{j}):-1:1
-    for i=size(x_tru{j},2):-1:1
+for j=length(xhat):-1:1
+    for i=size(x_tru{1},2):-1:1
         x_rel_ric{j}(:,i) = C_IR{j}(:,:,i)'*x_rel{j}(:,i);
-        A{j} = blkdiag(C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i));
+        A = blkdiag(C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i),C_IR{j}(:,:,i));
         
-        e_ric{j}(:,i) = A{j}*e{j}(:,i);
+        e_ric{j}(:,i) = A*e{j}(:,i);
         e_ric_rel{j}(:,i) = S*e_ric{j}(:,i);
         
-        temp = P{j}(:,:,i);%unscrunch(P(:,i));
-        temp = A{j}*temp*A{j}';
+%         temp = unscrunch(P{j}(:,i));
+        temp = P{j}(:,:,i);
+        temp = A*temp*A';
         
         temp2 = S*temp*S';
         

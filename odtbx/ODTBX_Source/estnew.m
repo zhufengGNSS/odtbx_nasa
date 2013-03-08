@@ -127,7 +127,7 @@ classdef estnew < estimator_simple
             eratio = getOdtbxOptions(obj.options, 'EditRatio', []); % Default is empty, meaning no meas. editing
             eflag_set  = getOdtbxOptions(obj.options, 'EditFlag', []); % Default is empty (no meas. editing)
 
-            for sim_time_ind = 1:length(obj.tspan)
+            for sim_time_ind = 1:length(obj.tspan)-1
                 if (sim_time_ind == 1)
                     % Filter initial conditions
                     obj.Xhat(:,1) = obj.Xbaro;
@@ -141,22 +141,6 @@ classdef estnew < estimator_simple
                         X_state(:,sim_time_ind),obj.datarg.tru));
                     R = NaN(2*Y_size);
                 end
-                          
-                % Calculate true/estimated measurement at tspan(sim_time_ind)
-                [Y_state(1:Y_size*2,1),R(:,:)] = ...
-                    obj.wrappermeas(obj.datfun,obj.tspan(sim_time_ind), ...
-                    X_state(:,1),obj.datarg,obj.options);
-                
-                % Apply measurement errors
-                obj.Y(:,sim_time_ind) = Y_state(Y_size+1:Y_size*2,1) + ...
-                    covsmpl(R(Y_size+1:Y_size*2,Y_size+1:Y_size*2));
-                
-                % Perform measurement update
-                [obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind), eflag_set] = ...
-                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),...
-                    obj.Xhat(:,sim_time_ind),obj.Phat(:,:,sim_time_ind),...
-                    obj.Y(:,sim_time_ind),obj.options, eflag_set, eratio,...
-                    obj.datarg.est);
                            
                 % Prepare for propagation
                 done = false;
@@ -209,6 +193,22 @@ classdef estnew < estimator_simple
                     obj.Phat(:,:,sim_time_ind+1) = (obj.Phat(:,:,sim_time_ind+1) + obj.Phat(:,:,sim_time_ind+1)')/2;
                     
                 end
+                
+                % Calculate true/estimated measurement at tspan(sim_time_ind)
+                [Y_state(1:Y_size*2,1),R(:,:)] = ...
+                    obj.wrappermeas(obj.datfun,obj.tspan(sim_time_ind), ...
+                    X_state(:,1),obj.datarg,obj.options);
+                
+                % Apply measurement errors
+                obj.Y(:,sim_time_ind+1) = Y_state(Y_size+1:Y_size*2,1) + ...
+                    covsmpl(R(Y_size+1:Y_size*2,Y_size+1:Y_size*2));
+                
+                % Perform measurement update
+                [obj.Xhat(:,sim_time_ind+1),obj.Phat(:,:,sim_time_ind+1), eflag_set] = ...
+                    kalmup(obj.datfun.est,obj.tspan(sim_time_ind),...
+                    obj.Xhat(:,sim_time_ind+1),obj.Phat(:,:,sim_time_ind+1),...
+                    obj.Y(:,sim_time_ind+1),obj.options, eflag_set, eratio,...
+                    obj.datarg.est);
             end
 
 %             Calculate errors, package data, and output results (state errors,

@@ -83,7 +83,7 @@ Pnot.Pbaro = S*P0*S'; % Estimator initial covariance
 
 %
 % Define the times and epoch to process measurements and estimate
-tspan = 0:10:300;
+tspan = 0:10:30;
 epoch = datenum('13 DEC 2010 00:00:0.000');
   
 %

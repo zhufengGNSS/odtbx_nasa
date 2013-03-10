@@ -83,7 +83,7 @@ Pnot.Pbaro = S*P0*S'; % Estimator initial covariance
 
 %
 % Define the times and epoch to process measurements and estimate
-tspan = 0:1:300;
+tspan = 0:10:300;
 epoch = datenum('13 DEC 2010 00:00:0.000');
   
 %
@@ -182,63 +182,63 @@ end
 estval(t,e_ric_rel,P_ric_rel)
 
 %
-%% Plot sensitivity mosaic
-
-ns = 6;
-n = 12;
-lentr = size(sigsa,3);
-
-lastfig = ns;
-figure
-hold off
-pcolor(eye(ns+1,ns)*10*log10(abs(sigsa_rel_ric(:,:,end)))*eye(n,n+1))
-tickLabel = {'R'; 'I'; 'C'; 'VR'; 'VI'; 'VC'};
-set(gca,'xtick',(1:n)+0.5,'ytick',(1:ns)+0.5,...
-    'xticklabel',tickLabel,'yticklabel',tickLabel)
-xlabel('{\it A Priori} State Index')
-ylabel('Relative State Index')
-set(gca,'ydir','rev','xaxisloc','top')
-axis equal
-colorbar
-title('Sensitivity Mosaic')
-hold on
-
-%
-%% Plot Varpiles
-
-for i=size(Pa,3):-1:1
-    Par(:,:,i) = S*Pa(:,:,i)*S';
-    Pvr(:,:,i) = S*Pv(:,:,i)*S';
-    Pwr(:,:,i) = S*Pw(:,:,i)*S';
-    Phatar(:,:,i) = S*Phata(:,:,i)*S';
-    Phatvr(:,:,i) = S*Phatv(:,:,i)*S';
-    Phatwr(:,:,i) = S*Phatw(:,:,i)*S';
-end
-
-for i=size(Pa,3):-1:1
-    Pat(:,:,i) = trace(Par(1:3,1:3,i));
-    Pvt(:,:,i) = trace(Pvr(1:3,1:3,i));
-    Pwt(:,:,i) = trace(Pwr(1:3,1:3,i));
-    Phatat(:,:,i) = trace(Phatar(1:3,1:3,i));
-    Phatvt(:,:,i) = trace(Phatvr(1:3,1:3,i));
-    Phatwt(:,:,i) = trace(Phatwr(1:3,1:3,i));
-end
-
-dPat = Pat - Phatat;
-dPvt = Pvt - Phatvt;
-dPwt = Pwt - Phatwt;
-
-Phatlin = Phatat + Phatvt + Phatwt;
-P = Pat + Pvt + Pwt;
-for k = 1
-    figure
-    varpiles(t{1},dPat(k,k,:),dPvt(k,k,:),dPwt(k,k,:),...
-        Pat(k,k,:),Pvt(k,k,:),Pwt(k,k,:),...
-        Phatat(k,k,:),Phatvt(k,k,:),Phatwt(k,k,:),...
-        P(k,k,:),Phatlin(k,k,:));
-end
-titlestr = 'Relative Position Variance Sandpile [km^2]';
-title(titlestr)
-xlabel('Elapsed Time [s]')
+% %% Plot sensitivity mosaic
+% 
+% ns = 6;
+% n = 12;
+% lentr = size(sigsa,3);
+% 
+% lastfig = ns;
+% figure
+% hold off
+% pcolor(eye(ns+1,ns)*10*log10(abs(sigsa_rel_ric(:,:,end)))*eye(n,n+1))
+% tickLabel = {'R'; 'I'; 'C'; 'VR'; 'VI'; 'VC'};
+% set(gca,'xtick',(1:n)+0.5,'ytick',(1:ns)+0.5,...
+%     'xticklabel',tickLabel,'yticklabel',tickLabel)
+% xlabel('{\it A Priori} State Index')
+% ylabel('Relative State Index')
+% set(gca,'ydir','rev','xaxisloc','top')
+% axis equal
+% colorbar
+% title('Sensitivity Mosaic')
+% hold on
+% 
+% %
+% %% Plot Varpiles
+% 
+% for i=size(Pa,3):-1:1
+%     Par(:,:,i) = S*Pa(:,:,i)*S';
+%     Pvr(:,:,i) = S*Pv(:,:,i)*S';
+%     Pwr(:,:,i) = S*Pw(:,:,i)*S';
+%     Phatar(:,:,i) = S*Phata(:,:,i)*S';
+%     Phatvr(:,:,i) = S*Phatv(:,:,i)*S';
+%     Phatwr(:,:,i) = S*Phatw(:,:,i)*S';
+% end
+% 
+% for i=size(Pa,3):-1:1
+%     Pat(:,:,i) = trace(Par(1:3,1:3,i));
+%     Pvt(:,:,i) = trace(Pvr(1:3,1:3,i));
+%     Pwt(:,:,i) = trace(Pwr(1:3,1:3,i));
+%     Phatat(:,:,i) = trace(Phatar(1:3,1:3,i));
+%     Phatvt(:,:,i) = trace(Phatvr(1:3,1:3,i));
+%     Phatwt(:,:,i) = trace(Phatwr(1:3,1:3,i));
+% end
+% 
+% dPat = Pat - Phatat;
+% dPvt = Pvt - Phatvt;
+% dPwt = Pwt - Phatwt;
+% 
+% Phatlin = Phatat + Phatvt + Phatwt;
+% P = Pat + Pvt + Pwt;
+% for k = 1
+%     figure
+%     varpiles(t{1},dPat(k,k,:),dPvt(k,k,:),dPwt(k,k,:),...
+%         Pat(k,k,:),Pvt(k,k,:),Pwt(k,k,:),...
+%         Phatat(k,k,:),Phatvt(k,k,:),Phatwt(k,k,:),...
+%         P(k,k,:),Phatlin(k,k,:));
+% end
+% titlestr = 'Relative Position Variance Sandpile [km^2]';
+% title(titlestr)
+% xlabel('Elapsed Time [s]')
 
 echo off

@@ -84,14 +84,12 @@ classdef est_control < handle
         end % events
         
         
-        function [X_state_mod, Phi_mod] = control_events(obj,t,X,Phi,varargin)
+        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
+            
             % This function is used to change the state/covariance once a
             % condition has been detected.
-            
-%             disp "Controller"
-
             X_state_mod = X;
-            Phi_mod = Phi;
+            P_mod = P;
             
         end % control_events
         

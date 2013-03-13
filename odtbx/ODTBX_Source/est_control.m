@@ -6,14 +6,12 @@ classdef est_control < handle
         % Estimator
         est_type
         myest
-        
-        
     end
     
     methods
         
         function obj = est_control(varargin)
-            %% Input Parsing and Setup            
+            % Input Parsing and Setup            
             if nargin >= 1,
                 obj.est_type = varargin{1};
                 obj.myest = feval(obj.est_type, varargin{2:end});
@@ -38,10 +36,10 @@ classdef est_control < handle
         
         
         function varargout = run_sim(obj)
-            %% Run estimator
+            % Run estimator
             [t,Xhat,Phat,e,Y] = obj.myest.run_estimator();
             
-            %% Output results
+            % Output results
             if nargout >= 3,
                 varargout{1} = t;
                 varargout{2} = Xhat;
@@ -56,6 +54,7 @@ classdef est_control < handle
         end
         
         
+        %% Event conditions
         function [value,isterminal,direction] = events(obj,t,X,varargin)
             % This function is used to kick the integrator out of its loop
             % at a certain point (as determined by time or state
@@ -64,30 +63,71 @@ classdef est_control < handle
             
             % See header in integev.m for details on event function formats
             
-%             disp "Controller"
-            % Consider using functions for conditions
+            % Event 1: Position
+            [condition1,terminal1,direction1] = obj.event1(t,X);            
             
-            %% Event 1:
-            condition1 = X(1); %  We can change this to be anything related to t or X
-            terminal1 = 0;
-            direction1 = 0;
-            
-            %% Event 2:
-            condition2 = t - 295; %  We can change this to be anything related to t or X
-            terminal2 = 1;
-            direction2 = 0;
+            % Event 2: Time
+            [condition2,terminal2,direction2] = obj.event2(t,X);
                         
-            %% Put all the values together to be returned
-            value = [condition1; condition2]; % Condition to look for
+            % Put all the values together to be returned
+            value = [condition1; condition2]; % Conditions to look for
             isterminal = [terminal1; terminal2]; % Do we need to end the integration at this point?
             direction = [direction1; direction2]; % Is there a direction involved?
         end % events
         
         
-        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
+        function [value,isterminal,direction] = event1(obj,t,X)
+            % This function contains a condition that could halt the
+            % propagation of the system being tested. No action is taken to
+            % implement any controls in this function. 
+            % This function must be called from the events function (or
+            % nothing will happen).
             
+            % We can change this to be anything related to t or X
+            value = X(1); % Condition that will trigger the event when equal to zero
+            isterminal = 1; % Whether the condition will halt propagation
+            direction = 0; % If the event is purely zero-finding or if it is directional
+            
+        end % event2
+        
+        
+        function [value,isterminal,direction] = event2(obj,t,X)
+            % This function contains a condition that could halt the
+            % propagation of the system being tested. No action is taken to
+            % implement any controls in this function. 
+            % This function must be called from the events function (or
+            % nothing will happen).
+            
+            % We can change this to be anything related to t or X
+            value = t - 200; % Condition that will trigger the event when equal to zero
+            isterminal = 1; % Whether the condition will halt propagation
+            direction = 0; % If the event is purely zero-finding or if it is directional
+            
+        end % event2
+        
+        
+        %% Controls
+        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
             % This function is used to change the state/covariance once a
             % condition has been detected.
+            
+            % This function currently only operates on the most recent
+            % event that halts the integration (isterminal = 1). At this
+            % time, non-terminal events are ignored.
+
+            % Event1 control
+            [value,~,~] = obj.event1(t,X);
+            if (value == 0)
+                
+            end
+            
+            % Event2 control
+            disp "Event 2 triggered"
+            [value,~,~] = obj.event2(t,X);
+            if (value == 0)
+                X(4:7) = X(4:7).*2;
+            end
+            
             X_state_mod = X;
             P_mod = P;
             

@@ -139,6 +139,7 @@ tic
 % [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator()
 
 mysim = est_control('estnew',dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts);
+mysim.set_controllers();
 [t{1},xhat{1},P{1},e{1},Y{1}] = mysim.run_sim();
 
 toc

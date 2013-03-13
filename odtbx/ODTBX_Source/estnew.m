@@ -154,7 +154,7 @@ classdef estnew < estimator_simple
                     X_state_begin = X_state(:,1);
                     
                     Phat_current(:,:,1) = obj.Phat(:,:,sim_time_ind);
-                    Phat_next(:,:,1) = obj.Phat(:,:,sim_time_ind);
+                    Phat_next(:,:,1) = obj.Phat(:,:,sim_time_ind); % Just allocates, will be overwritten in loop
 
                     % Propagation loop
                     while ~done
@@ -176,6 +176,8 @@ classdef estnew < estimator_simple
                             
                             done = true;
                         else
+                            % Update Phat to the current time in
+                            % propagation
                             S_event(:,:,1) = (S_event(:,:,end) + S_event(:,:,end)')/2;
                             Phat_current(:,:,1) = Phi_event(:,:,end)*Phat_current(:,:,1)*Phi_event(:,:,end)' + S_event(:,:,end);
                             Phat_current(:,:,1) = (Phat_current(:,:,1) + Phat_current(:,:,1)')/2;
@@ -192,7 +194,8 @@ classdef estnew < estimator_simple
 
                     end
 
-                    % Pull the variables out of the state to save to object
+                    % Pull the variables out of the state to save to
+                    % objects
                     obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
                     obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
                     obj.t(sim_time_ind+1,1) = time_prop(end);

@@ -242,12 +242,11 @@ classdef estnew < estimator_simple
         
         
         function [xdot,A,Q] = wrapperdyn(obj,time,X,opts)
-%             
-%             [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:6,1),opts.est);
-%             [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(7:12,1),opts.tru);
             
-            [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X,opts.est);
-            [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X,opts.tru);
+            state_size = length(X);
+%             
+            [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:state_size/2,1),opts.est);
+            [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(state_size/2+1:state_size,1),opts.tru);
 
             xdot = [xdot1;xdot2];
             A = blkdiag(A1,A2);

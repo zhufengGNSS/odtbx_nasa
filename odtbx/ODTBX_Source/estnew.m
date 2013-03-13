@@ -157,7 +157,7 @@ classdef estnew < estimator_simple
                     while ~done
                         % Propagation
                         time_span = [prop_begin_time, prop_end_time];
-                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, se] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
+                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
              
                         % Check for full propagation
                         if (time_prop(end) == time_span(end))
@@ -168,8 +168,12 @@ classdef estnew < estimator_simple
                             S_state(:,:,1) = S_state_prop(1:state_component_length,1:state_component_length,end);
                             done = true;
                         else
+                            S_event(:,:,1) = (S_event(:,:,end) + S_event(:,:,end)')/2;
+                            Phi_event(:,:,end) = Phi_event(:,:,end)*obj.Phat(:,:,sim_time_ind)*Phi_event(:,:,end)' + S_event(:,:,end);
+                            Phi_event(:,:,end) = (Phi_event(:,:,end) + Phi_event(:,:,end)')/2;
+                            
                             % Adjust state/covariance based on user-supplied function
-                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phi_event(:,end));
+                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phi_event(:,:,end));
 
                             % What do we need to do with the new P? Use it
                             % to update Xhat?

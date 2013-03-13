@@ -152,6 +152,9 @@ classdef estnew < estimator_simple
                     prop_end_time = obj.tspan(sim_time_ind+1);
                     X_state(:,1) = [obj.Xhat(:,sim_time_ind); obj.X(:,sim_time_ind)];
                     X_state_begin = X_state(:,1);
+                    
+                    Phat_current(:,:,1) = obj.Phat(:,:,sim_time_ind);
+                    Phat_next(:,:,1) = obj.Phat(:,:,sim_time_ind);
 
                     % Propagation loop
                     while ~done
@@ -166,23 +169,25 @@ classdef estnew < estimator_simple
                             X_state(:,1) = X_state_prop(:,end);
                             Phi_state(:,:,1) = Phi_state_prop(1:state_component_length,1:state_component_length,end);
                             S_state(:,:,1) = S_state_prop(1:state_component_length,1:state_component_length,end);
+                            
+                            S_state(:,:,1) = (S_state(:,:,1) + S_state(:,:,1)')/2;
+                            Phat_next(:,:,1) = Phi_state(:,:,1)*Phat_current(:,:,1)*Phi_state(:,:,1)' + S_state(:,:,1);
+                            Phat_next(:,:,1) = (Phat_next(:,:,1) + Phat_next(:,:,1)')/2;
+                            
                             done = true;
                         else
                             S_event(:,:,1) = (S_event(:,:,end) + S_event(:,:,end)')/2;
-                            Phi_event(:,:,end) = Phi_event(:,:,end)*obj.Phat(:,:,sim_time_ind)*Phi_event(:,:,end)' + S_event(:,:,end);
-                            Phi_event(:,:,end) = (Phi_event(:,:,end) + Phi_event(:,:,end)')/2;
+                            Phat_current(:,:,1) = Phi_event(:,:,end)*Phat_current(:,:,1)*Phi_event(:,:,end)' + S_event(:,:,end);
+                            Phat_current(:,:,1) = (Phat_current(:,:,1) + Phat_current(:,:,1)')/2;
                             
                             % Adjust state/covariance based on user-supplied function
-                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phi_event(:,:,end));
-
-                            % What do we need to do with the new P? Use it
-                            % to update Xhat?
+                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phat_current(:,:,1));
                             
                             % Repropagate from where the loop ended (where
                             % the event occurred)
                             prop_begin_time = time_event(end);
                             X_state_begin = X_new;
-                            
+                            Phat_current(:,:,1) = P_new;
                         end
 
                     end
@@ -191,10 +196,7 @@ classdef estnew < estimator_simple
                     obj.X(:,sim_time_ind+1) = X_state(state_component_length+1:state_component_length*2,1);
                     obj.Xhat(:,sim_time_ind+1) = X_state(1:state_component_length,1);
                     obj.t(sim_time_ind+1,1) = time_prop(end);
-                    
-                    S_state(:,:,1) = (S_state(:,:,1) + S_state(:,:,1)')/2;
-                    obj.Phat(:,:,sim_time_ind+1) = Phi_state(:,:,1)*obj.Phat(:,:,sim_time_ind)*Phi_state(:,:,1)' + S_state(:,:,1);
-                    obj.Phat(:,:,sim_time_ind+1) = (obj.Phat(:,:,sim_time_ind+1) + obj.Phat(:,:,sim_time_ind+1)')/2;
+                    obj.Phat(:,:,sim_time_ind+1) = Phat_next(:,:,1);
                     
                 end
                 
@@ -303,11 +305,11 @@ classdef estnew < estimator_simple
         end % events
         
         
-        function [X_state_mod, Phi_mod] = control_events_default(obj,t,X,Phi,varargin)
+        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
             % This function is used to change the state/covariance once a
             % condition has been detected.
             X_state_mod = X;
-            Phi_mod = Phi;
+            P_mod = P;
             
         end
         

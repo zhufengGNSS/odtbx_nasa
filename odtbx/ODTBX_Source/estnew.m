@@ -148,17 +148,9 @@ classdef estnew < estimator_simple
                         time_span = [prop_begin_time, prop_end_time];
                         [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = ...
                             integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
-             
-                        [prop_begin_time prop_end_time]
-                        time_event
-                        ~isempty(time_event(:) == prop_begin_time)
                         
                         % Check for event
-                        if (~isempty(time_event(:)))
-                            time_event(end)
-                            prop_end_time
-                            time_event(end) == prop_end_time
-                            
+                        if (~isempty(time_event(:)))                            
                             % Update Phat to the current time in
                             % propagation
                             S_event_state(:,:,1) = (S_event(1:state_component_length,1:state_component_length,end) + ...
@@ -203,7 +195,6 @@ classdef estnew < estimator_simple
                             
                             done = true;
                         end
-                        disp('-------')
                     end
 
                     % Pull the variables out of the state to save to

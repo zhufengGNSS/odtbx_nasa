@@ -86,7 +86,7 @@ classdef est_control < handle
 
             % We can change this to be anything related to t or X
             value = X(1); % Condition that will trigger the event when equal to zero
-            isterminal = 1; % Whether the condition will halt propagation
+            isterminal = 0; % Whether the condition will halt propagation, currently must be 1 for condition to be applied
             direction = 0; % If the event is purely zero-finding or if it is directional
             
         end % event2
@@ -101,7 +101,7 @@ classdef est_control < handle
 
             % We can change this to be anything related to t or X
             value = t - 290; % Condition that will trigger the event when equal to zero
-            isterminal = 1; % Whether the condition will halt propagation
+            isterminal = 0; % Whether the condition will halt propagation, currently must be 1 for condition to be applied
             direction = 0; % If the event is purely zero-finding or if it is directional
             
         end % event2
@@ -125,7 +125,7 @@ classdef est_control < handle
             % Event2 control
             [value,~,~] = obj.event2(t,X);
             if (value == 0)
-                 X(11) = X(11).*1.5;
+%                  X(11) = X(11).*1.5;
             end
             
             X_state_mod = X;

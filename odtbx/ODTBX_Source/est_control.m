@@ -82,7 +82,7 @@ classdef est_control < handle
             % implement any controls in this function. 
             % This function must be called from the events function (or
             % nothing will happen).
-            
+
             % We can change this to be anything related to t or X
             value = X(1); % Condition that will trigger the event when equal to zero
             isterminal = 1; % Whether the condition will halt propagation
@@ -97,9 +97,9 @@ classdef est_control < handle
             % implement any controls in this function. 
             % This function must be called from the events function (or
             % nothing will happen).
-            
+
             % We can change this to be anything related to t or X
-            value = t - 200; % Condition that will trigger the event when equal to zero
+            value = t - 205; % Condition that will trigger the event when equal to zero
             isterminal = 1; % Whether the condition will halt propagation
             direction = 0; % If the event is purely zero-finding or if it is directional
             
@@ -107,14 +107,14 @@ classdef est_control < handle
         
         
         %% Controls
-        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
+        function [X_state_mod, P_mod] = control_events(obj,t,X,P,varargin)
             % This function is used to change the state/covariance once a
             % condition has been detected.
             
             % This function currently only operates on the most recent
             % event that halts the integration (isterminal = 1). At this
             % time, non-terminal events are ignored.
-
+            
             % Event1 control
             [value,~,~] = obj.event1(t,X);
             if (value == 0)
@@ -122,7 +122,6 @@ classdef est_control < handle
             end
             
             % Event2 control
-            disp "Event 2 triggered"
             [value,~,~] = obj.event2(t,X);
             if (value == 0)
                 X(4:7) = X(4:7).*2;

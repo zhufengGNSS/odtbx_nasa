@@ -169,7 +169,7 @@ classdef estnew < estimator_simple
                             X_state(:,1) = X_state_prop(:,end);
                             Phi_state(:,:,1) = Phi_state_prop(1:state_component_length,1:state_component_length,end);
                             S_state(:,:,1) = S_state_prop(1:state_component_length,1:state_component_length,end);
-                            
+
                             S_state(:,:,1) = (S_state(:,:,1) + S_state(:,:,1)')/2;
                             Phat_next(:,:,1) = Phi_state(:,:,1)*Phat_current(:,:,1)*Phi_state(:,:,1)' + S_state(:,:,1);
                             Phat_next(:,:,1) = (Phat_next(:,:,1) + Phat_next(:,:,1)')/2;
@@ -178,9 +178,15 @@ classdef estnew < estimator_simple
                         else
                             % Update Phat to the current time in
                             % propagation
-                            S_event(:,:,1) = (S_event(:,:,end) + S_event(:,:,end)')/2;
-                            Phat_current(:,:,1) = Phi_event(:,:,end)*Phat_current(:,:,1)*Phi_event(:,:,end)' + S_event(:,:,end);
+                            S_event_state(:,:,1) = (S_event(1:state_component_length,1:state_component_length,end) + ...
+                                S_event(1:state_component_length,1:state_component_length,end)')/2;
+                            Phi_event_state(:,:,1) = Phi_event(1:state_component_length,1:state_component_length,end);
+
+                            Phat_current(:,:,1) = Phi_event_state(:,:,end)*Phat_current(:,:,1)*Phi_event_state(:,:,end)' + S_event_state(:,:,end);
                             Phat_current(:,:,1) = (Phat_current(:,:,1) + Phat_current(:,:,1)')/2;
+                            
+                            disp('Event triggered')
+                            pause
                             
                             % Adjust state/covariance based on user-supplied function
                             [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phat_current(:,:,1));
@@ -220,8 +226,8 @@ classdef estnew < estimator_simple
                     obj.datarg.est);
             end
 
-%             Calculate errors, package data, and output results (state errors,
-%             covariance, residuals, etc)
+            % Calculate errors, package data, and output results (state errors,
+            % covariance, residuals, etc)
             obj.e = obj.Xhat(:,:) - obj.X(:,:);
 
 
@@ -244,7 +250,7 @@ classdef estnew < estimator_simple
         function [xdot,A,Q] = wrapperdyn(obj,time,X,opts)
             
             state_size = length(X);
-%             
+           
             [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:state_size/2,1),opts.est);
             [xdot2,A2,Q2] = feval(obj.dynfun.tru,time,X(state_size/2+1:state_size,1),opts.tru);
 

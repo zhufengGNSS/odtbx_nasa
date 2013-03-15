@@ -1,6 +1,7 @@
 classdef est_control < handle
-    %UNTITLED Summary of this class goes here
-    %   Detailed explanation goes here
+    %EST_CONTROL Handles the events and controls for a user-specified specified estimator.
+    %   Acts as a wrapper for a user-defined estimator. Users will define
+    %   all of the events and controls in this class.
     
     properties
         % Estimator
@@ -9,7 +10,7 @@ classdef est_control < handle
     end
     
     methods
-        
+        %% Estimator wrapper functions
         function obj = est_control(varargin)
             % Input Parsing and Setup            
             if nargin >= 1,
@@ -124,7 +125,7 @@ classdef est_control < handle
             % Event2 control
             [value,~,~] = obj.event2(t,X);
             if (value == 0)
-                X(4:7) = X(4:7).*2;
+%                  X(11) = X(11).*1.5;
             end
             
             X_state_mod = X;

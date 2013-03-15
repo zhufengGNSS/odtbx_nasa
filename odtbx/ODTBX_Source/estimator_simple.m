@@ -20,30 +20,12 @@ classdef estimator_simple < handle
         control_events_fcn
         
         % Out
-%         X_state
         t
         X
         Xhat
         Phat
         e
-        y
         Y
-        Pa
-        Pv
-        Pw
-        Phata
-        Phatv
-        Phatw
-        Phatm % new estseq
-        Phatt % new estseq
-        Sigma_a % estbat
-        Sig_sa % estseq
-        eflag % estseq
-        P
-        Pdy
-        Pdyt
-        Pm % estseq
-        restartRecord % estseq
     end
     
     methods
@@ -81,28 +63,20 @@ classdef estimator_simple < handle
             % See header in integev.m for details on event function formats
             
             % Put all the values together to be returned
-            value = [0; 0]; % Condition to look for
-            isterminal = [0; 0]; % Do we need to end the integration at this point?
-            direction = [0; 0]; % Is there a direction involved?
+            value = [0]; % Condition to look for
+            isterminal = [0]; % Do we need to end the integration at this point?
+            direction = [0]; % Is there a direction involved?
         end % events
         
         
-        function [X_state_mod, Phi_mod] = control_events_default(obj,t,X,Phi,varargin)
+        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
             % This function is used to change the state/covariance once a
             % condition has been detected.
             X_state_mod = X;
-            Phi_mod = Phi;
+            P_mod = P;
             
         end
     end % Methods
     
-    methods(Static)
-        
-        function y = refine(u,refine)
-            y = [reshape([u(1:end-1);repmat(u(1:end-1),refine,1)+...
-            cumsum(repmat(diff(u)/(refine+1),refine,1),1)],[],1);u(end)]';
-        end
-        
-    end % Methods (Static)
 end % Class
 

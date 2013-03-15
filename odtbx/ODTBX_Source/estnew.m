@@ -1,6 +1,8 @@
 classdef estnew < estimator_simple
     % ESTNEW A new, simple ODTBX estimator
-    %   Detailed explanation goes here
+    %   A simple estimator based on the sequential estimator found in 
+    %   Statistical Orbit Determination by Bob Schutz, Byron Tapley, and 
+    %   George H. Born and estseq.m from ODTBX.
     
     properties
         
@@ -8,23 +10,8 @@ classdef estnew < estimator_simple
     
     methods
         function obj = estnew(varargin)
-%             Initialize inputs (state, covariance, timespan, models)
             %% Input Parsing and Setup
-            % Parse the input list and options structure.  Pre-allocate arrays, using a
-            % cell index for the monte carlo cases, which will avoid the need for each
-            % case to have time series at common sample times.  Use an extra dimension
-            % "on the right" within each monte carlo case to accomodate the time
-            % series, which will avoid the need for conversions from cell to double for
-            % plotting.  Where it makes sense, use cell indices to partition
-            % large matrices into submatrices, to avoid the need for opaque indexing
-            % computations.
-            %
-            % This should be a subfunction, or if there is a lot of commonality with
-            % estseq's version, a private function.
-            %
-            % If there are no input arguments, perform a built-in self-test.  If there
-            % are no output arguments, then plot the results of the input self-test
-            % number as a demo.
+            % Parse the input list and options structure. 
             
             if nargin >= 4,
                 if all(isfield(varargin{1}, {'tru','est'})),
@@ -100,14 +87,13 @@ classdef estnew < estimator_simple
                 obj.datarg.est = [];
             end
             
-            
             obj.events_fcn = @obj.events_default;
             obj.control_events_fcn = @obj.control_events_default;
         end
     
         
         function varargout = run_estimator(obj)
-            
+            %% Estimator
             % Preallocate variables
             state_component_length = length(obj.Xo);
             num_time_steps = length(obj.tspan);
@@ -185,9 +171,6 @@ classdef estnew < estimator_simple
                             Phat_current(:,:,1) = Phi_event_state(:,:,end)*Phat_current(:,:,1)*Phi_event_state(:,:,end)' + S_event_state(:,:,end);
                             Phat_current(:,:,1) = (Phat_current(:,:,1) + Phat_current(:,:,1)')/2;
                             
-                            disp('Event triggered')
-                            pause
-                            
                             % Adjust state/covariance based on user-supplied function
                             [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phat_current(:,:,1));
                             
@@ -248,7 +231,9 @@ classdef estnew < estimator_simple
         
         
         function [xdot,A,Q] = wrapperdyn(obj,time,X,opts)
-            
+            % Dynamics wrapper function called by integrator. Accepts a 
+            % combined state (estimated and truth states) so that 
+            % propagation of states occurs simultaneously.
             state_size = length(X);
            
             [xdot1,A1,Q1] = feval(obj.dynfun.est,time,X(1:state_size/2,1),opts.est);
@@ -262,6 +247,7 @@ classdef estnew < estimator_simple
       
         
         function [Y,R] = wrappermeas(obj, datfun, time, X_state, datarg, options)
+            % Measurements wrapper function that accepts a combined state.
             state_size = length(X_state);
             % Ybar
             Ybar = feval(datfun.est,time,X_state(1:state_size/2),datarg.est);

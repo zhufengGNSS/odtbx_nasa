@@ -146,8 +146,49 @@ classdef estnew < estimator_simple
                     while ~done
                         % Propagation
                         time_span = [prop_begin_time, prop_end_time];
-                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
+                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = ...
+                            integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
              
+                        [prop_begin_time prop_end_time]
+                        time_event
+                        ~isempty(time_event(:) == prop_begin_time)
+                        
+                        % Check for event
+                        if (~isempty(time_event(:)))
+                            time_event(end)
+                            prop_end_time
+                            time_event(end) == prop_end_time
+                            
+                            % Update Phat to the current time in
+                            % propagation
+                            S_event_state(:,:,1) = (S_event(1:state_component_length,1:state_component_length,end) + ...
+                                S_event(1:state_component_length,1:state_component_length,end)')/2;
+                            Phi_event_state(:,:,1) = Phi_event(1:state_component_length,1:state_component_length,end);
+
+                            Phat_current(:,:,1) = Phi_event_state(:,:,end)*Phat_current(:,:,1)*Phi_event_state(:,:,end)' + S_event_state(:,:,end);
+                            Phat_current(:,:,1) = (Phat_current(:,:,1) + Phat_current(:,:,1)')/2;
+                            
+                            % Adjust state/covariance based on user-supplied function
+                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phat_current(:,:,1));
+                            
+                            if (time_event(end) ~= prop_end_time)
+                                % If the event occurred in the middle of a
+                                % propagation, we need to propagate from where
+                                % the loop ended.
+                                prop_begin_time = time_event(end);
+                                X_state_begin = X_new;
+                                Phat_current(:,:,1) = P_new;
+                            else
+                                % If the event occurred at the boundary of a
+                                % propagation, the user-supplied function
+                                % values need to be used when the propagation 
+                                % loop is over. 
+                                prop_begin_time = time_event(end);
+                                X_state_prop(:,end) = X_new;
+                                Phat_current(:,:,1) = P_new;
+                            end
+                        end
+                        
                         % Check for full propagation
                         if (time_prop(end) == time_span(end))
                             % Save the final propagated state back to the state
@@ -161,26 +202,8 @@ classdef estnew < estimator_simple
                             Phat_next(:,:,1) = (Phat_next(:,:,1) + Phat_next(:,:,1)')/2;
                             
                             done = true;
-                        else
-                            % Update Phat to the current time in
-                            % propagation
-                            S_event_state(:,:,1) = (S_event(1:state_component_length,1:state_component_length,end) + ...
-                                S_event(1:state_component_length,1:state_component_length,end)')/2;
-                            Phi_event_state(:,:,1) = Phi_event(1:state_component_length,1:state_component_length,end);
-
-                            Phat_current(:,:,1) = Phi_event_state(:,:,end)*Phat_current(:,:,1)*Phi_event_state(:,:,end)' + S_event_state(:,:,end);
-                            Phat_current(:,:,1) = (Phat_current(:,:,1) + Phat_current(:,:,1)')/2;
-                            
-                            % Adjust state/covariance based on user-supplied function
-                            [X_new, P_new] = feval(@obj.control_events_fcn, time_event(:,end), X_event(:,end), Phat_current(:,:,1));
-                            
-                            % Repropagate from where the loop ended (where
-                            % the event occurred)
-                            prop_begin_time = time_event(end);
-                            X_state_begin = X_new;
-                            Phat_current(:,:,1) = P_new;
                         end
-
+                        disp('-------')
                     end
 
                     % Pull the variables out of the state to save to

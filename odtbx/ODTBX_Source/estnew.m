@@ -87,8 +87,8 @@ classdef estnew < estimator_simple
                 obj.datarg.est = [];
             end
             
-            obj.events_fcn = @obj.events_default;
-            obj.control_events_fcn = @obj.control_events_default;
+            obj.events_fcn = @obj.events;
+            obj.control_events_fcn = @obj.control_events;
         end
     
         
@@ -286,7 +286,7 @@ classdef estnew < estimator_simple
         % These are what event functions and control functions should look
         % like. 
         
-        function [value,isterminal,direction] = events_default(obj,t,X,varargin)
+        function [value,isterminal,direction] = events(obj,t,X,varargin)
             % This function is used to kick the integrator out of its loop
             % at a certain point (as determined by time or state
             % conditions) in order to perform an action desginated by
@@ -313,7 +313,7 @@ classdef estnew < estimator_simple
         end % events
         
         
-        function [X_state_mod, P_mod] = control_events_default(obj,t,X,P,varargin)
+        function [X_state_mod, P_mod] = control_events(obj,t,X,P,varargin)
             % This function is used to change the state/covariance once a
             % condition has been detected.
             X_state_mod = X;

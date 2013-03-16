@@ -134,9 +134,8 @@ opts = setOdtbxOptions(opts,'EditRatio',9*ones(35,1));
 
 tic
 
-% myest = estseq(dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts,S,C);
-% 
-% [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,sigsa,eflag,Pdy,Pdyt] = myest.run_estimator()
+% myest = estnew(dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts);
+% [t{1},xhat{1},P{1},e{1},Y{1}] = myest.run_estimator();
 
 mysim = est_control('estnew',dynfun,datfun,tspan,Xnot,Pnot,opts,dynopts,measopts);
 mysim.set_controllers();

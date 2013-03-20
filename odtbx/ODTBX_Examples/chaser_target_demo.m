@@ -91,9 +91,9 @@ epoch = datenum('13 DEC 2010 00:00:0.000');
 %
 
 % Use the same dynamics model for the truth and the estimator.
-% dynfun.tru = @dualIADyn;
-% dynfun.est = @dualIADyn;
-dynfun = @dualIADyn;
+dynfun.tru = @dualIADyn;
+dynfun.est = @dualIADyn;
+% dynfun = @dualIADyn;
 
 dynopts = [];
 

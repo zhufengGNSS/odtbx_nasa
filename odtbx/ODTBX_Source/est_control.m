@@ -17,7 +17,7 @@ classdef est_control < handle
                 obj.est_type = varargin{1};
                 obj.myest = feval(obj.est_type, varargin{2:end});
             else
-                disp "Must provide inputs!";
+                disp('Must provide inputs!');
             end
         end
         
@@ -100,7 +100,7 @@ classdef est_control < handle
             % nothing will happen).
 
             % We can change this to be anything related to t or X
-            value = t - 290; % Condition that will trigger the event when equal to zero
+            value = t - 205; % Condition that will trigger the event when equal to zero
             isterminal = 0; % Whether the condition will halt propagation, currently must be 1 for condition to be applied
             direction = 0; % If the event is purely zero-finding or if it is directional
             
@@ -125,7 +125,7 @@ classdef est_control < handle
             % Event2 control
             [value,~,~] = obj.event2(t,X);
             if (value == 0)
-%                  X(11) = X(11).*1.5;
+                 X(11) = X(11).*1.5;
             end
             
             X_state_mod = X;

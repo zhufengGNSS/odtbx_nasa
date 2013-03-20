@@ -5,7 +5,7 @@ classdef estnew < estimator_simple
     %   George H. Born and estseq.m from ODTBX.
     
     properties
-        
+        use_wrapperdyn
     end
     
     methods
@@ -16,9 +16,10 @@ classdef estnew < estimator_simple
             if nargin >= 4,
                 if all(isfield(varargin{1}, {'tru','est'})),
                     obj.dynfun = varargin{1};
+                    obj.use_wrapperdyn = true;
                 else
-                    obj.dynfun.tru = varargin{1};
-                    obj.dynfun.est = varargin{1};
+                    obj.dynfun.comb = varargin{1};
+                    obj.use_wrapperdyn = false;
                 end
                 if all(isfield(varargin{2}, {'tru','est'})),
                     obj.datfun = varargin{2};
@@ -163,8 +164,14 @@ classdef estnew < estimator_simple
                     while ~done
                         % Propagation
                         time_span = [prop_begin_time, prop_end_time];
-                        [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = ...
-                            integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
+                        if (obj.use_wrapperdyn == true) % Two functions, one each for est and tru
+                            [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = ...
+                                integev(@obj.wrapperdyn,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
+                        else
+                            obj.dynfun.comb % One function handles all data
+                            [time_prop, X_state_prop, time_event, X_event, Phi_state_prop, Phi_event, S_state_prop, S_event] = ...
+                                integev(obj.dynfun.comb,time_span,X_state_begin,[],obj.dynarg,@obj.events_fcn);
+                        end
                         
                         % Check for event
                         if (~isempty(time_event(:)))                            

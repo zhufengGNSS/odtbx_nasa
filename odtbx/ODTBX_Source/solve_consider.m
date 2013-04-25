@@ -38,12 +38,22 @@ classdef solve_consider
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
             % Interface maintains compatibility with jatForces?
             if (obj.external_func == 'jat')
-                
+                [xDot,A,Q] = obj.jatForces(obj,t,x,jatWorld);
             elseif (obj.external_func == 'gmat')
-                
+                [xDot,A,Q] = obj.gmatForces(obj,t,x,jatWorld);
             else
                 disp 'External function not recognized.'
             end
+        end
+        
+        
+        function [xDot,A,Q] = obj.jatForces(obj,t,x,jatWorld)
+            % John Gaebler's Code, revised
+        end
+        
+        
+        function [xDot,A,Q] = obj.gmatForces(obj,t,x,jatWorld)
+            % Need GMAT interface info
         end
         
     end

@@ -101,10 +101,14 @@ if nargout == 4,
         else
             ikeep = ~isnan(dy(:,k));
         end
-        Hnn = H(ikeep,:,k);
-        Rnn = R(ikeep,ikeep,k);
-        Pdynn = Hnn*P(:,:,k)*Hnn' + Rnn;
-        Pdy(ikeep,ikeep,k) = Pdynn;
+%         size(ikeep)
+%         size(k)
+%         size(H)
+%         disp('-')
+        Hnn = H(ikeep(1),:,k(1));
+        Rnn = R(ikeep(1),ikeep(1),k(1));
+        Pdynn = Hnn*P(:,:,k(1))*Hnn' + Rnn;
+        Pdy(ikeep(1),ikeep(1),k(1)) = Pdynn;
     end
 end
 if nargin == 8,

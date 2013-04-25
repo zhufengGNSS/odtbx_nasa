@@ -536,6 +536,9 @@ measurementOptions = {
     'Camera'
     'Attitude'
     'CalibrationFlag'
+    'solvefor'
+    'dynamicConsider'
+    'localConsider'
     };
 
 allOptions = {

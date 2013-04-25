@@ -1734,16 +1734,6 @@ function change_satellite(hObject, eventdata, handles)
         global T;
         global X;
         
-        % Dynarg could be a number or an anonymous function returning a
-        % structure
-        % If it's a number, this should convert it
-        dynarg = str2num(propagator.dynarg);
-        % If conversion fails, the resultant string should be empty
-        if isempty(dynarg)
-            % We would then know to evaluate it, because it is a function
-            dynarg = eval('propagator.dynarg');
-        end
-        
         try
             [T,X] = integ(propagator.dynfun, time, coords, opts, dynarg);
         catch exceptions

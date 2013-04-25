@@ -282,7 +282,12 @@ function ok_button_Callback(hObject, eventdata, handles)
         time_prop.end = time_values.End_Time;
 
         propagator.dynfun = prop_values.Propagator;
-        propagator.dynarg = prop_values.Dynarg;
+        if (~isempty(prop_values.Dynarg))
+            propagator.dynarg = prop_values.Dynarg;
+        else
+            propagator.dynarg = [];
+        end
+        
 
         handles.output = get(hObject,'String');
 
@@ -323,7 +328,6 @@ function [error] = check_entry_validity(state_values, time_values, prop_values)
     
     % Make sure propagator exists
     % The user has to actually enter something
-    % Is there a way to check dynargs?
     prop_field_names = fieldnames(prop_values);
     try
         % Warnings appear informing us of the next error check (so we don't
@@ -343,6 +347,18 @@ function [error] = check_entry_validity(state_values, time_values, prop_values)
         errordlg('Function does not exist!', prop_field_names{1});
         error = 1;
         return
+    end
+    
+    % Check dynarg
+    % Dynarg could be any variable from the workspace, a number, or empty
+    if (~isempty(prop_values.(prop_field_names{2})))
+        try
+            dynarg = evalin('base',prop_values.(prop_field_names{2}));
+        catch exceptions
+            errordlg(exceptions.message, prop_field_names{2});
+            error = 1;
+            return
+        end
     end
     
 end

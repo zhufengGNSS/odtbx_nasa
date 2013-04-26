@@ -95,7 +95,7 @@ if nargin < 2, % test data
     my=100; % # of time steps
     nc=10;  % # of cases
     mx=19;  % # of states
-    RandStream.setDefaultStream(RandStream('shr3cong', 'Seed', 0))
+    RandStream.setGlobalStream(RandStream('shr3cong', 'Seed', 0))
     e=randn(mx,my,nc); 
 %     fs=e+1.5;
     for i=nc:-1:1

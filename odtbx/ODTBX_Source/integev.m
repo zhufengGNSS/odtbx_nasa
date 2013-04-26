@@ -75,6 +75,9 @@ if nargin < 4 || isempty(options)
     options = odtbxOptions;
 end
 if nargin == 6
+    warning('ODTBX:integev', ...
+            ['Function argument evtfun will be deprecated in a future ODTBX version. ' ...
+             'An event function should be specified within the odtbxOptions structure.']);
     options = setOdtbxOptions(options,'OdeSolvOpts',...
         odeset(options.OdeSolvOpts,'events',evtfun));
 end

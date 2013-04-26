@@ -1735,7 +1735,7 @@ function change_satellite(hObject, eventdata, handles)
         global X;
         
         try
-            [T,X] = integ(propagator.dynfun, time, coords, opts, dynarg);
+            [T,X] = integ(propagator.dynfun, time, coords, opts, propagator.dynarg);
         catch exceptions
             errordlg(exceptions.message, 'Propagation Error!');
         end

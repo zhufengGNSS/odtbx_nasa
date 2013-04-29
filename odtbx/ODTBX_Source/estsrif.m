@@ -492,7 +492,7 @@ lenti = length(tint);
 [~,Xsref] = integ(dynfun.est,tint,Xbaro,options,dynarg.est);
 
 % Indices within tint that point back to tspan, i.e., tint(ispan)=tspan
-[~,ispan] = ismember(tspan,tint);
+[~,ispan] = ismember(tspan,tint,'legacy');
 
 Yref = feval(datfun.tru,tspan,Xref(:,ispan),datarg.tru);
 Ybar = feval(datfun.est,tspan,Xsref(:,ispan),datarg.est);
@@ -519,7 +519,7 @@ titer = titer(1:ind);
 lentr = length(titer);
 
 % Find indices within titer that point back to tint
-[~,iint] = ismember(tint,titer);
+[~,iint] = ismember(tint,titer,'legacy');
 
 if ~exist('mapfun','var'),
     ns = size(S(:,:,1),1);

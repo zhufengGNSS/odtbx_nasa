@@ -537,7 +537,7 @@ lenti = length(tint);
 [~,Xsref] = integ(dynfun.est,tint,Xbaro,options,dynarg.est);
 
 % Indices within tint that point back to tspan, i.e., tint(ispan)=tspan
-[~,ispan] = ismember(tspan,tint);
+[~,ispan] = ismember(tspan,tint,'legacy');
 
 % JAG replaced original measurement calls with code below which
 %   allows numerical computation of H with numjac.m within ominusc if H is 
@@ -568,7 +568,7 @@ titer = titer(1:ind);
 lentr = length(titer);
 
 % Find indices within titer that point back to tint
-[~,iint] = ismember(tint,titer);
+[~,iint] = ismember(tint,titer,'legacy');
 
 %% Covariance Analysis
 % Perform a general covariance analysis linearized about the reference.

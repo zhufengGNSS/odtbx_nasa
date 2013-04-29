@@ -102,6 +102,8 @@ clc
 testCases = {
     % Release 6.0
         'CIOTransform',''
+    % Release 5.5
+        'rotate_results',''
     % Release 5.0
         'bplane',''
         'gasdyn', ''

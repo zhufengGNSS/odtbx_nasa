@@ -97,9 +97,9 @@ lentr = length(titer);
 m = size(Yref,1);
 lents = length(tspan);
 % Indices within tint that point back to tspan, i.e., tint(ispan)=tspan
-[~,ispan] = ismember(tspan,tint);
+[~,ispan] = ismember(tspan,tint,'legacy');
 % Find indices within titer that point back to tint
-[~,iint] = ismember(tint,titer);
+[~,iint] = ismember(tint,titer,'legacy');
 
 ns = size(S(:,:,1),1);
 nc = size(C(:,:,1),1);

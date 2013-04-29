@@ -1,101 +1,105 @@
 classdef IERSLib < handle
     
-    % 
-    % This class facilitates the CIO based
-    %   
-    %          celestial to terrestrial 
-    %
-    % transformation.  Default 2010 IERS standards
-    %
-    %
-    % The primary function is:
-    %
-    %         GCRS2ITRS(t,dt,du,xp,yp)
-    %
-    % which provides the 3x3 celestial to terrestrial 
-    % transformation matrix.  In order to obtain the 
-    % necessary EOP info the helper object EOPLib.m
-    % is provided. 
-    %
-    %  EXAMPLE:
-    %
-    %     % fractional MJD referenced to UTC
-    %     t = fMJD_UTC;
-    %
-    %     % some coordinate in the terrestrial frame
-    %     X_itrs = [x y z];
-    %
-    %     % initialize the EOP and Xformation objects
-    %     eopLib  = EOPLib ();  iersLib = IERSLib();
-    % 
-    %     % get EOP info for the exact time
-    %     [xp,yp,du,dt] = eopLib.getEOP(t);
-    %
-    %     % compute the celestial to terrestrial xform matrix
-    %     C2T = iersLib.GCRS2ITRS(t,dt,du,xp,yp);
-    %
-    %     % convert ITRS --> GCRS
-    %     X_gcrs = inv(C2T)*X_itrs     
-    %
-    %
-    %  AUTHOR:
-    %
-    %    Dr. Abel Brown 
-    %
-    %
-    %  EMAIL:
-    %
-    %    First:
-    %       abel.brown@ai-solutions.com 
-    %
-    %    Second:
-    %       brown.2179@gmail.com
-    %
-    %
-    %  REFERENCES:
-    %
-    %    IERS 2010 
-    %      www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html
-    %
-    %    IERS 2003
-    %      www.iers.org/IERS/EN/Publications/TechnicalNotes/tn32.html
-    %
-    %    IERS FTP
-    %      ftp://tai.bipm.org/iers/conv2010/chapter5/
-    %      ftp://maia.usno.navy.mil/conv2010/chapter5/
-    %
-    %    SOFA Library
-    %      
-    %      Main:  
-    %        http://www.iausofa.org
-    %
-    %      Time Reference Cookbook:
-    %        http://www.iausofa.org/2012_0301_C/sofa/sofa_ts_c.pdf
-    %
-    %      Validation Routines:
-    %        
-    %        C:
-    %          http://www.iausofa.org/2012_0301_C/sofa/t_sofa_c.c
-    %
-    %        FORTRAN:
-    %          http://www.iausofa.org/2012_0301_F/sofa/t_sofa_f.for
-    %        
-    %      Tutorial:
-    %        www.iausofa.org/publications/sofa_pn.pdf
-    %
-    %      NOVAS Comparison:
-    %        www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA543243
-    %
-    %
-    %    David Vallado, Seago J., Seidelmann P., Implementation Issues 
-    %     Surrounding the New IAU Reference Systems for Astrodynamics, 
-    %     AIAA, AAS 06-134, 2006
-    %   
-    %
-    %  FURTHER INSTRUCTIONS:
-    %
-    %    Have fun!
-    %
+% This class facilitates the CIO based celestial to terrestrial 
+% transformation.  Defaults to 2010 IERS standards.
+%
+% The primary function is:
+%
+%         GCRS2ITRS(t,dt,du,xp,yp)
+%
+% which provides the 3x3 celestial to terrestrial 
+% transformation matrix.  In order to obtain the 
+% necessary EOP info the helper object EOPLib.m
+% is provided. 
+%
+%  EXAMPLE:
+%
+%     % fractional MJD referenced to UTC
+%     t = fMJD_UTC;
+%
+%     % some coordinate in the terrestrial frame
+%     X_itrs = [x y z];
+%
+%     % initialize the EOP and Xformation objects
+%     eopLib  = EOPLib ();  iersLib = IERSLib();
+% 
+%     % get EOP info for the exact time
+%     [xp,yp,du,dt] = eopLib.getEOP(t);
+%
+%     % compute the celestial to terrestrial xform matrix
+%     C2T = iersLib.GCRS2ITRS(t,dt,du,xp,yp);
+%
+%     % convert ITRS --> GCRS
+%     X_gcrs = inv(C2T)*X_itrs     
+%
+%
+%  AUTHOR: Dr. Abel Brown 
+%
+%  EMAIL:
+%    First:
+%       abel.brown@ai-solutions.com 
+%
+%    Second:
+%       brown.2179@gmail.com
+%
+%  REFERENCES:
+%
+%    IERS 2010 
+%      www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html
+%
+%    IERS 2003
+%      www.iers.org/IERS/EN/Publications/TechnicalNotes/tn32.html
+%
+%    IERS FTP
+%      ftp://tai.bipm.org/iers/conv2010/chapter5/
+%      ftp://maia.usno.navy.mil/conv2010/chapter5/
+%
+%    SOFA Library
+%      
+%      Main:  
+%        http://www.iausofa.org
+%
+%      Time Reference Cookbook:
+%        http://www.iausofa.org/2012_0301_C/sofa/sofa_ts_c.pdf
+%
+%      Validation Routines:
+%        
+%        C:
+%          http://www.iausofa.org/2012_0301_C/sofa/t_sofa_c.c
+%
+%        FORTRAN:
+%          http://www.iausofa.org/2012_0301_F/sofa/t_sofa_f.for
+%        
+%      Tutorial:
+%        www.iausofa.org/publications/sofa_pn.pdf
+%
+%      NOVAS Comparison:
+%        www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA543243
+%
+%
+%    David Vallado, Seago J., Seidelmann P., Implementation Issues 
+%     Surrounding the New IAU Reference Systems for Astrodynamics, 
+%     AIAA, AAS 06-134, 2006
+%
+% See also: EOPLib
+    
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
     
     properties(Constant, Access = 'public')            
         

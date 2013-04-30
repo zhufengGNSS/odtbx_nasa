@@ -1,5 +1,5 @@
-function fail = integ_test
-% Test function for integ
+function fail = integ_test(odesolv)
+% Test function for integ, using any ODTBX-supported integrator.
 %
 % Test case is a random run, which has an analytical solution:
 %
@@ -26,13 +26,19 @@ function fail = integ_test
 
 % Version History:
 % Original - Russell Carpenter
-% (for additional changes, see the svn repository)
+% (for additional changes, see the git repository)
 
 q = 1;
 tspan = [0 30];
 x0 = [1; 1];
 
-[~,x,Phi,Qd] = integ(@dynfun,tspan,x0,[],q);
+% Set the integrator if specified
+options = [];
+if (nargin >= 1)
+    options = setOdtbxOptions('OdeSolver', odesolv);
+end
+
+[~,x,Phi,Qd] = integ(@dynfun,tspan,x0,options,q);
 dt = tspan(end) - tspan(1);
 Phichk = [1 dt; 0 1];
 Qdchk = q*[dt^3/3 dt^2/2; dt^2/2 dt];

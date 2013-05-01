@@ -1726,16 +1726,20 @@ function change_satellite(hObject, eventdata, handles)
                   sat_state_prop.vel_x;
                   sat_state_prop.vel_y;
                   sat_state_prop.vel_z];
+                      
+        % Pull in the dynarg from the workspace      
+        dynarg = evalin('base',propagator.dynarg);
 
         % Set numerical integration tolerances
         opts = odeset('reltol',1e-9,'abstol',1e-9);      
-        mu = 3.986e5;           % Pancake gravitational parameter
         
+        % Get access to variables where results are stored
         global T;
         global X;
         
+        % Calculate
         try
-            [T,X] = integ(propagator.dynfun, time, coords, opts, propagator.dynarg);
+            [T,X] = integ(propagator.dynfun, time, coords, opts, dynarg);
         catch exceptions
             errordlg(exceptions.message, 'Propagation Error!');
         end

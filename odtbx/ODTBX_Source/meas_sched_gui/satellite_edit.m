@@ -118,8 +118,11 @@ function satellite_edit_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.time_end, 'String', num2str(time_prop.end));
 
     set(handles.prop_handle, 'String', propagator.dynfun);
-    set(handles.dynarg, 'String', num2str(propagator.dynarg));
-
+    if (isequal(propagator.dynarg,'[]'))
+        set(handles.dynarg, 'String', '')
+    else
+        set(handles.dynarg, 'String', num2str(propagator.dynarg));
+    end
 
     % Choose default command line output for satellite_edit
     handles.output = hObject;
@@ -285,7 +288,7 @@ function ok_button_Callback(hObject, eventdata, handles)
         if (~isempty(prop_values.Dynarg))
             propagator.dynarg = prop_values.Dynarg;
         else
-            propagator.dynarg = [];
+            propagator.dynarg = '[]';
         end
         
 

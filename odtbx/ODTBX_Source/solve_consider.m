@@ -11,16 +11,24 @@ classdef solve_consider
     
     
     methods
-        function obj = solve_consider(solve_in, dyn_cons_in, loc_cons_in, external_func_in)
-            if nargin > 0
-                % Provides the opportunity to define solve for/consider
-                % params when the class is created.
-                obj.solve.param = solve_in;
-                obj.dyn_cons.param = dyn_cons_in;
-                obj.loc_cons.param = loc_cons_in;
-                obj.external_func = external_func_in;
+        function obj = solve_consider(varargin)
+            % Provides the opportunity to define solve for/consider
+            % params when the class is created.
+            if nargin >= 1
+                obj.solve.param = varargin(1);
+            end
+            if nargin >= 2
+                obj.dyn_cons.param = varargin(2); 
+            end
+            if nargin >= 3
+                obj.loc_cons.param = varargin(3);
+            end
+            if nargin >= 4
+                obj.external_func = varargin(4);
             end
             
+            % Even if variables weren't passed in, these will occur if
+            % there is data in the variables
             if (~isempty(obj.solve.param))
                 obj.solve.user_order = 1:length(obj.solve.param);
             end

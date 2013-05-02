@@ -31,12 +31,10 @@ classdef solve_consider
             % there is data in the variables
             if (~isempty(obj.solve.param))
                 obj.solve.user_order = 1:length(obj.solve.param);
-            end
-            
+            end  
             if (~isempty(obj.dyn_cons.param))
                 obj.dyn_cons.user_order = 1:length(obj.dyn_cons.param);
             end
-            
             if (~isempty(obj.loc_cons.param))
                 obj.loc_cons.user_order = 1:length(obj.loc_cons.param);
             end
@@ -45,10 +43,10 @@ classdef solve_consider
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
             % Interface maintains compatibility with jatForces?
-            if (obj.external_func == 'jat')
-                [xDot,A,Q] = obj.jatForces(obj,t,x,jatWorld);
-            elseif (obj.external_func == 'gmat')
-                [xDot,A,Q] = obj.gmatForces(obj,t,x,jatWorld);
+            if (isequal(obj.external_func, 'jat'))
+                [xDot,A,Q] = obj.jatForces(t,x,jatWorld);
+            elseif (isequal(obj.external_func, 'gmat'))
+                [xDot,A,Q] = obj.gmatForces(t,x,jatWorld);
             else
                 disp 'External function not recognized.'
             end

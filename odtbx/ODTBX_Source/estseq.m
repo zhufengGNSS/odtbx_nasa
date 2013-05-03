@@ -382,20 +382,7 @@ if testmode,
             niter = 3;
             options = setOdtbxOptions('MonteCarloSeed',1);
             options = setOdtbxOptions(options,'EditFlag',2);
-%             Input for this file from comments below
-%             tspan = 1:5;
-%             ncases = 125;
-%             refint = 31;
-%             S = ones(1,1,length(tint));
-%             C = zeros(0,0,length(tint));
-%             Po = 10;
-%             Pbaro = 10;
-%             Xo = 0;
-%             Xbaro = 0;
-%             dynarg.tru = 1; % Process Noise PSD
-%             dynarg.est = 0; % Process Noise PSD
-%             datarg.tru = 1; % Measurement Noise Variance
-%             datarg.est = 1; % Measurement Noise Variance
+
         case 2 % Consider covariance
             dynfun.tru = @irwbdyn;
             dynfun.est = @irwdyn;
@@ -406,21 +393,7 @@ if testmode,
             options = setOdtbxOptions('MonteCarloSeed',2);
             options = setOdtbxOptions(options,'EditFlag',[2 2 2]);
             refint = 3;
-%             Input for this file from comments below
-%             tspan = 1:30;
-%             ncases = 12;
-%             refint = 3;
-%             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
-%             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
-%             Po = 1e0*eye(8);
-%             Po(7:8,7:8) = 2e0*eye(2);
-%             Pbaro = 2e0*eye(6);
-%             Xo = zeros(8,1);
-%             Xbaro = zeros(6,1);
-%             dynarg.tru = 1e-6; % Process Noise PSD
-%             dynarg.est = 1e-2; % Process Noise PSD
-%             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-%             datarg.est = 1.0e02^2; % Measurement Noise Variance
+
         case 3 % Schmidt Kalman filter version of case 2
             ischmidt = 1;
             dynfun.tru = @irwbdyn;
@@ -431,22 +404,7 @@ if testmode,
             niter = 3;
             options = setOdtbxOptions('MonteCarloSeed',3);
             options = setOdtbxOptions(options,'EditFlag',[2 2 2]);
-%             Input for this file from comments below
-%             tspan = 1:30;
-%             ncases = 12;
-%             refint = 3;
-%             tint = refine(tspan,refint);
-%             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
-%             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
-%             Po = 1e0*eye(8);
-%             Po(7:8,7:8) = 2e0*eye(2);
-%             Pbaro = 2e0*eye(8);    % Modified from test2
-%             Xo = zeros(8,1);
-%             Xbaro = zeros(8,1);    % Modified from test2
-%             dynarg.tru = 1e-6;     % Process Noise PSD
-%             dynarg.est = 1e-2;     % Process Noise PSD
-%             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-%             datarg.est = 1.0e02^2; % Measurement Noise Variance
+
         case 4 % Estimation using JAT forces
             dynfun.tru = @jatForces_km;
             dynfun.est = dynfun.tru;
@@ -845,8 +803,8 @@ if testmode && ~demomode,
     end
     [dPhat{:}] = deal(NaN(size(Phat)));
     [de{:}] = deal(NaN(size(e)));
-    Pfail = zeros(length(titer),ncases);
-    efail = zeros(length(titer),ncases,ns);
+    Pfail = zeros(lentr,ncases);
+    efail = zeros(lentr,ncases,ns);
     for k = ncases:-1:1,
         dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
         %sPhat{k} = Phat_test{k} + Phat{k}; %#ok<AGROW>
@@ -861,7 +819,7 @@ if testmode && ~demomode,
             chistat = 37.325;
             vectest = false;
         end
-        for i = length(titer):-1:1,
+        for i = lentr:-1:1,
             SPS = S(:,:,i)*unscrunch(P_test_array(:,i))*S(:,:,i)';  
             if ischmidt==1
                 dek=S(:,:,i)*de{k}(:,i); % Only check the solved-for errors
@@ -956,6 +914,10 @@ if nargout >= 18
     restartRecord.S = S(:,:,1);
     restartRecord.C = C(:,:,1);
     varargout{18} = restartRecord;
+end
+if nargout >= 19
+    varargout{19} = S;
+    varargout{20} = C;
 end
 
 end % function

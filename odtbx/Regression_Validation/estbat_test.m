@@ -92,12 +92,12 @@ function fail = run_test(testnum)
     end
     
     % Call estbat with loaded data
-    ncases = getOdtbxOptions(options.tru,'MonteCarloCases',1);
-    lent = length(tspan);
     [~,~,Phat,e,~,Pa,Pv,Pw,Phata,Phatv,~,Sigma_a] = ...
         estbat(dynfun, datfun, tspan, Xo, Po, options, dynarg, datarg, S, C);
     
     % Compare estbat output to validated output
+    lent = length(tspan);
+    ncases = getOdtbxOptions(options,'MonteCarloCases',1);
     for k = ncases:-1:1,
         % TODO: use chi2 test like in estseq instead of "9\sigma"
         dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>

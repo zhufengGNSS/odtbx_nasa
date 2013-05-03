@@ -281,8 +281,8 @@ else
     options.tru = setOdtbxOptions('OdeSolvOpts',odeset);
     options.est = options.tru;
 end
-ncases = getOdtbxOptions(options.tru,'MonteCarloCases',1);
-niter = getOdtbxOptions(options.tru,'UpdateIterations',10);
+ncases = getOdtbxOptions(options.est,'MonteCarloCases',1);
+niter = getOdtbxOptions(options.est,'UpdateIterations',10);
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
         dynarg = varargin{7};
@@ -385,7 +385,7 @@ for i = lent:-1:1,
 end
 
 % Acquire the "use process noise" flag, which defaults to 1 ('yes').
-procNoiseFlag = getOdtbxOptions(options.tru, 'UseProcNoise', 1);
+procNoiseFlag = getOdtbxOptions(options.est, 'UseProcNoise', 1);
 
 % If the user has specified that process noise should not be used,
 % achieve this by zeroing out the Qd array.
@@ -713,7 +713,7 @@ end
 % uses the Cholesky decomposition, we have to handle this case separately.
 
 % Check some estimator options
-eopts = chkestopts(options.tru,ncases);
+eopts = chkestopts(options.est,ncases);
 
 for j = ncases:-1:1,
     xo = covsmpl(Po, 1, eopts.monteseed(j));

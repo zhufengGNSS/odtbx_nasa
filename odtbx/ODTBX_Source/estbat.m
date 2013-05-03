@@ -43,6 +43,15 @@ function varargout = estbat(varargin)
 %   then the output data will stored in cell arrays, with each cell array 
 %   element corresponding to an entire time series for each monte carlo 
 %   case.
+%   Note that as of ODTBX R2013a, OPTIONS can be either a standard
+%   ODTBXOPTIONS structure, or a struct of two ODTBXOPTIONS structures that
+%   are used separately for truth and estimated computations. The latter
+%   method is achieved by settings OPTIONS as a struct:
+%      >> options.tru = setOdtbxOptions(...);
+%      >> options.est = setOdtbxOptions(...);
+%      >> [...] = estseq(..., options, ...);
+%   Using this method, all options common to truth and estimated
+%   computations are taken from the options.est structure.
 %
 %   [T,X,P] = ESTBAT(DYNFUN,DATFUN,TSPAN,X0,P0,OPTIONS,DYNARG,DATARG)
 %   passes DYNARG to DYNFUN and DATARG to DATFUN as DYNFUN(T,X,DYNARG) and
@@ -189,7 +198,9 @@ function varargout = estbat(varargin)
 %                            UpdateIterations, which defaults to 10.
 % 2012-08-28 R. Mathur       Extracted regression test
 % 2013-05-01 R. Mathur       Fully extracted regression test to estbat_test
-%
+%                            Added ability to specify separate truth & estimated
+%                            options structures for the options input.
+
 %% ESTBAT: Batch Estimator
 %
 % ESTBAT is the primary batch estimator for OD Toolbox.  The original
@@ -270,7 +281,7 @@ elseif nargin >= 4,
     Po = diag( inf*ones( size(Xo) ) );
     Pbaro = Po;
 end
-if nargin >=6,
+if nargin >= 6,
     if all(isfield(varargin{6}, {'tru','est'})),
         options = varargin{6};
     else

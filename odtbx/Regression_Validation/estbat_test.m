@@ -6,7 +6,7 @@ function failed = estbat_test
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
 %  more details.)
-%
+
 % ODTBX: Orbit Determination Toolbox
 % 
 % Copyright (c) 2003-2011 United States Government as represented by the

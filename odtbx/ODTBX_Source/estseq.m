@@ -675,7 +675,6 @@ end
 % Generate the time series of estimation errors for each
 % case.  Use estval to plot these data if no output arguments are supplied.
 
-
 P = scrunch(P);
 for j = ncases:-1:1,
     t{j} = titer;
@@ -744,7 +743,7 @@ if nargout >= 16,
     varargout{16} = Pm;
     varargout{17} = Phatm;
 end
-if nargout >= 18
+if nargout >= 18,
     restartRecord.Pao = Pa(:,:,end);
     restartRecord.Pvo = Pv(:,:,end);
     restartRecord.Pwo = Pw(:,:,end);
@@ -770,7 +769,7 @@ if nargout >= 18
     restartRecord.C = C(:,:,1);
     varargout{18} = restartRecord;
 end
-if nargout >= 19
+if nargout >= 19,
     varargout{19} = S;
     varargout{20} = C;
 end

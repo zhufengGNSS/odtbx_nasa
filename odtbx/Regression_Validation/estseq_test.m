@@ -64,8 +64,8 @@ failed = any(any(fail));
 
 end %function
 
-% Runs the actual estbat tests. The contents of this function have been
-% extracted from estbat.
+% Runs the actual estseq tests. The contents of this function have been
+% extracted from estseq.
 function fail = run_test(testnum)
     % Set functions based on the test being performed
     switch testnum
@@ -267,15 +267,15 @@ function fail = run_test(testnum)
             load estseq_test4;
             
             % Create JAT structures and initialize integrator
-            dynarg.tru = createJATWorld(options); 
-            dynarg.est = dynarg.tru;
             gsList  = createGroundStationList('DBS_NDOSL_WGS84_Mod_Example.txt');
             options = setOdtbxOptions(options,'gsList',gsList);
-            datarg.tru  = options;
-            datarg.est  = setOdtbxOptions(datarg.tru,'rSigma',3*[1e-3 1e-6]);
-            
             options = setOdtbxOptions(options,'OdeSolver',@ode113,'OdeSolvOpts',...
                 odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10));
+            dynarg.tru = createJATWorld(options);
+            dynarg.est = dynarg.tru;
+            datarg.tru  = options;
+            datarg.est  = setOdtbxOptions(datarg.tru,'rSigma',3*[1e-3 1e-6]);
+
             
 % The estseq_test4.mat file was creating using the following data, in
 % addition to the truth test results data. This comment can be deleted
@@ -335,9 +335,9 @@ function fail = run_test(testnum)
     [de{1:ncases}] = deal(NaN(size(e)));
     Pfail = zeros(lentr,ncases);
     efail = zeros(lentr,ncases,ns);
+    
     for k = ncases:-1:1,
         dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-        %sPhat{k} = Phat_test{k} + Phat{k}; %#ok<AGROW>
         de{k} = e_test{k} - e{k}; %#ok<USENS>
         % Is each error sample within prob of 1e-9 of its corresponding test
         % value?  Is each Phat sample "close enough," in terms of the
@@ -359,7 +359,6 @@ function fail = run_test(testnum)
             if vectest,
                 efail(i,k,1) = ...
                     dek'/SPS*dek > chistat;
-                    %dek'*inv(SPS)*dek > chistat; 
             else
                 for j = ns:-1:1,
                     efail(i,k,j) = dek(j)^2/SPS(j,j) > 37.325; 

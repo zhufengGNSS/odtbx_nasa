@@ -363,19 +363,7 @@ if testmode,
             options = setOdtbxOptions('MonteCarloSeed',1);
             options = setOdtbxOptions(options,'EditFlag',2);
             options = setOdtbxOptions(options,'UseSmoother',1);
-%             tspan = 1:5;
-%             ncases = 125;
-%             refint = 31;
-%             S = ones(1,1,length(tint));
-%             C = zeros(0,0,length(tint));
-%             Po = 10;
-%             Pbaro = 10;
-%             Xo = 0;
-%             Xbaro = 0;
-%             dynarg.tru = 1; % Process Noise PSD
-%             dynarg.est = 0; % Process Noise PSD
-%             datarg.tru = 1; % Measurement Noise Variance
-%             datarg.est = 1; % Measurement Noise Variance
+
         case 2 % Consider covariance
             dynfun.tru = @irwbdyn;
             dynfun.est = @irwdyn;
@@ -387,21 +375,7 @@ if testmode,
             options = setOdtbxOptions(options,'EditFlag',[2 2 2]);
             options = setOdtbxOptions(options,'UseSmoother',1);
             refint = 3;
-%             Input for this file from comments below
-%             tspan = 1:30;
-%             ncases = 12;
-%             refint = 3;
-%             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
-%             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
-%             Po = 1e0*eye(8);
-%             Po(7:8,7:8) = 2e0*eye(2);
-%             Pbaro = 2e0*eye(6);
-%             Xo = zeros(8,1);
-%             Xbaro = zeros(6,1);
-%             dynarg.tru = 1e-6; % Process Noise PSD
-%             dynarg.est = 1e-2; % Process Noise PSD
-%             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-%             datarg.est = 1.0e02^2; % Measurement Noise Variance
+
         case 3 % Estimation using JAT forces
             dynfun.tru = @jatForces_km;
             dynfun.est = dynfun.tru;
@@ -1005,7 +979,7 @@ if nargout >= 19,
     varargout{19} = Pm;
     varargout{20} = Phatm;
 end
-if nargout >= 21
+if nargout >= 21,
     restartRecord.Pao = Pa(:,:,end);
     restartRecord.Pvo = Pv(:,:,end);
     restartRecord.Pwo = Pw(:,:,end);
@@ -1030,6 +1004,10 @@ if nargout >= 21
     restartRecord.S = S(:,:,1);
     restartRecord.C = C(:,:,1);
     varargout{21} = restartRecord;
+end
+if nargout >= 22,
+    varargout{22} = S;
+    varargout{23} = C;
 end
 
 end % function

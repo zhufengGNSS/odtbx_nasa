@@ -51,6 +51,15 @@ function varargout = estpar(varargin)
 %   created with the SETODTBXOPTIONS function.  See ODTBXOPTIONS for
 %   details. Commonly used options allow one to specify parameters or
 %   features of the estimator, force model, and measurment model.  
+%   Note that as of ODTBX R2013a, OPTIONS can be either a standard
+%   ODTBXOPTIONS structure, or a struct of two ODTBXOPTIONS structures that
+%   are used separately for truth and estimated computations. The latter
+%   method is achieved by settings OPTIONS as a struct:
+%      >> options.tru = setOdtbxOptions(...);
+%      >> options.est = setOdtbxOptions(...);
+%      >> [...] = estseq(..., options, ...);
+%   Using this method, all options common to truth and estimated
+%   computations are taken from the options.est structure.
 %
 %   [T,X,P] = ESTPAR(DYNFUN,DATFUN,TSPAN,X0,P0,OPTIONS,DYNARG,DATARG)
 %   passes DYNARG to DYNFUN and DATARG to DATFUN as DYNFUN(T,X,DYNARG) and
@@ -188,14 +197,20 @@ if nargin >= 5, % ESTPAR(PROPFUN,MEASFUN,TSPAN,X0,P0...)
 elseif nargin ~= 0 && nargin ~= 1,
     error('There must be at least 5 inputs! (dynfun,datfun,tspan,X0,PO)')
 end
-if nargin >=6,
-    options = varargin{6};
+if nargin >= 6,
+    if all(isfield(varargin{6}, {'tru','est'})),
+        options = varargin{6};
+    else
+        options.tru = varargin{6};
+        options.est = options.tru;
+    end
 else
-    options = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.tru = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.est = options.tru;
 end
-ncases = getOdtbxOptions(options,'MonteCarloCases',1); % Set to at least 1
-N = getOdtbxOptions(options,'Particles',20);
-% refint = getOdtbxOptions(options,'refint',0);
+ncases = getOdtbxOptions(options.est,'MonteCarloCases',1); % Set to at least 1
+N = getOdtbxOptions(options.est,'Particles',20);
+% refint = getOdtbxOptions(options.tru,'refint',0);
 
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
@@ -251,7 +266,7 @@ ytemp = feval(datfun.tru,tspan(1),Xo,datarg.tru);
 nmeas = length(ytemp);
 
 % Get montecarloseed and edit options
-eopts = chkestopts(options,ncases,nmeas);
+eopts = chkestopts(options.est,ncases,nmeas);
 
 if(~isnan(eopts.monteseed(1)))
 %     RandStream.setGlobalStream(eopts.monteseed(1));
@@ -282,7 +297,7 @@ dy = NaN(nmeas,lent);
 
 %% Reference trajectory
 
-[~,x_tru,~] = integ(dynfun.tru,tspan,Xo,options,dynarg.tru);
+[~,x_tru,~] = integ(dynfun.tru,tspan,Xo,options.tru,dynarg.tru);
 
 [Y_tru,~,R_tru] = feval(datfun.tru,tspan,x_tru,datarg.tru);
 
@@ -362,7 +377,7 @@ for i = 1:2:lent
     for j = 1:N
         
         % Particle propagation
-        [~,Xtemp,~,Qd_est] = integ(dynfun.est,[tpp(i+1),tpp(i+2)],Xk(:,j),options,dynarg.est);
+        [~,Xtemp,~,Qd_est] = integ(dynfun.est,[tpp(i+1),tpp(i+2)],Xk(:,j),options.est,dynarg.est);
         Xk(:,j) = Xtemp(:,end) + covsmpl(Qd_est(:,:,end)); %The samples are added with process noise covariance
         
     end
@@ -416,3 +431,5 @@ if nargout >=13,
 end
 
 fprintf('Particles resampled %d times!\n',ReCount)
+
+end % function

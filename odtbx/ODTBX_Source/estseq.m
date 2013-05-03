@@ -44,7 +44,7 @@ function varargout = estseq(varargin)
 %   created with the SETODTBXOPTIONS function.  See ODTBXOPTIONS for
 %   details. Commonly used options allow one to specify parameters or
 %   features of the estimator, force model, and measurment model.  One of
-%   estimator parameters is 'SchmidtKalman'.  This is the flag to use
+%   the estimator parameters is 'SchmidtKalman'.  This is the flag to use
 %   the Schmidt Kalman filter instead of the standard Kalman filter in
 %   ESTSEQ.
 %   Note that as of ODTBX R2013a, OPTIONS can be either a standard
@@ -781,20 +781,3 @@ function y = refine(u,refine)
 y = [reshape([u(1:end-1);repmat(u(1:end-1),refine,1)+...
     cumsum(repmat(diff(u)/(refine+1),refine,1),1)],[],1);u(end)]';
 end
-
-% function x = rk4(ode,tspan,x0,dynarg)
-% x = NaN(length(x0),length(tspan));
-% x(:,1) = x0;
-% dt = diff(tspan);
-% for i = 2:length(tspan),
-%     dx = feval(ode,tspan(i-1),x(:,i-1),dynarg);
-%     k1 = dt(i-1) * dx;
-%     dx = feval(ode,tspan(i-1),x(:,i-1)+k1/2,dynarg);
-%     k2 = dt(i-1) * dx;
-%     dx = feval(ode,tspan(i-1),x(:,i-1)+k2/2,dynarg);
-%     k3 = dt(i-1) * dx;
-%     dx = feval(ode,tspan(i-1),x(:,i-1)+k3,dynarg);
-%     k4 = dt(i-1) * dx;
-%     x(:,i) = x(:,i-1) + (k1 + 2*k2 + 2*k3 + k4)/6;
-% end
-% end

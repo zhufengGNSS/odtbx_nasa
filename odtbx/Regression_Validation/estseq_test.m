@@ -383,7 +383,7 @@ function fail = run_test(testnum)
         any(any(Pfail))]);
 end
 
-%% Self-test user functions
+%% Functions used by the tests
 
 %% Dynamics function for case 1: true and estimate
 function [Xdot,A,Q] = rwdyn(t,X,q)

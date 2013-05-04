@@ -128,7 +128,8 @@ function fail = run_test(testnum)
         any(any(Pfail))]);
 end
 
-% Self-test user functions
+%% Functions used by the tests
+
 function [Xdot,A,Q] = rwdyn(t,X,q) % Test 1 dynfun
 el = length(t);
 A = zeros(1,1,el);

@@ -193,6 +193,11 @@ function varargout = estspf(varargin)
 % 2010 Sept 16 Sun Hur-Diaz
 %   Added measurement editing capability
 %
+% 2013 May 3 Ravi Mathur
+%   Fully extracted regression test to estspf_test.
+%   Added ability to specify separate truth & estimated options structures 
+%     for the options input.
+
 %% ESTSPF: Addititive Divided Difference Sigma Point Filter
 %
 % ESTSPF is part of the OD Toolbox.  It allows for the analysis of additive
@@ -233,20 +238,12 @@ function varargout = estspf(varargin)
 % TODO: This should be a subfunction, or if there is a lot of commonality with
 % estseq's version, a private function.
 %
-% If there are no input arguments, perform a built-in self-test.  If there
-% are no output arguments, then plot the results of the input self-test
-% number as a demo.
+% The full self-test has been extracted to estspf_test.m to conform to
+% the new regression testing framework.
+%
+% If there are no output arguments, then plot the results of a particular
+% input as a demo.
 
-if nargin == 0,
-    selftest = true;
-else
-    selftest = false;
-end
-if nargin == 1,
-    testmode = varargin{1}; % Test cases defined as subfunctions at the end
-else
-    testmode = false;
-end
 if nargin >= 5, % ESTSPF(PROPFUN,MEASFUN,TSPAN,X0,P0...)
     if all(isfield(varargin{1}, {'tru','est'})),
         propfun = varargin{1};
@@ -329,90 +326,6 @@ if nargout == 0,
     ksig = 2;
 else
     demomode = false;
-end
-
-if selftest,
-    totaltests = 2;
-    disp('Selftest...')
-    
-    % Run all the test cases
-    for k = 1:totaltests,
-        disp(['Case ',num2str(k),'...'])
-        fail(k,:) = estspf(k); %#ok<AGROW>
-    end
-    
-    % If system supports parallel processing run all
-    % the test cases again in parallel
-    testparallel = 0;
-    try % See if system supports parallel operation
-        if matlabpool('size') == 0,
-            matlabpool('open');
-            testparallel = 1;
-        else
-            disp('Skipping parallel test.');
-            disp('Self test already running in parallel environment.');
-        end
-    catch %#ok<CTCH>
-        disp('Skipping parallel test.');
-        disp('No support for parallel processing.');
-    end
-    if testparallel,
-        for k = 1:totaltests,
-            disp(['Parallel Case ',num2str(k),'...'])
-            fail(k+totaltests,:) = estspf(k); %#ok<AGROW>
-        end
-        matlabpool('close');
-    end
-    
-    varargout{1} = any(any(fail));
-    varargout{2} = fail;
-    return
-elseif testmode,
-    switch testmode
-        case 1
-            propfun.tru = @rwprop;
-            propfun.est = @rwprop;
-            measfun.tru = @rwmeas;
-            measfun.est = @rwmeas;
-            load('estspf_test1.mat')
-            options = setOdtbxOptions(options, 'MonteCarloSeed', randn_seed);
-            options = setOdtbxOptions(options, 'EditFlag', 2);
-%             Input for this file from comments below
-%             tspan = 1:5;
-%             ncases = 125;
-%             S = 1;
-%             C = [];
-%             Po = 10;
-%             Pbaro = 10;
-%             Xo = 0;
-%             Xbaro = 0;
-%             proparg.tru = 1; % Process Noise PSD
-%             proparg.est = 0; % Process Noise PSD
-%             measarg.tru = 1; % Measurement Noise Stdev
-%             measarg.est = 1; % Measurement Noise Stdev
-        case 2 % Consider covariance
-            propfun.tru = @irwbprop;
-            propfun.est = @irwprop;
-            measfun.tru = @irwbmeas;
-            measfun.est = @irwmeas;
-            load('estspf_test2.mat')
-            options = setOdtbxOptions(options, 'MonteCarloSeed', randn_seed);
-            options = setOdtbxOptions(options, 'EditFlag', 2);
-%             Input for this file from comments below
-%             tspan = 1:30;
-%             ncases = 12;
-%             S = [eye(6), zeros(6,2)];
-%             C = [zeros(2,6), eye(2)];
-%             Po = 1e0*eye(8);
-%             Po(7:8,7:8) = 2e0*eye(2);
-%             Pbaro = 2e0*eye(6);
-%             Xo = zeros(8,1);
-%             Xbaro = zeros(6,1);
-%             proparg.tru = 1e-6; % Process Noise PSD
-%             proparg.est = 1e-2; % Process Noise PSD
-%             measarg.tru = 1.0e-0; % Measurement Noise Stdev
-%             measarg.est = 1.0e02; % Measurement Noise Stdev
-    end
 end
 
 %% Covariance and Monte Carlo Analysis
@@ -676,29 +589,6 @@ if demomode,
     keyboard
 end
 
-% Self-test regression tests
-if testmode && ~demomode && nargout<3,
-    switch testmode
-        case 1
-            load('estspf_test1.mat')
-        case 2
-            load('estspf_test2.mat')
-    end
-    fail = logical([...
-        any(any(any(abs(cell2mat(Phat) - cell2mat(P)) > 1e-10))), ...
-        any(any(any(abs(PA - P_a) > 1e-10))), ...
-        any(any(any(abs(PV - P_v) > 1e-10))),...
-        any(any(any(abs(PW - P_w) > 1e-10))), ...
-        any(any(any(abs(PHATW - Psw) > 1e-10))), ...
-        any(any(any(abs(PHATV - Psv) > 1e-10))), ...
-        any(any(any(abs(PHATA - Psa) > 1e-10))), ...
-        any(any(any(abs(cell2mat(X) - cell2mat(shat)) > 1e-10))), ...
-        any(any(any(abs(cell2mat(E) - cell2mat(es)) > 1e-10))), ...
-        any(any(any(abs(cell2mat(DY) - cell2mat(dy)) > 1e-10))) ...
-        ]); 
-    varargout{1} = fail;
-end
-
 % Assign output variables
 if nargout >= 3,
     varargout{1} = t;
@@ -735,6 +625,8 @@ end
 if nargout >=13,
     varargout{13} = Pdy;
 end
+
+end % function
 
 % ESTSPF helper functions
 
@@ -789,6 +681,8 @@ else
     Phat = scrunch(rtPssa*rtPssa' + rtPssv*rtPssv' + rtPssw*rtPssw');
 end
 
+end % function
+
 
 function [shat_pst,rtPss,Phat,x_pst]=spf_tu(...
     tprop,shat_pre,rtPss,fun,arg,hbar,ns,x_pre)
@@ -830,6 +724,8 @@ else
     Phat = scrunch(rtPssa*rtPssa' + rtPssv*rtPssv' + rtPssw*rtPssw');
 end
 
+end % function
+
 function X = spawnsigpts(x,N,hbar,n)
 % Creates the set of sigma points from the mean, x, the Cholesky factor
 % of the covariance matrix, N, and the divided difference scale factor, hbar.
@@ -837,9 +733,13 @@ function X = spawnsigpts(x,N,hbar,n)
 % whose 2nd:nth columns are x+hN, and whose n+st1:2nth columns are x-hN.
 X = repmat(x,1,2*n+1) + [zeros(size(x)), hbar*N, -hbar*N];
 
+end % function
+
 function x = mergesigpts(X,hbar,n)
 % Merge a set of sigma points back into a single vector.
 x = (hbar^2-n)/hbar^2*X(:,1) + sum(1/2/hbar^2*X(:,2:end),2);
+
+end % function
 
 function [D1,D2] = diffsigpts(X,hbar,n)
 % Compute the divided difference matrices containing information about the
@@ -858,12 +758,16 @@ if any(n2),
     D2(n2) = 0;
 end
 
+end % function
+
 function [Da,Dv,Dw] = extractdiffs(D,n)
 % Extract columns from the divided difference matrices that corresponds to
 % the covariance partitions.
 Da = D(:,    1:  n);
 Dv = D(:,  n+1:2*n);
 Dw = D(:,2*n+1:3*n);
+
+end % function
 
 function [omc,K] = fixgain(observed,computed,K)
 % For any observed minus computed measurements that are NaNs due to 
@@ -874,6 +778,8 @@ n = isnan(omc);
 if any(n),
     K(:,n) = 0;
 end
+
+end % function
 
 function N = thinQR(D,n)
 % Perform "thin" QR decomposition of the compound matrix.  For rectangular
@@ -901,6 +807,8 @@ else
     N = N(1:n,:)';
 end
 
+end % function
+
 function [Psa,Psv,Psw,P_a,P_v,P_w,Pda,Pdv,Pdw] = fullcovs(...
     rtPssa,rtPssv,rtPssw,rtPxxa,rtPxxv,rtPxxw,S)
 % Create full covariances from Cholesky factors for output
@@ -914,139 +822,4 @@ Pda = S*P_a*S' - Psa;
 Pdv = S*P_v*S' - Psv;
 Pdw = S*P_w*S' - Psw;
 
-% Self-test user functions
-% Propagation function for case 1: true and estimate
-function [Xnext,rtQd] = rwprop(tspan,Xcurr,q)
-dt = tspan(2)-tspan(1);
-Xnext = Xcurr;
-rtQd = sqrt(q*dt);
-
-% Propagation function for case 2: true
-function [Xnext,rtQd] = irwbprop(tspan,Xcurr,q)
-dt = tspan(2)-tspan(1);
-n = size(Xcurr,1);
-O = zeros(n,n);
-A([1:3 7:8],[4:6 8]) = eye(5,4);
-Xnext = expm(A*dt)*Xcurr;
-Q([4:6 8],[4:6 8]) = q*eye(4);
-Psi = expm([-A Q; O A']*dt);
-Phi = Psi(n+1:2*n,n+1:2*n)';
-rtQd = chol(Phi*Psi(1:n,n+1:2*n))';
-% The following is the discrete formulation from the continuous model
-% [lx,nx]=size(Xcurr);
-% Xnext=zeros(lx,nx);
-% for i=1:nx
-%     if i==1
-%         [t,x,Phi,S] = integ(@irwbdyn,tspan,Xcurr(:,i),[],q);
-%         lt=length(t);
-%         Xnext(:,i)=x(:,lt);
-%         rtQd=chol(S(:,:,lt))';
-%     else
-%         [t,x] = integ(@irwbdyn,tspan,Xcurr(:,i),[],q);
-%         lt=length(t);
-%         Xnext(:,i)=x(:,lt);
-%     end
-% end
-
-% Propagation function for case 2: estimate, solve for only
-function [Xnext,rtQd] = irwprop(tspan,Xcurr,q)
-dt = tspan(2)-tspan(1);
-n = size(Xcurr,1);
-O = zeros(n,n);
-A(:,4:6) = eye(6,3);
-Xnext = expm(A*dt)*Xcurr;
-Q(4:6,4:6) = q*eye(3);
-Psi = expm([-A Q; O A']*dt);
-Phi = Psi(n+1:2*n,n+1:2*n)';
-rtQd = chol(Phi*Psi(1:n,n+1:2*n))';
-% The following is the discrete formulation from the continuous model
-% [lx,nx]=size(Xcurr);
-% Xnext=zeros(lx,nx);
-% for i=1:nx
-%     if i==1
-%         [t,x,Phi,S] = integ(@irwdyn,tspan,Xcurr(:,i),[],q);
-%         lt=length(t);
-%         Xnext(:,i)=x(:,lt);
-%         rtQd=chol(S(:,:,lt))';
-%     else
-%         [t,x] = integ(@irwdyn,tspan,Xcurr(:,i),[],q);
-%         lt=length(t);
-%         Xnext(:,i)=x(:,lt);
-%     end
-% end
-
-% Measurement function for case 1: true and estimate
-function [Y,rtR] = rwmeas(t,X,sig) %#ok<INUSL>
-Y = X;
-rtR = sig;
-
-% Measurement function for case 2: true
-function [Y,rtR] = irwbmeas(t,X,sig) %#ok<INUSL>
-H = [eye(3) zeros(3,3) -ones(3,1) zeros(3,1)];
-Y = H*X;
-rtR = sig*eye(3);
-% The following is the discrete formulation from the continuous model
-% [lx,nx]=size(X);
-% Y=zeros(3,nx);
-% for i=1:nx
-%     if i==1
-%         [Y(:,i),H,R] = irwbdat(t,X(:,i),sig^2);
-%         rtR=chol(R(:,:,1))';
-%     else
-%         Y(:,i) = irwbdat(t,X(:,i),sig^2);
-%     end
-% end
-
-% Measurement function for case 2: estimate, solve for only
-function [Y,rtR] = irwmeas(t,X,sig) %#ok<INUSL>
-H = [eye(3) zeros(3,3)];
-Y = H*X;
-rtR = sig*eye(3);
-% The following is the discrete formulation from the continuous model
-% [lx,nx]=size(X);
-% Y=zeros(3,nx);
-% for i=1:nx
-%     if i==1
-%         [Y(:,i),H,R] = irwdat(t,X(:,i),sig^2);
-%         rtR=chol(R(:,:,1))';
-%     else
-%         Y(:,i) = irwdat(t,X(:,i),sig^2);
-%     end
-% end
-
-% Continuous functions of Case 2 from estseq.m
-% ----------------------------------------------
-% Dynamics function for case 2: true
-function [Xdot,A,Q] = irwbdyn(t,X,q) %#ok<DEFNU>
-el = length(t);
-A([1:3 7:8],[4:6 8]) = eye(5,4);
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q([4:6 8],[4:6 8]) = q*eye(4);
-Q = repmat(Q,[1 1 el]);
-
-% Dynamics function for case 2: estimate, solve for only
-function [Xdot,A,Q] = irwdyn(t,X,q) %#ok<DEFNU>
-el = length(t);
-A(:,4:6) = eye(6,3);
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q(4:6,4:6) = q*eye(3);
-Q = repmat(Q,[1 1 el]);
-
-% Measurement function for case 2: true
-function [Y,H,R] = irwbdat(t,X,r) %#ok<DEFNU>
-el = length(t);
-H = [eye(3) zeros(3,3) -ones(3,1) zeros(3,1)];
-Y = H*X;
-H = repmat(H,[1 1 el]);
-R = r*repmat(eye(3),[1 1 el]);
-
-% Measurement function for case 2: estimate, solve for only
-function [Y,H,R] = irwdat(t,X,r) %#ok<DEFNU>
-el = length(t);
-H = [eye(3) zeros(3,3)];
-Y = H*X;
-H = repmat(H,[1 1 el]);
-R = r*repmat(eye(3),[1 1 el]);
-
+end % function

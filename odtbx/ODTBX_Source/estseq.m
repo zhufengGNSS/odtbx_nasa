@@ -252,7 +252,7 @@ function varargout = estseq(varargin)
 % the new regression testing framework.
 %
 % If there are no output arguments, then plot the results of a particular
-% input self-test as a demo.
+% input as a demo.
 
 if(nargin < 2)
     error('estseq no longer supports direct regression testing. Please use estseq_test.');

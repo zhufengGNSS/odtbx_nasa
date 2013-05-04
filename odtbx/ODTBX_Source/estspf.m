@@ -59,6 +59,15 @@ function varargout = estspf(varargin)
 %   created with the SETODTBXOPTIONS function.  See ODTBXOPTIONS for
 %   details. Commonly used options allow one to specify parameters or
 %   features of the estimator, force model, and measurment model. 
+%   Note that as of ODTBX R2013a, OPTIONS can be either a standard
+%   ODTBXOPTIONS structure, or a struct of two ODTBXOPTIONS structures that
+%   are used separately for truth and estimated computations. The latter
+%   method is achieved by settings OPTIONS as a struct:
+%      >> options.tru = setOdtbxOptions(...);
+%      >> options.est = setOdtbxOptions(...);
+%      >> [...] = estseq(..., options, ...);
+%   Using this method, all options common to truth and estimated
+%   computations are taken from the options.est structure.
 %
 %   [T,X,P] = ESTSPF(PROPFUN,MEASFUN,TSPAN,X0,P0,OPTIONS,PROPARG,MEASARG)
 %   passes PROPARG to PROPFUN and MEASARG to MEASFUN as PROPFUN(TV,X,PROPARG) 
@@ -244,6 +253,12 @@ function varargout = estspf(varargin)
 % If there are no output arguments, then plot the results of a particular
 % input as a demo.
 
+if nargin <= 1,
+    error('estspf no longer supports direct regression testing. Please use estspf_test.');
+elseif nargin < 5,
+    error('There must be at least 5 inputs! (propfun,measfun,tspan,X0,PO)');
+end
+
 if nargin >= 5, % ESTSPF(PROPFUN,MEASFUN,TSPAN,X0,P0...)
     if all(isfield(varargin{1}, {'tru','est'})),
         propfun = varargin{1};
@@ -274,16 +289,20 @@ if nargin >= 5, % ESTSPF(PROPFUN,MEASFUN,TSPAN,X0,P0...)
     end
     if isempty(Po) || isempty(Pbaro)
         error('Initial covariance must be set!')
+    end    
+end
+if nargin >= 6,
+    if all(isfield(varargin{6}, {'tru','est'})),
+        options = varargin{6};
+    else
+        options.tru = varargin{6};
+        options.est = options.tru;
     end
-elseif nargin ~= 0 && nargin ~= 1,
-    error('There must be at least 5 inputs! (propfun,measfun,tspan,X0,PO)')
-end
-if nargin >=6,
-    options = varargin{6};
 else
-    options = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.tru = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.est = options.tru;
 end
-ncases = getOdtbxOptions(options,'MonteCarloCases',1); % Set to at least 1
+ncases = getOdtbxOptions(options.est,'MonteCarloCases',1); % Set to at least 1
 
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
@@ -364,7 +383,7 @@ ytemp = feval(measfun.tru,tspan(1),Xo,measarg.tru);
 nmeas = length(ytemp);
 
 % Get montecarloseed and edit options
-eopts = chkestopts(options,ncases,nmeas);
+eopts = chkestopts(options.est,ncases,nmeas);
 
 if(~isnan(eopts.monteseed(1)))
     randn('state', eopts.monteseed(1));

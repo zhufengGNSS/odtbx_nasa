@@ -3,9 +3,9 @@ classdef solve_consider
     %   Detailed explanation goes here
     
     properties
-        solve = struct('param', [], 'user_order', [], 'func_order', []);
-        dyn_cons = struct('param', [], 'user_order', [], 'func_order', []);
-        loc_cons = struct('param', [], 'user_order', [], 'func_order', []);
+        solve = struct('param', {''}, 'user_order', {''}, 'func_order', {''});
+        dyn_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''});
+        loc_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''});
         external_func = 'jat';
     end
     
@@ -15,13 +15,13 @@ classdef solve_consider
             % Provides the opportunity to define solve for/consider
             % params when the class is created.
             if nargin >= 1
-                obj.solve.param = varargin(1);
+                obj.solve.param = varargin{1};
             end
             if nargin >= 2
-                obj.dyn_cons.param = varargin(2); 
+                obj.dyn_cons.param = varargin{2}; 
             end
             if nargin >= 3
-                obj.loc_cons.param = varargin(3);
+                obj.loc_cons.param = varargin{3};
             end
             if nargin >= 4
                 obj.external_func = varargin(4);
@@ -30,13 +30,19 @@ classdef solve_consider
             % Even if variables weren't passed in, these will occur if
             % there is data in the variables
             if (~isempty(obj.solve.param))
-                obj.solve.user_order = 1:length(obj.solve.param);
+                for order = 1:length(obj.solve.param)
+                    obj.solve.user_order{order,1} = order;
+                end
             end  
             if (~isempty(obj.dyn_cons.param))
-                obj.dyn_cons.user_order = 1:length(obj.dyn_cons.param);
+                for order = 1:length(obj.dyn_cons.param)
+                    obj.dyn_cons.user_order{order,1} = order;
+                end
             end
             if (~isempty(obj.loc_cons.param))
-                obj.loc_cons.user_order = 1:length(obj.loc_cons.param);
+                for order = 1:length(obj.loc_cons.param)
+                    obj.loc_cons.user_order{order,1} = order;
+                end
             end
         end
         
@@ -68,11 +74,11 @@ classdef solve_consider
                 Fsi =solv+find(strcmpi(dyn_cons,'SOLAR-GM'));
                 Fmi =solv+find(strcmpi(dyn_cons,'LUNAR-GM'));
                 Fsri=solv+find(strcmpi(dyn_cons,'SOLRAD 8'));
-
-                Fearth=x(Fei,1);
-                Fsun=x(Fsi,1);
-                Fmoon=x(Fmi,1);
-                Fsrp=x(Fsri,1); % Fraction of Cr
+                
+%                 Fearth=x(Fei,1);
+%                 Fsun=x(Fsi,1);
+%                 Fmoon=x(Fmi,1);
+%                 Fsrp=x(Fsri,1); % Fraction of Cr
             end
 
             x=x(1:6,:)*1000; % conversion km -> m

@@ -3,9 +3,12 @@ classdef solve_consider
     %   Detailed explanation goes here
     
     properties
-        solve = struct('param', {''}, 'user_order', {''}, 'func_order', {''});
-        dyn_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''});
-        loc_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''});
+        solve = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
+            'user_map', containers.Map, 'func_map', containers.Map);
+        dyn_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
+            'user_map', containers.Map, 'func_map', containers.Map);
+        loc_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
+            'user_map', containers.Map, 'func_map', containers.Map);
         external_func = 'jat';
     end
     
@@ -31,17 +34,29 @@ classdef solve_consider
             % there is data in the variables
             if (~isempty(obj.solve.param))
                 for order = 1:length(obj.solve.param)
+                    % Assign the value
                     obj.solve.user_order{order,1} = order;
+                    % Add to map
+                    obj.solve.user_map(obj.solve.param{order}) = ...
+                        obj.solve.user_order{order,1};
                 end
             end  
             if (~isempty(obj.dyn_cons.param))
                 for order = 1:length(obj.dyn_cons.param)
+                    % Assign the value
                     obj.dyn_cons.user_order{order,1} = order;
+                    % Add to map
+                    obj.dyn_cons.user_map(obj.dyn_cons.param{order}) = ...
+                        obj.dyn_cons.user_order{order,1};
                 end
             end
             if (~isempty(obj.loc_cons.param))
                 for order = 1:length(obj.loc_cons.param)
+                    % Assign the value
                     obj.loc_cons.user_order{order,1} = order;
+                    % Add to map
+                    obj.loc_cons.user_map(obj.loc_cons.param{order}) = ...
+                        obj.loc_cons.user_order{order,1};
                 end
             end
         end
@@ -66,8 +81,10 @@ classdef solve_consider
             A = zeros(nx,nx,nt);
             Q = zeros(nx,nx,nt);
 
+%             Order the inputs so that jat will 
             [Fei,Fsi,Fmi,Fsri]=deal([]);
 
+            % These could be replaced by obj.dyn_cons.user_order + solv
             if exist('dyn_cons','var')
                 solv = length(solve);
                 Fei =solv+find(strcmpi(dyn_cons,'EARTH-GM'));
@@ -75,11 +92,11 @@ classdef solve_consider
                 Fmi =solv+find(strcmpi(dyn_cons,'LUNAR-GM'));
                 Fsri=solv+find(strcmpi(dyn_cons,'SOLRAD 8'));
                 
-%                 Fearth=x(Fei,1);
-%                 Fsun=x(Fsi,1);
-%                 Fmoon=x(Fmi,1);
-%                 Fsrp=x(Fsri,1); % Fraction of Cr
             end
+
+            % New section here about what order jat calculates things
+            % (outlined below). Save to obj.dyn_cons.func_order . Use in
+            % place of cur. 
 
             x=x(1:6,:)*1000; % conversion km -> m
 

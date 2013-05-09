@@ -4,11 +4,11 @@ classdef solve_consider
     
     properties
         solve = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
-            'user_map', containers.Map, 'func_map', containers.Map);
+            'user_map', containers.Map);
         dyn_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
-            'user_map', containers.Map, 'func_map', containers.Map);
+            'user_map', containers.Map);
         loc_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
-            'user_map', containers.Map, 'func_map', containers.Map);
+            'user_map', containers.Map);
         external_func = 'jat';
     end
     
@@ -41,19 +41,21 @@ classdef solve_consider
                         obj.solve.user_order{order,1};
                 end
             end  
+            current_len = length(obj.solve.param);
             if (~isempty(obj.dyn_cons.param))
                 for order = 1:length(obj.dyn_cons.param)
                     % Assign the value
-                    obj.dyn_cons.user_order{order,1} = order;
+                    obj.dyn_cons.user_order{order,1} = order + current_len;
                     % Add to map
                     obj.dyn_cons.user_map(obj.dyn_cons.param{order}) = ...
                         obj.dyn_cons.user_order{order,1};
                 end
             end
+            current_len = current_len + length(obj.dyn_cons.param);
             if (~isempty(obj.loc_cons.param))
                 for order = 1:length(obj.loc_cons.param)
                     % Assign the value
-                    obj.loc_cons.user_order{order,1} = order;
+                    obj.loc_cons.user_order{order,1} = order + current_len;
                     % Add to map
                     obj.loc_cons.user_map(obj.loc_cons.param{order}) = ...
                         obj.loc_cons.user_order{order,1};
@@ -81,22 +83,21 @@ classdef solve_consider
             A = zeros(nx,nx,nt);
             Q = zeros(nx,nx,nt);
 
-%             Order the inputs so that jat will 
             [Fei,Fsi,Fmi,Fsri]=deal([]);
 
-            % These could be replaced by obj.dyn_cons.user_order + solv
-            if exist('dyn_cons','var')
-                solv = length(solve);
-                Fei =solv+find(strcmpi(dyn_cons,'EARTH-GM'));
-                Fsi =solv+find(strcmpi(dyn_cons,'SOLAR-GM'));
-                Fmi =solv+find(strcmpi(dyn_cons,'LUNAR-GM'));
-                Fsri=solv+find(strcmpi(dyn_cons,'SOLRAD 8'));
-                
+            % Make the code more readable and reduce hash lookups
+            if isKey(obj.dyn_cons.user_map, 'EARTH-GM')
+                Fei = obj.dyn_cons.user_map('EARTH-GM');
             end
-
-            % New section here about what order jat calculates things
-            % (outlined below). Save to obj.dyn_cons.func_order . Use in
-            % place of cur. 
+            if isKey(obj.dyn_cons.user_map, 'SOLAR-GM')
+                Fsi = obj.dyn_cons.user_map('SOLAR-GM');
+            end
+            if isKey(obj.dyn_cons.user_map, 'LUNAR-GM')
+                Fmi = obj.dyn_cons.user_map('LUNAR-GM');
+            end
+            if isKey(obj.dyn_cons.user_map, 'SOLRAD 8')
+                Fsri = obj.dyn_cons.user_map('SOLRAD 8');
+            end
 
             x=x(1:6,:)*1000; % conversion km -> m
 
@@ -133,35 +134,43 @@ classdef solve_consider
                     %
                     % If a force is not added, all higher slots are shifted.
                     cur = 0;
-                    if Fei % earth gravity error
+                    if isKey(obj.dyn_cons.user_map, 'EARTH-GM') % earth gravity error
                         % need spacecraft position and earth GM
-                        acc_earth(:,i)=jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        A(4:6,Fei,i)=A(4:6,Fei,i) + acc_earth(:,i);
+                        acc_earth(:,i) = ...
+                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
+                        A(4:6,Fei,i) = A(4:6,Fei,i) + acc_earth(:,i);
                         cur=cur+1;
                     end
-                    if Fsi % solar gravity error
+                    if isKey(obj.dyn_cons.user_map, 'SOLAR-GM') % solar gravity error
                         % need spacecraft inertial position, sun inertial position,
                         % and sun GM
-                        acc_sun(:,i)=jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        A(4:6,Fsi,i)=A(4:6,Fsi,i) + acc_sun(:,i);
+                        acc_sun(:,i) = ...
+                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
+                        A(4:6,Fsi,i) = A(4:6,Fsi,i) + acc_sun(:,i);
                         cur=cur+1;
                     end
-                    if Fmi % lunar gravity error
+                    if isKey(obj.dyn_cons.user_map, 'LUNAR-GM') % lunar gravity error
                         % need spacecraft inertial position, lunar inertial
                         % position, and lunar GM
-                        acc_moon(:,i)=jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        A(4:6,Fmi,i)=A(4:6,Fmi,i) + acc_moon(:,i);
+                        acc_moon(:,i) = ...
+                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
+                        A(4:6,Fmi,i) = A(4:6,Fmi,i) + acc_moon(:,i);
                         cur=cur+1;
                     end
                     if useDragPartial 
                         A(4:6,1:3,i) = A(4:6,1:3,i) + jatWorld.dragPartials();
                         cur=cur+1;
                     end
-                    if Fsri
-                        SRPjat(:,i)=jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray;
-                        A(4:6,Fsri,i)=A(4:6,Fsri,i) + (SRPjat(:,i))/1000;% m -> km          +[-3.05073589;6.75748831;2.03244886]*1e-9
+                    if isKey(obj.dyn_cons.user_map, 'SOLRAD 8')
+                        SRPjat(:,i) = ...
+                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray;
+                        A(4:6,Fsri,i) = A(4:6,Fsri,i) + (SRPjat(:,i))/1000;% m -> km          +[-3.05073589;6.75748831;2.03244886]*1e-9
                         cur=cur+1;
                     end
+                    
+                    % If there are any more consider parameters, they
+                    % should go here
+                    
                 end
             end
 

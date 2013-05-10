@@ -135,13 +135,16 @@ datopts.('RecAcqThresh') = 19;
 datopts.('YumaFile') = 'Yuma_590.txt';
 
 %% Estimator Options
-% Now let's specify options for the estimator itself. We want measurements
-% to be accepted or rejected based on a "3-sigma edit" rule, which is
-% passed to ODTBX through the 'EditRatio' option.
+% Now let's specify options for the estimator itself. We want to disable
+% measurement editing, which is done through the 'EditFlag' option.
+% Had we instead wanted to accept or reject measurements based on a
+% "3-sigma edit" rule, we could have passed that to ODTBX through the
+% 'EditRatio' option.
 
 opts = setOdtbxOptions('MonteCarloCases',1,'UpdateIterations',1);
-opts = setOdtbxOptions(opts,'EditFlag',2*ones(35,1));  % Why is this here if editflag=2 overrides editratio?
-opts = setOdtbxOptions(opts,'EditRatio',9*ones(35,1));
+opts = setOdtbxOptions(opts,'EditFlag',2*ones(35,1));  % Disable measurement editing
+%opts = setOdtbxOptions(opts,'EditRatio',9*ones(35,1)); % 3-sigma edit rule for measurements
+
 
 %% Sequential Estimation
 % Let's use a sequential estimator to estimate the target and chaser
@@ -164,12 +167,19 @@ for i=length(xhat):-1:1
     % Compute the relative position of the chaser with respect to the target
     x_rel{i} = x_tru{i}(1:3,:)-x_tru{i}(7:9,:);
     
-    % Create the rotation matrix from IJK to RIC coordinates
+    % Create the rotation matrix from IJK to RIC coordinates of the target
     C_IR{i} = dcm('ric',x_tru{i}(7:9,:),x_tru{i}(10:12,:));
 end
 
 S = [eye(6,6) -eye(6,6)];
 
+% The output covariances and sensitivities also need to be rotated to the
+% RIC frame. Let's build the needed rotation matrix for this.
+% Rotate the stae into RIC
+% Build rotation matrix that will rotate errors & covariances
+% absolute/relative covariance in ric frame
+% absolve/relative sensitivities in ric frame
+% look at sensmos
 for j=length(xhat):-1:1
     for i=size(x_tru{1},2):-1:1
         x_rel_ric{j}(:,i) = C_IR{j}(:,:,i)'*x_rel{j}(:,i);
@@ -197,27 +207,13 @@ end
 estval(t,e_ric_rel,P_ric_rel);
 
 %% Plot Sensitivity Mosaic
-% We plot the sensitivities of the estimated data using Matlab's 'pcolor'
-% function.
+% We plot the sensitivities of the estimated data using the ODTBX 'sensmos'
+% function, then customize the plot labels.
 
-ns = 6;
-n = 12;
-lentr = size(sigsa,3);
-
-lastfig = ns;
 figure;
-hold off;
-pcolor(eye(ns+1,ns)*10*log10(abs(sigsa_rel_ric(:,:,end)))*eye(n,n+1)); % Use log scaling to ensure proper color ranges
+sensmos(t{end}, sigsa_rel_ric);
 tickLabel = {'R'; 'I'; 'C'; 'VR'; 'VI'; 'VC'};
-set(gca,'xtick',(1:n)+0.5,'ytick',(1:ns)+0.5,...
-    'xticklabel',tickLabel,'yticklabel',tickLabel);
-xlabel('{\it A Priori} State Index');
-ylabel('Relative State Index');
-set(gca,'ydir','rev','xaxisloc','top');
-axis equal;
-colorbar;
-title('Sensitivity Mosaic');
-hold on;
+set(gca,'xticklabel',tickLabel,'yticklabel',tickLabel);
 
 %% Plot Variance Sandpiles
 % ODTBX provides the 'varpiles' function to plot individual contributions

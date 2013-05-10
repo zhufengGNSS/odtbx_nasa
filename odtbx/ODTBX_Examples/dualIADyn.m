@@ -1,6 +1,8 @@
 function [xdot A Q] = dualIADyn(t,x,~)
-% dualIADyn Get dynamics & estimation values for the pancake_demo example.
-
+% Get dynamics & estimation values for the chaser_target tutorial.
+% This function is a wrapper for the individual dynamics of the chaser and
+% target spacecraft.
+%
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
 %  more details.)
@@ -21,24 +23,22 @@ function [xdot A Q] = dualIADyn(t,x,~)
 
 lent = length(t);
 
-I = eye(6,6);
 O = zeros(6,6);
 
-xc = x(1:6,:);
-xt = x(7:12,:);
+% Extract states from input
+xc = x(1:6,:);  % Chaser state
+xt = x(7:12,:); % Target state
 
-[xdotC Ac Qc] = r2bp(t,xc);
-[xdotT At Qt] = r2bp(t,xt);
+% Compute accelations, Jacobian, and Process Noise for chaser and target
+[xdotC Ac Qc] = r2bp(t,xc); % Chaser state equations of motion
+[xdotT At Qt] = r2bp(t,xt); % Target state equations of motion
 
-xdot = [xdotC;
-        xdotT];
+xdot = [xdotC; xdotT]; % The output dynamics is a concatenation of the chaser and target dynamics
 
-A = nan(12,12,lent);
-Q = nan(12,12,lent);
-for i=1:lent
-    A(:,:,i) = [Ac O;
-                O At];
-    Q(:,:,i) = blkdiag(Qc,Qt);
-end
+% Concatenate the chaser and target Jacobian and Process Noise
+Amat = [Ac O; O At];
+Qmat = blkdiag(Qc, Qt);
+A = repmat(Amat, [1 1 lent]);
+Q = repmat(Qmat, [1 1 lent]);
     
 end

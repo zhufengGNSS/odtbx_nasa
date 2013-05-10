@@ -1,5 +1,5 @@
 function [xdot A Q] = pancake_dyn(~,x,wP)
-% pancake_dyn Get dynamics & estimation values for the chaser_target_demo example.
+% Get dynamics & estimation values for the pancake tutorial.
 
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

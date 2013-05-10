@@ -1,5 +1,4 @@
 %% OD Toolbox Tutorial 1: Planet Pancake
-%
 % This tutorial will teach you how to get started with using basic OD
 % Toolbox functionality. In particular, you will learn how to perform the
 % following analysis with ODTBX:
@@ -13,7 +12,6 @@
 % # Estimate all components of the state vector.
 
 %% Introduction
-%
 % Pancake is a circular planet that exists in a 2D universe with no other gravitational influences.
 % Its rotation rate $\omega_p$, radius $r_p$, and gravitational parameter $\mu$ are all known. In
 % addition, there is a satellite ground station on the surface of
@@ -102,7 +100,7 @@ rank_M = rank(M); % Get rank of observability gramian
 
 % The system is observable if M is full rank
 if rank_M < length(M)
-    fprintf('System is not observable! The observability gramian has rank %i\n', rank_M)
+    fprintf('System is not observable! The observability Gramian has rank %i\n', rank_M)
 else
     fprintf('System is observable!\n')
 end
@@ -127,7 +125,7 @@ rank_M = rank(M); % Get rank of observability gramian
 
 % The system is observable if M is full rank
 if rank_M < length(M)
-    fprintf('System is not observable! The observability gramian has rank %i\n', rank_M)
+    fprintf('System is not observable! The observability Gramian has rank %i\n', rank_M)
 else
     fprintf('System is observable!\n')
 end
@@ -166,9 +164,24 @@ plot_ominusc(t,dy,Pdy,Pdyt);
 % surface.
 
 figure;
-plot(x(1,:),x(2,:),'b',x(6,:),x(7,:),'g')
-title('Pancake Demo')
-legend('S/C','Pancake')
-xlabel('X [km]')
-ylabel('Y [km]')
-axis equal
+plot(x(1,:),x(2,:),'b',x(6,:),x(7,:),'g');
+title('Pancake Demo');
+legend('S/C','Pancake');
+xlabel('X [km]');
+ylabel('Y [km]');
+axis equal;
+
+%% License 
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.

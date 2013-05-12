@@ -43,6 +43,15 @@ function varargout = estbat(varargin)
 %   then the output data will stored in cell arrays, with each cell array 
 %   element corresponding to an entire time series for each monte carlo 
 %   case.
+%   Note that as of ODTBX R2013a, OPTIONS can be either a standard
+%   ODTBXOPTIONS structure, or a struct of two ODTBXOPTIONS structures that
+%   are used separately for truth and estimated computations. The latter
+%   method is achieved by settings OPTIONS as a struct:
+%      >> options.tru = setOdtbxOptions(...);
+%      >> options.est = setOdtbxOptions(...);
+%      >> [...] = estseq(..., options, ...);
+%   Using this method, all options common to truth and estimated
+%   computations are taken from the options.est structure.
 %
 %   [T,X,P] = ESTBAT(DYNFUN,DATFUN,TSPAN,X0,P0,OPTIONS,DYNARG,DATARG)
 %   passes DYNARG to DYNFUN and DATARG to DATFUN as DYNFUN(T,X,DYNARG) and
@@ -188,7 +197,10 @@ function varargout = estbat(varargin)
 %                            the lincov, up to a maximum set by
 %                            UpdateIterations, which defaults to 10.
 % 2012-08-28 R. Mathur       Extracted regression test
-%
+% 2013-05-01 R. Mathur       Fully extracted regression test to estbat_test
+%                            Added ability to specify separate truth & estimated
+%                            options structures for the options input.
+
 %% ESTBAT: Batch Estimator
 %
 % ESTBAT is the primary batch estimator for OD Toolbox.  The original
@@ -225,15 +237,8 @@ function varargout = estbat(varargin)
 % If there are no output arguments, then plot the results of a particular
 % input self-test as a demo.
 
-if(nargin == 0)
-    error('estbat no longer supports zero-input regression testing. Please use estbat_test.');
-end
-
-% testmode specifies which self test to run
-if nargin == 1,
-    testmode = varargin{1};
-else
-    testmode = false;
+if(nargin < 4)
+    error('estbat no longer supports direct regression testing. Please use estbat_test.');
 end
 
 if nargin >= 4,
@@ -276,13 +281,19 @@ elseif nargin >= 4,
     Po = diag( inf*ones( size(Xo) ) );
     Pbaro = Po;
 end
-if nargin >=6,
-    options = varargin{6};
+if nargin >= 6,
+    if all(isfield(varargin{6}, {'tru','est'})),
+        options = varargin{6};
+    else
+        options.tru = varargin{6};
+        options.est = options.tru;
+    end
 else
-    options = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.tru = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.est = options.tru;
 end
-ncases = getOdtbxOptions(options,'MonteCarloCases',1);
-niter = getOdtbxOptions(options,'UpdateIterations',10);
+ncases = getOdtbxOptions(options.est,'MonteCarloCases',1);
+niter = getOdtbxOptions(options.est,'UpdateIterations',10);
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
         dynarg = varargin{7};
@@ -312,72 +323,6 @@ else
     demomode = false;
 end
 
-if testmode,
-    switch testmode
-        case 1
-            dynfun.tru = @rwdyn;
-            dynfun.est = @rwdyn;
-            datfun.tru = @rwdat;
-            datfun.est = @rwdat;
-            load estbat_test1 % Input for this file from comments below
-            options = setOdtbxOptions('MonteCarloSeed',1);
-%             tspan = 1:5;
-%             ncases = 125;
-%             S = ones(1,1,length(tspan));
-%             C = zeros(0,0,length(tspan));
-%             Po = 1000; % Can't be Inf
-%             Pbaro = 1e10; % Can be Inf, but will generate warnings
-%             Xo = 0;
-%             Xbaro = 0;
-%             dynarg.tru = 1; % Process Noise PSD
-%             dynarg.est = 0; % Batch has no process noise
-%             datarg.tru = 1; % Measurement Noise Variance
-%             datarg.est = 1; % Measurement Noise Variance
-        case 2
-            dynfun.tru = @irwbdyn;
-            dynfun.est = @irwdyn;          
-            datfun.tru = @irwbdat;
-            datfun.est = @irwdat;
-            load estbat_test2 % Input for this file from comments below
-            options = setOdtbxOptions('MonteCarloSeed',2);
-%             tspan = 1:30;
-%             ncases = 12;
-%             S = repmat([eye(6), zeros(6,2)],[1 1 length(tspan)]);
-%             C = repmat([zeros(2,6), eye(2)],[1 1 length(tspan)]);
-%             Po = 1e0*eye(8);
-%             Po(7:8,7:8) = 2e0*eye(2);
-%             Pbaro = 2e0*eye(6);
-%             Xo = zeros(8,1);
-%             Xbaro = zeros(6,1);
-%             dynarg.tru = 1e-6; % Process Noise PSD
-%             dynarg.est = 0; % Batch has no process noise
-%             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-%             datarg.est = 1.0e02^2; % Measurement Noise Variance
-        case 3
-            dynfun.tru = @sogmbdyn;
-            dynfun.est = @rwdyn;          
-            datfun.tru = @sogmbdat;
-            datfun.est = @rwdat;
-            load estbat_test3 % Input for this file from comments below
-            options = setOdtbxOptions('MonteCarloSeed',2);
-%             tspan = 1:30;
-%             ncases = 12;
-%             S = repmat([1 0 0],[1 1 length(tspan)]);
-%             C = repmat([zeros(2,1), eye(2)],[1 1 length(tspan)]);
-%             Po = 1e0;
-%             Po(2:3,2:3) = 1e-2*eye(2);
-%             Pbaro = 2e0;
-%             Xo = zeros(3,1);
-%             Xbaro = 0;
-%             dynarg.tru.q = 1e-3; % Process Noise PSD
-%             dynarg.tru.w_n = 5e-1; % Natural frequency
-%             dynarg.tru.zeta = .1; % Damping
-%             dynarg.est = 0; % Batch has no process noise
-%             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-%             datarg.est = 1.0e01^2; % Measurement Noise Variance
-    end
-end
-
 %% Reference Trajectory
 % Integrate the reference trajectory and associated variational equations
 % over the specified time interval.  Assume the first instant is the anchor
@@ -385,12 +330,12 @@ end
 
 % Note that if tspan is a 2-vector, then it will be replaced by a new tspan
 % as determined by the variable step integrator within the function integ.
-[tspan,Xref,Phi,Qd] = integ(dynfun.tru,tspan,Xo,options,dynarg.tru);
-[t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options,dynarg.est);
+[tspan,Xref,Phi,Qd] = integ(dynfun.tru,tspan,Xo,options.tru,dynarg.tru);
+[t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options.est,dynarg.est);
 Yref = feval(datfun.tru,tspan,Xref,datarg.tru);
 Ybar = feval(datfun.est,tspan,Xsref,datarg.est);
-[~,H,R] = ominusc(datfun.tru,tspan,Xref,Yref,options,[],datarg.tru);
-[~,Hs,Rhat] = ominusc(datfun.est,tspan,Xsref,Ybar,options,[],datarg.est);
+[~,H,R] = ominusc(datfun.tru,tspan,Xref,Yref,options.tru,[],datarg.tru);
+[~,Hs,Rhat] = ominusc(datfun.est,tspan,Xsref,Ybar,options.est,[],datarg.est);
 % nmeas = size(Yref,1);
 
 % Assign other input variables dependent on tspan, if needed
@@ -451,7 +396,7 @@ for i = lent:-1:1,
 end
 
 % Acquire the "use process noise" flag, which defaults to 1 ('yes').
-procNoiseFlag = getOdtbxOptions(options, 'UseProcNoise', 1);
+procNoiseFlag = getOdtbxOptions(options.est, 'UseProcNoise', 1);
 
 % If the user has specified that process noise should not be used,
 % achieve this by zeroing out the Qd array.
@@ -505,7 +450,8 @@ end
 for i = lent:-1:1,
     k = find(~isnan(Ybar(:,i)));
     %K{i} = J\Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i));
-    K{i} = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+    %K{i} = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+    K{i} = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
     Ktilde{i} = Stilde(:,:,i)*K{i};
 end
 
@@ -700,7 +646,7 @@ for i = lent:-1:1,
 end
 
 % Compute the true measurement error covariance Pdyt
-[~,~,R,Pdyt] = ominusc(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
+[~,~,R,Pdyt] = ominusc(datfun.tru,tspan,Xref,Yref,options.tru,P,datarg.tru);
 
 % NOTE: For the demomode examples plotted below, the pre- and
 % post-multiplication of P_a, P_v, and P_w by S and S',
@@ -778,7 +724,7 @@ end
 % uses the Cholesky decomposition, we have to handle this case separately.
 
 % Check some estimator options
-eopts = chkestopts(options,ncases);
+eopts = chkestopts(options.est,ncases);
 
 for j = ncases:-1:1,
     xo = covsmpl(Po, 1, eopts.monteseed(j));
@@ -788,7 +734,7 @@ for j = ncases:-1:1,
     else
         wd{j} = zeros(n,lent); 
     end
-    [~,xdum] = integ(dynfun.tru,tspan,Xo+xo,options,dynarg.tru);
+    [~,xdum] = integ(dynfun.tru,tspan,Xo+xo,options.tru,dynarg.tru);
     for i = lent:-1:1,
         %x = Phi(:,:,i)*xo + wd{j}(:,i);
         X{j}(:,i) = xdum(:,i) + wd{j}(:,i); 
@@ -811,12 +757,11 @@ parfor j = 1:ncases,
     iter = 0;
     Xhato{j} = Xsref0;
     while Dxo > tol
-        [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); %#ok<PFBNS>
+        [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options.est,dynarg.est); %#ok<PFBNS>
         lentj = length(tj);
         J = inv(Pbaro);
         dY = NaN(size(Y{j}));
-        [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options,[],...
-            datarg.est); %#ok<PFBNS>
+        [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options.est,[],datarg.est); %#ok<PFBNS>
         for i = 1:lentj
             k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
             if ~isempty(k)
@@ -839,7 +784,8 @@ parfor j = 1:ncases,
                 Phato{j} = 0;
             end
             k = find(~isnan(Y{j}(:,i)));
-            Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+            %Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+            Kj = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
             ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
             Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
             dxo = dxo + Kj*dY(k,i);
@@ -869,58 +815,18 @@ end
 
 clear t Phat
 for j = ncases:-1:1,
-    [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
+    [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options.est,dynarg.est); 
     for i = length(t{j}):-1:1,
         pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
         Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
         e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
     end
-    [y{j},~,~,Pdy{j}] = ominusc(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
+    [y{j},~,~,Pdy{j}] = ominusc(datfun.est,t{j},Xhat{j},Y{j},options.est,unscrunch(Phat{j}),datarg.est); 
 end
 if demomode,
     estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
     disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
     keyboard
-end
-
-% Self-test regression tests
-if testmode && ~demomode,
-    switch testmode
-        case 1
-            load estbat_test1
-        case 2
-            load estbat_test2
-        case 3
-            load estbat_test3
-    end
-    for k = ncases:-1:1,
-        % TODO: use chi2 test like in estseq instead of "9\sigma"
-        dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-        sPhat{k} = Phat_test{k} + Phat{k}; 
-        de{k} = e_test{k} - e{k}; %#ok<USENS>
-        % Is each error sample within 9\sigma of its corresponding test
-        % value?  Is each Phat sample "close enough," in terms of the
-        % matrix 2-norm (largest singular value) to its test value?
-        for i = lent:-1:1,
-            efail(i,k) = ...
-                de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
-                > 81;  %#ok<MINV>
-            Pfail(i,k) = ...
-                norm(unscrunch(dPhat{k}(:,i))) > ...
-                0.1*norm(unscrunch(Phat_test{k}(:,i))); 
-        end
-    end
-    fail = logical([...
-        any(any(any(abs(P_test - P) > 1e-10))), ...
-        any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
-        any(any(any(abs(Pv_test - Pv) > 1e-10))),...
-        any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
-        any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
-        any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
-        any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
-        any(any(efail)), ...
-        any(any(Pfail))]); 
-    varargout{1} = fail;
 end
 
 if nargout >= 3,
@@ -953,72 +859,14 @@ if nargout >= 14
 end 
 end % function
 
-function x = robustls(A,b)
-% More robust least-squares solution to Ax = b.  This is based on the help
-% for the QR function, which shows how "the least squares approximate
-% solution to A*x = b can be found with the Q-less qr decomposition and one
-% step of iterative refinement."
-R = triu(qr(A));
-x = R\(R'\(A'*b));
-r = b - A*x;
-e = R\(R'\(A'*r));
-x = x + e;
-end
-
-% Self-test user functions
-function [Xdot,A,Q] = rwdyn(t,X,q) % Test 1 dynfun
-el = length(t);
-A = zeros(1,1,el);
-Xdot = A*X;
-Q = q*ones(1,1,el);
-end
-function [Y,H,R] = rwdat(t,X,r) % Test 1 datfun
-Y = X;
-H = ones(1,1,length(t));
-R = r*ones(1,1,length(t));
-end
-function [Xdot,A,Q] = irwbdyn(t,X,q) % Test 2 dynfun.tru
-el = length(t);
-A([1:3 7:8],[4:6 8]) = eye(5,4);
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q([4:6 8],[4:6 8]) = q*eye(4);
-Q = repmat(Q,[1 1 el]);
-end
-function [Xdot,A,Q] = irwdyn(t,X,q) % Test 2 dynfun.est
-el = length(t);
-A(:,4:6) = eye(6,3);
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q(4:6,4:6) = q*eye(3);
-Q = repmat(Q,[1 1 el]);
-end
-function [Xdot,A,Q] = sogmbdyn(t,X,c) % Test 3 dynfun.tru
-el = length(t);
-A(:,2:3) = eye(3,2);
-A(3,2:3) = [-c.w_n^2, -2*c.zeta*c.w_n];
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q(3,3) = c.q;
-Q = repmat(Q,[1 1 el]);
-end
-function [Y,H,R] = sogmbdat(t,X,r) % Test 3 datfun.tru
-Y = X(1,:) + X(2,:);
-H = [1 1 0];
-H = repmat(H,[1,1,length(t)]);
-R = r*ones(1,1,length(t));
-end
-function [Y,H,R] = irwbdat(t,X,r) % Test 2 datfun.tru
-el = length(t);
-H = [eye(3) zeros(3,3) -ones(3,1) zeros(3,1)];
-Y = H*X;
-H = repmat(H,[1 1 el]);
-R = r*repmat(eye(3),[1 1 el]);
-end
-function [Y,H,R] = irwdat(t,X,r) % Test 2 datfun.est
-el = length(t);
-H = [eye(3) zeros(3,3)];
-Y = H*X;
-H = repmat(H,[1 1 el]);
-R = r*repmat(eye(3),[1 1 el]);
-end
+% function x = robustls(A,b)
+% % More robust least-squares solution to Ax = b.  This is based on the help
+% % for the QR function, which shows how "the least squares approximate
+% % solution to A*x = b can be found with the Q-less qr decomposition and one
+% % step of iterative refinement."
+% R = triu(qr(A));
+% x = R\(R'\(A'*b));
+% r = b - A*x;
+% e = R\(R'\(A'*r));
+% x = x + e;
+% end

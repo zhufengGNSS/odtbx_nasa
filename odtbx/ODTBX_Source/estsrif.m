@@ -48,7 +48,17 @@ function varargout = estsrif(varargin)
 %   with default properties replaced by values in OPTIONS, an argument
 %   created with the SETODTBXOPTIONS function.  See ODTBXOPTIONS for
 %   details. Commonly used options allow one to specify parameters or
-%   features of the estimator, force model, and measurment model.  
+%   features of the estimator, force model, and measurment model.
+%   Note that as of ODTBX R2013a, OPTIONS can be either a standard
+%   ODTBXOPTIONS structure, or a struct of two ODTBXOPTIONS structures that
+%   are used separately for truth and estimated computations. The latter
+%   method is achieved by settings OPTIONS as a struct:
+%      >> options.tru = setOdtbxOptions(...);
+%      >> options.est = setOdtbxOptions(...);
+%      >> [...] = estseq(..., options, ...);
+%   Using this method, all options common to truth and estimated
+%   computations are taken from the options.est structure, EXCEPT for the
+%   'Refint' option, which is taken from the options.tru structure.
 %
 %   [T,X,P] = ESTSRIF(DYNFUN,DATFUN,TSPAN,X0,P0,OPTIONS,DYNARG,DATARG)
 %   passes DYNARG to DYNFUN and DATARG to DATFUN as DYNFUN(T,X,DYNARG) and
@@ -191,6 +201,11 @@ function varargout = estsrif(varargin)
 %
 % Ravi Mathur                    8/28/2012     Extracted regression test
 % Emergent Space Technologies
+%
+% Ravi Mathur
+% Emergent Space Technologies    05/02/2013    Fully extracted regression test to estsrif_test
+%                                              Added ability to specify separate truth & estimated
+%                                              options structures for the options input.
 
 %% ESTSRIF: Square-Root Information Filter Sequential Estimator
 %
@@ -215,17 +230,10 @@ function varargout = estsrif(varargin)
 % the new regression testing framework.
 %
 % If there are no output arguments, then plot the results of a particular
-% input self-test as a demo.
+% input as a demo.
 
-if(nargin == 0)
-    error('estsrif no longer supports zero-input regression testing. Please use estsrif_test.');
-end
-
-% testmode specifies which self test to run
-if nargin == 1,
-    testmode = varargin{1};
-else
-    testmode = false;
+if(nargin < 2)
+    error('estsrif no longer supports direct regression testing. Please use estsrif_test.');
 end
 
 if nargin == 2
@@ -297,15 +305,21 @@ elseif nargin >= 4,
     Po = 1/eps*eye(length(Xo));
     Pbaro = Po;
 end
-if nargin >=6,
-    options = varargin{6};
-elseif nargin ~= 2
-    options = setOdtbxOptions('OdeSolvOpts',odeset);
+if nargin >= 6,
+    if all(isfield(varargin{6}, {'tru','est'})),
+        options = varargin{6};
+    else
+        options.tru = varargin{6};
+        options.est = options.tru;
+    end
+elseif nargin ~= 2,
+    options.tru = setOdtbxOptions('OdeSolvOpts',odeset);
+    options.est = options.tru;
 end
-upvec = getOdtbxOptions(options,'UpdateVectorized',1);
-ncases = getOdtbxOptions(options,'MonteCarloCases',1);
-niter = getOdtbxOptions(options,'UpdateIterations',1);
-refint = getOdtbxOptions(options,'refint',3); 
+upvec = getOdtbxOptions(options.est,'UpdateVectorized',1);
+ncases = getOdtbxOptions(options.est,'MonteCarloCases',1);
+niter = getOdtbxOptions(options.est,'UpdateIterations',1);
+refint = getOdtbxOptions(options.tru,'refint',3); % Applies to truth integrator
 
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
@@ -351,117 +365,6 @@ else
     demomode = false;
 end
 
-if testmode,
-    switch testmode
-        case 1
-            dynfun.tru = @rwdyn;
-            dynfun.est = @rwdyn;
-            datfun.tru = @rwdat;
-            datfun.est = @rwdat;
-            load('estseq_test1.mat')
-            niter = 3;
-            options = setOdtbxOptions('MonteCarloSeed',1);
-            options = setOdtbxOptions(options,'EditFlag',2);
-            options = setOdtbxOptions(options,'UseSmoother',1);
-%             tspan = 1:5;
-%             ncases = 125;
-%             refint = 31;
-%             S = ones(1,1,length(tint));
-%             C = zeros(0,0,length(tint));
-%             Po = 10;
-%             Pbaro = 10;
-%             Xo = 0;
-%             Xbaro = 0;
-%             dynarg.tru = 1; % Process Noise PSD
-%             dynarg.est = 0; % Process Noise PSD
-%             datarg.tru = 1; % Measurement Noise Variance
-%             datarg.est = 1; % Measurement Noise Variance
-        case 2 % Consider covariance
-            dynfun.tru = @irwbdyn;
-            dynfun.est = @irwdyn;
-            datfun.tru = @irwbdat;
-            datfun.est = @irwdat;
-            load('estseq_test2.mat')
-            niter = 3;
-            options = setOdtbxOptions('MonteCarloSeed',2);
-            options = setOdtbxOptions(options,'EditFlag',[2 2 2]);
-            options = setOdtbxOptions(options,'UseSmoother',1);
-            refint = 3;
-%             Input for this file from comments below
-%             tspan = 1:30;
-%             ncases = 12;
-%             refint = 3;
-%             S = repmat([eye(6), zeros(6,2)],[1 1 length(tint)]);
-%             C = repmat([zeros(2,6), eye(2)],[1 1 length(tint)]);
-%             Po = 1e0*eye(8);
-%             Po(7:8,7:8) = 2e0*eye(2);
-%             Pbaro = 2e0*eye(6);
-%             Xo = zeros(8,1);
-%             Xbaro = zeros(6,1);
-%             dynarg.tru = 1e-6; % Process Noise PSD
-%             dynarg.est = 1e-2; % Process Noise PSD
-%             datarg.tru = 1.0e-0^2; % Measurement Noise Variance
-%             datarg.est = 1.0e02^2; % Measurement Noise Variance
-        case 3 % Estimation using JAT forces
-            dynfun.tru = @jatForces_km;
-            dynfun.est = dynfun.tru;
-            datfun.tru = @gsmeas;
-            datfun.est = datfun.tru;
-            jOptions    = odtbxOptions('force');
-            jOptions    = setOdtbxOptions(jOptions, 'epoch', JATConstant('MJDJ2000') );
-            jOptions    = setOdtbxOptions(jOptions, 'cD', 2.2);
-            jOptions    = setOdtbxOptions(jOptions, 'cR', 0.7);
-            jOptions    = setOdtbxOptions(jOptions, 'mass', 1000);
-            jOptions    = setOdtbxOptions(jOptions, 'draga', 20, 'srpArea', 20);
-            jOptions    = setOdtbxOptions(jOptions, 'earthGravityModel', '2body');
-            jOptions    = setOdtbxOptions(jOptions, 'gravDeg', 2, 'gravOrder', 2);
-            jOptions    = setOdtbxOptions(jOptions, 'useSolarGravity', false);
-            jOptions    = setOdtbxOptions(jOptions, 'useLunarGravity', false);
-            jOptions    = setOdtbxOptions(jOptions, 'useSolarRadiationPressure', false);
-            jOptions    = setOdtbxOptions(jOptions, 'useAtmosphericDrag', false);
-            jOptions    = setOdtbxOptions(jOptions, 'atmosphereModel', 'HP');
-            jOptions    = setOdtbxOptions(jOptions, 'nParameterForHPModel', 2);
-            jOptions    = setOdtbxOptions(jOptions, 'f107Daily', 150);
-            jOptions    = setOdtbxOptions(jOptions, 'f107Average', 150);
-            jOptions    = setOdtbxOptions(jOptions, 'ap', 15);
-            dynarg.tru = createJATWorld(jOptions); 
-            dynarg.est = dynarg.tru;
-            S = eye(6);            % Solve-for map - solve for all 6 states
-            Xo = [6878;0.00;0.00;0.00;0.00;8.339];       % km & km/sec                     
-            Xbaro = S*Xo;
-            Po = diag([1e-2 1e-4 1e-1 1e-4 1e-7 1e-5].^2); % km^2 & km^2/s^2
-            Pbaro = S*Po*S';
-            C=[];
-            epoch   = datenum(2006,12,31,23,59,38.3);
-            gsID    = {'ZZOD'};
-            gsList  = createGroundStationList('DBS_NDOSL_WGS84_Mod_Example.txt');
-            measOptions = odtbxOptions('measurement');
-            measOptions = setOdtbxOptions(measOptions,'epoch',epoch);
-            measOptions = setOdtbxOptions(measOptions,'useRange',true);
-            measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
-            measOptions = setOdtbxOptions(measOptions,'useRangerate',true);
-            measOptions = setOdtbxOptions(measOptions,'useDoppler',false);
-            measOptions = setOdtbxOptions(measOptions,'rSigma',[1e-3 1e-6]);
-            measOptions = setOdtbxOptions(measOptions,'useTroposphere',false);
-            measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
-            measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',0);
-            measOptions = setOdtbxOptions(measOptions,'gsList',gsList);
-            datarg.tru  = measOptions;
-            datarg.est  = setOdtbxOptions(datarg.tru,'rSigma',3*[1e-3 1e-6]);
-            tspan   = 0:10:300; 
-            options = odtbxOptions('estimator');
-            options = setOdtbxOptions(options, 'UpdateIterations',2,'MonteCarloCases',2,...
-                'MonteCarloSeed', 1, 'OdeSolver',@ode113,'OdeSolvOpts',...
-                odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10));
-            options = setOdtbxOptions(options,'EditFlag',[2 2]);
-            options = setOdtbxOptions(options,'MonteCarloCases',2);
-            options = setOdtbxOptions(options,'UseSmoother',1);
-            niter = 2;
-            load('estseq_test4.mat')
-            refint = 3;
-    end
-end
-
 %% Reference Trajectory
 % Integrate the reference trajectory and associated variational equations
 % over the specified time interval.  Add intermediate sample points between
@@ -475,7 +378,7 @@ if refint < 0 % Variable step integrator to determine intermediate points
     Xref(:,1) = Xo;      % True states at measurement points tspan only
     ind = 1;
     for i = 1:lents-1
-        [ti,xi] = integ(dynfun.tru,tspan(i:i+1),xinit,options,dynarg.tru);
+        [ti,xi] = integ(dynfun.tru,tspan(i:i+1),xinit,options.tru,dynarg.tru);
         len = length(ti);
         tint(ind+1:ind+len-1) = ti(2:end)';
         Xref(:,ind+1:ind+len-1) = xi(:,2:end);
@@ -486,18 +389,18 @@ if refint < 0 % Variable step integrator to determine intermediate points
     Xref = Xref(:,1:ind);
 else
     tint = refine(tspan,refint);
-    [~,Xref] = integ(dynfun.tru,tint,Xo,options,dynarg.tru);
+    [~,Xref] = integ(dynfun.tru,tint,Xo,options.tru,dynarg.tru);
 end
 lenti = length(tint);
-[~,Xsref] = integ(dynfun.est,tint,Xbaro,options,dynarg.est);
+[~,Xsref] = integ(dynfun.est,tint,Xbaro,options.est,dynarg.est);
 
 % Indices within tint that point back to tspan, i.e., tint(ispan)=tspan
-[~,ispan] = ismember(tspan,tint);
+[~,ispan] = ismember(tspan,tint,'legacy');
 
 Yref = feval(datfun.tru,tspan,Xref(:,ispan),datarg.tru);
 Ybar = feval(datfun.est,tspan,Xsref(:,ispan),datarg.est);
-[~,Href,R] = ominusc(datfun.tru,tspan,Xref(:,ispan),Yref,options,[],datarg.tru);
-[~,Hsref,Rhat] = ominusc(datfun.est,tspan,Xsref(:,ispan),Ybar,options,[],datarg.est);
+[~,Href,R] = ominusc(datfun.tru,tspan,Xref(:,ispan),Yref,options.tru,[],datarg.tru);
+[~,Hsref,Rhat] = ominusc(datfun.est,tspan,Xsref(:,ispan),Ybar,options.est,[],datarg.est);
 m = size(Ybar,1);
 
 %% Time tag arrays
@@ -519,7 +422,7 @@ titer = titer(1:ind);
 lentr = length(titer);
 
 % Find indices within titer that point back to tint
-[~,iint] = ismember(tint,titer);
+[~,iint] = ismember(tint,titer,'legacy');
 
 if ~exist('mapfun','var'),
     ns = size(S(:,:,1),1);
@@ -549,6 +452,8 @@ if restart
     Po = Pao + Pvo + Pwo + Pmo;
     Pbaro = Phatao + Phatvo + Phatwo + Phatmo;
     
+    % Here, the entire options structure is passed in, even if it has
+    % separate truth & estimated components. lincov_kf will sort that out.
     [P,Pa,Pv,Pw,Pm,Phata,Phatv,Phatw,Phatm,Sig_a,Pdyt]=lincov_kf(...
         tspan,tint,titer,niter,S,C,Po,Pbaro,Xref,Href,Yref,R,Xsref,Hsref,...
         Ybar,Rhat,dynfun,dynarg,demomode,0,options,...
@@ -574,10 +479,11 @@ end
 % running.
 
 % Check some estimator options
-eopts = chkestopts(options,ncases,m);
+eopts = chkestopts(options.est,ncases,m);
+
 % See if UseSmoother flag is set.  If not, the default value is 0, which
 % means to not use the smoother.
-smooth=getOdtbxOptions(options,'UseSmoother',0);
+smooth=getOdtbxOptions(options.est,'UseSmoother',0);
 
 % Pre-allocate arrays that need to be filled in forward-time order (the
 % rest can be fully allocated when created).
@@ -672,7 +578,7 @@ parfor j = 1:ncases,
             if upvec == 1
                 [Xhat{j}(:,k),Rhat,Phat{j}(:,:,k),eflag{j}(:,k),y{j}(:,k),Pdy{j}(:,:,k)] = srifmeas(...
                     datfun.est,tspan(i),Xhat{j}(:,k-1),Rhat,Phat{j}(:,:,k-1),Y{j}(:,i),...
-                    options,eopts.eflag,eopts.eratio,datarg.est); %#ok<PFBNS>
+                    options.est,eopts.eflag,eopts.eratio,datarg.est); %#ok<PFBNS>
             else
                 Xhat_tmp = Xhat{j}(:,k-1);
                 Rhat_tmp = Rhat;
@@ -683,7 +589,7 @@ parfor j = 1:ncases,
                 for bb=1:m
                     [Xhat_tmp,Rhat_tmp,Phat_tmp,eflag{j}(bb,k),y{j}(bb,k),Pdy{j}(bb,bb,k)] = srifmeas(...
                         datfun.est,tspan(i),Xhat_tmp,Rhat_tmp,Phat_tmp,Y{j}(:,i),...
-                        options,eopts.eflag,eopts.eratio,datarg.est,bb);
+                        options.est,eopts.eflag,eopts.eratio,datarg.est,bb);
                 end
                 Xhat{j}(:,k) = Xhat_tmp;
                 Rhat = Rhat_tmp;
@@ -880,88 +786,6 @@ if demomode,
     keyboard
 end
 
-%% Self-test regression tests
-if testmode && ~demomode,
-    P_test_array = P_test; % Assign to an array variable so Matlab doesn't complain
-    
-    switch testmode
-        case 1
-            load('estseq_test1.mat')
-        case 2
-            load('estseq_test2.mat')
-        case 3
-            load('estseq_test4.mat')
-    end
-    [dPhat{:}] = deal(NaN(size(Phat)));
-    [dPstar{:}] = deal(NaN(size(Pstar)));
-    
-    [de{:}] = deal(NaN(size(e)));
-    [destar{:}] = deal(NaN(size(estar)));
-    
-    Pfail = zeros(length(titer),ncases);
-    Pstarfail = zeros(length(titer),ncases);
-    
-    efail = zeros(length(titer),ncases,ns);
-    estarfail = zeros(length(titer),ncases,ns);
-    
-    for k = ncases:-1:1,
-        dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-        dPstar{k} = Pstar_test{k} - Pstar{k};
-        %sPhat{k} = Phat_test{k} + Phat{k}; %#ok<AGROW>
-        de{k} = e_test{k} - e{k}; %#ok<USENS>
-        destar{k} = estar_test{k} - estar{k}; %#ok<USENS>
-        % Is each error sample within prob of 1e-9 of its corresponding test
-        % value?  Is each Phat sample "close enough," in terms of the
-        % matrix 2-norm (largest singular value) to its test value?
-        try
-            chistat = chi2inv(1-1e-9,ns);
-            vectest = true;
-        catch %#ok<CTCH>
-            chistat = 37.325;
-            vectest = false;
-        end
-        for i = length(titer):-1:1,
-            SPS = S(:,:,i)*unscrunch(P_test_array(:,i))*S(:,:,i)';  
-            
-            dek=de{k}(:,i);
-            dekstar=destar{k}(:,i);
-            
-            if vectest,
-                efail(i,k,1) = ...
-                    dek'/SPS*dek > chistat;
-                    %dek'*inv(SPS)*dek > chistat; 
-                estarfail(i,k,1) = ...
-                    dekstar'/SPS*dekstar > chistat;
-            else
-                for j = ns:-1:1,
-                    efail(i,k,j) = dek(j)^2/SPS(j,j) > 37.325; 
-                    estarfail(i,k,j) = dekstar(j)^2/SPS(j,j) > 37.325;
-                end
-            end
-            Pfail(i,k) = ...
-                norm(unscrunch(dPhat{k}(:,i))) > ...
-                0.1*norm(unscrunch(Phat_test{k}(:,i))); 
-            Pstarfail(i,k) = ...
-                norm(unscrunch(dPstar{k}(:,i))) > ...
-                0.1*norm(unscrunch(Pstar_test{k}(:,i)));
-        end
-    end
-    fail = logical([...
-        any(any(any(abs(P_test - P) > 4e-10))), ...
-        any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
-        any(any(any(abs(Pv_test - Pv) > 1e-10))),...
-        any(any(any(abs(Pw_test - Pw) > 4e-10))), ...
-        any(any(any(abs(Phatw_test - Phatw) > 1e-10))), ...
-        any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
-        any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
-        any(any(any(abs(Sig_sa_test - Sig_sa) > 2e-10))), ...
-        any(any(any(efail))), ...
-        any(any(any(estarfail))), ...
-        any(any(Pfail)), ...
-        any(any(Pstarfail))]);
-    varargout{1} = fail;
-end
-
 %% Output results
 if nargout >= 3,
     varargout{1} = t;
@@ -1005,7 +829,7 @@ if nargout >= 19,
     varargout{19} = Pm;
     varargout{20} = Phatm;
 end
-if nargout >= 21
+if nargout >= 21,
     restartRecord.Pao = Pa(:,:,end);
     restartRecord.Pvo = Pv(:,:,end);
     restartRecord.Pwo = Pw(:,:,end);
@@ -1030,6 +854,10 @@ if nargout >= 21
     restartRecord.S = S(:,:,1);
     restartRecord.C = C(:,:,1);
     varargout{21} = restartRecord;
+end
+if nargout >= 22,
+    varargout{22} = S;
+    varargout{23} = C;
 end
 
 end % function
@@ -1095,64 +923,10 @@ dy_isel = dy(isel);
 Pdy(iuse,iuse) = H(iuse,:)*Pbar*H(iuse,:)' + R(iuse,iuse);
 Pdy_isel = Pdy(isel,isel);
 
-end
+end % function
 
 % ESTSRIF helper functions
 function y = refine(u,refine)
 y = [reshape([u(1:end-1);repmat(u(1:end-1),refine,1)+...
     cumsum(repmat(diff(u)/(refine+1),refine,1),1)],[],1);u(end)]';
-end
-
-% Self-test user functions
-% Dynamics function for case 1: true and estimate
-function [Xdot,A,Q] = rwdyn(t,X,q)
-el = length(t);
-A = zeros(1,1,el);
-Xdot = zeros(size(X));
-Q = q*ones(1,1,el);
-end
-
-% Dynamics function for case 2: true
-function [Xdot,A,Q] = irwbdyn(t,X,q)
-el = length(t);
-A([1:3 7:8],[4:6 8]) = eye(5,4);
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q([4:6 8],[4:6 8]) = q*eye(4);
-Q = repmat(Q,[1 1 el]);
-end
-
-% Dynamics function for case 2: estimate, solve for only
-function [Xdot,A,Q] = irwdyn(t,X,q)
-el = length(t);
-A(:,4:6) = eye(6,3);
-Xdot = A*X;
-A = repmat(A,[1 1 el]);
-Q(4:6,4:6) = q*eye(3);
-Q = repmat(Q,[1 1 el]);
-end
-
-% Measurement function for case 1: true and estimate
-function [Y,H,R] = rwdat(t,X,r)
-Y = X;
-H = ones(1,1,length(t));
-R = r*ones(1,1,length(t));
-end
-
-% Measurement function for case 2: true
-function [Y,H,R] = irwbdat(t,X,r)
-el = length(t);
-H = [eye(3) zeros(3,3) -ones(3,1) zeros(3,1)];
-Y = H*X;
-H = repmat(H,[1 1 el]);
-R = r*repmat(eye(3),[1 1 el]);
-end
-
-% Measurement function for case 2: estimate, solve for only
-function [Y,H,R] = irwdat(t,X,r)
-el = length(t);
-H = [eye(3) zeros(3,3)];
-Y = H*X;
-H = repmat(H,[1 1 el]);
-R = r*repmat(eye(3),[1 1 el]);
 end

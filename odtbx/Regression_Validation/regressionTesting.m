@@ -100,6 +100,10 @@ clc
 % handled by varying the test name, e.g. foo_1_test, foo_2_test, etc.
 
 testCases = {
+    % Release 6.0
+        'CIOTransform',''
+    % Release 5.5
+        'rotate_results',''
     % Release 5.0
         'bplane',''
         'gasdyn', ''

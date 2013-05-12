@@ -112,7 +112,7 @@ classdef FilterGpsExplicitTimes < FilterGpsData
             end
             if obj.tol == 0.0
                 % no tolerance to apply, use exact bitmatches
-                [~,~,ind] = intersect(obj.filter_times,gps_data.PRN_data{prn}.epoch);
+                [~,~,ind] = intersect(obj.filter_times,gps_data.PRN_data{prn}.epoch,'legacy');
             else
                 % apply a tolerance for comparison
                 [ind] = compValsTol(gps_data.PRN_data{prn}.epoch, obj.filter_times, obj.tol);

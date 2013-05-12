@@ -1,4 +1,4 @@
-function varargout = estval(t,e,P,Pt,fhs,iusemn)
+function h = estval(t,e,P,Pt,fhs,iusemn)
 % ESTVAL  Evaluation of estimator outputs (plotting).
 %   ESTVAL(T,E,P) plots the estimation errors E (blue lines) and their 
 %   "formal" 2-sigma envelope (green dashed lines), derived from the 
@@ -23,6 +23,7 @@ function varargout = estval(t,e,P,Pt,fhs,iusemn)
 %      ++  <- Negative ensemble mean of "formal" sigmas from P (green plus)
 %      ||  <- Bottom of this line = -1 sigma actual ensemble deviation
 %
+%
 %   ESTVAL(T,E,P,Pt) also plots the standard deviation derived from the
 %   true covariance matrix Pt as black plusses.
 % 
@@ -34,8 +35,10 @@ function varargout = estval(t,e,P,Pt,fhs,iusemn)
 %   standard deviation of the error is relative to the ensemble mean of the
 %   error (iusemn=1) or relative to zero (iusemn=0).  Default is iusemn=1.
 %
-%   Calling estval with no input arguments will cause it to execute an
-%   internal self-test.
+%   h = ESTVAL(T,E,fs,Pt,fhs,iusemn) assumes that the covariance standard
+%   deviations are known directly and given in fs. In this case, fs must be
+%   be a 3D matrix. The generated figure handles are returned in h. This
+%   mode exists mainly for regression testing.
 %
 %   N.B.: the current version requires that each M.C. case have the same
 %   number of elements, i.e. the number of dimensions and the number of
@@ -83,35 +86,30 @@ function varargout = estval(t,e,P,Pt,fhs,iusemn)
 % 2010 Mar 10 John Gaebler                                                                                                                                           -
 %   Added label to plot legend if statistics toolbox and Monte Carlo cases                                                                                           -
 %   are present.
+%
+% 2013 May 3 Ravi Mathur
+% Fully extracted internal self-tests to estval_test.m to conform to the
+% new regression testing framework.
 
-marksize = 5;
-if nargin < 3, % test data
-    N=100;
-    K=10;
-    n=19;
-    randn('state',0);
-    e=randn(n,N,K);
-    fs=e+1.5;
-    fhs=gcf;
-    if nargin == 0
-        % Case 1
-        fail1 = estval(0);
-        % Case 2
-        fail2 = estval(1);
-        varargout{1} = any([fail1 fail2]);
-        return
+markersize = 5; % Desired size of markers
+
+if nargin < 3, % Old selftest, no longer supported
+    error('estval no longer supports direct regression testing. Please use estval_test.');
+else
+    if iscell(e),
+        K = length(e);       % number of Monte Carlo cases
+        [n,N] = size(e{1});  % n = no. of states, N = number of time steps
+        t = [t{1}];          % same time steps for all cases
+        e = reshape([e{:}],n,N,K);
     else
-        iusemn = t;
-        icase = iusemn;
-        t=linspace(0,100,N);
+        [n,N,K] = size(e);
     end
-elseif nargin >= 3,
-    K = length(e);       % number of Monte Carlo cases
-    [n,N] = size(e{1});  % n = no. of states, N = number of time steps
-    t = [t{1}];          % same time steps for all cases
-    e = reshape([e{:}],n,N,K);
-    P = reshape([P{:}],n*(n+1)/2,N,K);
-    fs = sigextract(P);
+    if iscell(P),
+        P = reshape([P{:}],n*(n+1)/2,N,K);
+        fs = sigextract(P);
+    else
+        fs = P; % Assume passed-in P was actually standard deviations
+    end
     if nargin<6
         iusemn=1;
     end
@@ -121,7 +119,7 @@ if nargin<4 || isempty(Pt)
 else
     ts = sigextract(Pt);
 end
-if nargin<5 && ~exist('fhs','var')
+if nargin<5 % && ~exist('fhs','var')
     fhs = 0;
 end
 
@@ -140,9 +138,9 @@ es = std(e,0,3);         % Ensemble STD of the errors
 tr = repmat(t(:)',3,1);  
 nax = 3;                 % Maximum number of plots per figure
 nfig = ceil(n/nax);      % Number of figure windows needed
-scrn = get(0,'monitorpositions');
-scrn = scrn(end,:);
-fsiz = [min(scrn(3)./[nfig 2]) scrn(4)/2];
+% scrn = get(0,'monitorpositions');
+% scrn = scrn(end,:);
+% fsiz = [min(scrn(3)./[nfig 2]) scrn(4)/2];
 
 for i = 1:n, % Cycle through each state
     ifig = ceil(i/nax);
@@ -202,7 +200,7 @@ for i = 1:n, % Cycle through each state
         hold off
         leghan(end+1)=v(1);
         legstr{end+1}='2X confidence interval on ensemble sigmas';
-        set(v,'markersize',marksize)
+        set(v,'markersize',markersize)
         end
         if i==1 && i-(ifig-1)*nax == 1
             if nargin<4 || isempty(Pt)
@@ -227,7 +225,7 @@ for i = 1:n, % Cycle through each state
             end
         end
     end
-    set(h,'markersize',marksize)
+    set(h,'markersize',markersize)
     ylabel(['x_{',num2str(i),'}'],'fontname','times','fontsize',12,...
         'fontangle','italic','rotation',0,...
         'horizontalalign','right','verticalalign','middle')
@@ -243,23 +241,6 @@ for i = fhs+ (1:nfig),
 end
 
 kds=get(fhs+1,'children');
-set(fhs+1,'children',circshift(kds,length(kds)-find(strcmp(get(kds,'tag'),'legend'))+1))
+set(fhs+1,'children',circshift(kds,length(kds)-find(strcmp(get(kds,'tag'),'legend'))+1));
 
-% Regression testing
-if nargin < 3 && nargout > 0
-    load estval_test_data
-    lh = length(h);
-    fail = 0;
-    if icase==0
-        g_save = g_save0;
-    else
-        g_save = g_save1;
-    end
-    for i = lh:-1:1
-        g(i) = get(h(i));
-        fail = any([fail ( any (abs(g(i).YData - g_save(i).YData) > eps) )]);
-    end
-    varargout{1} = fail;
-    eval(['close ',num2str(fhs+(1:nfig))]);
-end
-        
+end % function

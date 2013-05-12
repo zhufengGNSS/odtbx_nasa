@@ -58,10 +58,11 @@ tspan = 0:60:86400; % Integration time span and step size
 % computes the state transition matrix on request. Like other Matlab
 % integrators, integ requires a user-supplied dynamics function.
 
-opts = odeset('reltol', 1e-9, 'abstol', 1e-9); % Numerical integration tolerances
+odeOpts = odeset('reltol', 1e-9, 'abstol', 1e-9); % Numerical integration tolerances
+odtbxOpts = setOdtbxOptions('OdeSolvOpts', odeOpts);
 
 % Numerically integrate the spacecraft orbit and state transition matrix
-[t x Phi] = integ(@pancake_dyn, tspan, x0, opts, w_p); % w_p will be passed to pancake_dyn()
+[t x Phi] = integ(@pancake_dyn, tspan, x0, odtbxOpts, w_p); % w_p will be passed to pancake_dyn()
 
 %%
 % where the function pancake_dyn(), defined in pancake_dyn.m, defines

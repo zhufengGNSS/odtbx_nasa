@@ -66,9 +66,9 @@ classdef solve_consider
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
             % Interface maintains compatibility with jatForces?
-            if (isequal(obj.external_func, 'jat'))
+            if (strcmpi(obj.external_func, 'jat'))
                 [xDot,A,Q] = obj.jatForces(t,x,jatWorld);
-            elseif (isequal(obj.external_func, 'gmat'))
+            elseif (strcmpi(obj.external_func, 'gmat'))
                 [xDot,A,Q] = obj.gmatForces(t,x,jatWorld);
             else
                 disp 'External function not recognized.'
@@ -76,10 +76,10 @@ classdef solve_consider
         end
         
         
-        function [xDot,A,Q] = obj.jatForces(obj,t,x,jatWorld)
+        function [xDot,A,Q] = jatForces(obj,t,x,jatWorld)
             % John Gaebler's Code, revised
             [nx,nt] = size(x);
-            dyn_max = max(cell2mat(obj.dyn_cons.user_order));
+            dyn_max = max(cell2mat(obj.dyn_cons.user_order))
             xDot = zeros(nx,nt);
             A = zeros(nx,dyn_max,nt);
             Q = zeros(nx,nx,nt);
@@ -112,6 +112,7 @@ classdef solve_consider
             acc_moon=nan(3,nt);
 
             if( nargout > 1 )
+                A = [];
                 useGravPartial = ( jatWorld.get_j2_gravity_flag() || jatWorld.get_2body_gravity_flag() );
                 useDragPartial = jatWorld.get_drag_flag();
 
@@ -137,6 +138,11 @@ classdef solve_consider
                         % need spacecraft position and earth GM
                         acc_earth(:,i) = ...
                             jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
+                        disp "-------"
+                        size(A)
+                        size(acc_earth(:,i))
+                        i
+                        Fei
                         A(4:6,Fei,i) = A(4:6,Fei,i) + acc_earth(:,i);
                         cur=cur+1;
                     end
@@ -184,7 +190,7 @@ classdef solve_consider
         end
         
         
-        function [xDot,A,Q] = obj.gmatForces(obj,t,x,jatWorld)
+        function [xDot,A,Q] = gmatForces(obj,t,x,jatWorld)
             % Need GMAT interface info
         end
         

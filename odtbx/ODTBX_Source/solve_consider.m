@@ -33,6 +33,11 @@ classdef solve_consider
                 obj.external_func = varargin(4);
             end
             
+            map_params(obj);
+        end
+        
+        
+        function map_params(obj)
             % Maps all of the consider functions to values representing
             % the order they should be listed in the A matrix.
             if (~isempty(obj.solve.param))
@@ -67,7 +72,19 @@ classdef solve_consider
         end
         
         
+        function unmap_params(obj)
+            if (isfield(obj.solve, 'user_map') || isfield(obj.dyn_cons, 'user_map') || isfield(obj.loc_cons, 'user_map'))
+                remove(obj.solve.user_map, obj.solve.user_map.keys());
+                remove(obj.dyn_cons.user_map, obj.dyn_cons.user_map.keys());
+                remove(obj.loc_cons.user_map, obj.loc_cons.user_map.keys());
+            end
+        end
+        
+        
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
+            unmap_params(obj);
+            map_params(obj);
+            
             % Interface maintains compatibility with jatForces?
             if (strcmpi(obj.external_func, 'jat'))
                 [xDot,A,Q] = obj.jatForces(t,x,jatWorld);
@@ -80,18 +97,18 @@ classdef solve_consider
         
         
         function [xDot,A,Q] = jatForces(obj,t,x,jatWorld)
-            x
+%             x
             % John Gaebler's Code, revised
             [nx,nt] = size(x);
-%             dyn_max = max(cell2mat(obj.dyn_cons.user_order))
+            dyn_max = max(cell2mat(obj.dyn_cons.user_order))
             xDot = zeros(nx,nt);
-            A = zeros(nx,nx,nt);
-%             A = zeros(nx,dyn_max,nt);
+%             A = zeros(nx,nx,nt);
+            A = zeros(nx,dyn_max,nt);
             Q = zeros(nx,nx,nt);
 
-            [Fei,Fsi,Fmi,Fsri]=deal([])
+            [Fei,Fsi,Fmi,Fsri]=deal([]);
 %             Fei
-            obj.dyn_cons.user_map('EARTH-GM')
+%             obj.dyn_cons.user_map('EARTH-GM')
             % Make the code more readable and reduce hash lookups
             if isKey(obj.dyn_cons.user_map, 'EARTH-GM')
                 Fei = obj.dyn_cons.user_map('EARTH-GM');
@@ -144,10 +161,6 @@ classdef solve_consider
                         % need spacecraft position and earth GM
                         acc_earth(:,i) = ...
                             jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        size(A)
-                        size(acc_earth(:,i))
-                        i
-                        Fei
                         A(4:6,Fei,i) = A(4:6,Fei,i) + acc_earth(:,i);
                         cur=cur+1;
                     end

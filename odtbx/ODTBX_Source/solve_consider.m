@@ -17,21 +17,24 @@ classdef solve_consider
         function obj = solve_consider(varargin)
             % Provides the opportunity to define solve for/consider
             % params when the class is created.
-            if nargin >= 1
+            if nargin >= 1 % First variable is always the solve param
                 obj.solve.param = varargin{1};
             end
-            if nargin >= 2
+            if nargin == 2 % If length is two, short state, second is external function
+                obj.external_func = varargin(2);
+            end
+            if nargin > 2 % If length is bigger than two, we'll get a full state
                 obj.dyn_cons.param = varargin{2}; 
             end
-            if nargin >= 3
+            if nargin >= 3 % Full state
                 obj.loc_cons.param = varargin{3};
             end
-            if nargin >= 4
+            if nargin >= 4 % Full state
                 obj.external_func = varargin(4);
             end
             
-            % Even if variables weren't passed in, these will occur if
-            % there is data in the variables
+            % Maps all of the consider functions to values representing
+            % the order they should be listed in the A matrix.
             if (~isempty(obj.solve.param))
                 for order = 1:length(obj.solve.param)
                     % Assign the value
@@ -77,15 +80,18 @@ classdef solve_consider
         
         
         function [xDot,A,Q] = jatForces(obj,t,x,jatWorld)
+            x
             % John Gaebler's Code, revised
             [nx,nt] = size(x);
-            dyn_max = max(cell2mat(obj.dyn_cons.user_order))
+%             dyn_max = max(cell2mat(obj.dyn_cons.user_order))
             xDot = zeros(nx,nt);
-            A = zeros(nx,dyn_max,nt);
+            A = zeros(nx,nx,nt);
+%             A = zeros(nx,dyn_max,nt);
             Q = zeros(nx,nx,nt);
 
-            [Fei,Fsi,Fmi,Fsri]=deal([]);
-
+            [Fei,Fsi,Fmi,Fsri]=deal([])
+%             Fei
+            obj.dyn_cons.user_map('EARTH-GM')
             % Make the code more readable and reduce hash lookups
             if isKey(obj.dyn_cons.user_map, 'EARTH-GM')
                 Fei = obj.dyn_cons.user_map('EARTH-GM');
@@ -138,7 +144,6 @@ classdef solve_consider
                         % need spacecraft position and earth GM
                         acc_earth(:,i) = ...
                             jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        disp "-------"
                         size(A)
                         size(acc_earth(:,i))
                         i

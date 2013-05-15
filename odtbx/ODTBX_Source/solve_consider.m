@@ -3,12 +3,10 @@ classdef solve_consider
     %   Detailed explanation goes here
     
     properties
-        solve = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
-            'user_map', containers.Map);
-        dyn_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
-            'user_map', containers.Map);
-        loc_cons = struct('param', {''}, 'user_order', {''}, 'func_order', {''}, ...
-            'user_map', containers.Map);
+        solve = struct('param', {''}, 'user_order', {''});
+        dyn_cons = struct('param', {''}, 'user_order', {''});
+        loc_cons = struct('param', {''}, 'user_order', {''});
+        param_order = containers.Map;
         external_func = 'jat';
     end
     
@@ -34,6 +32,7 @@ classdef solve_consider
             end
             
             map_params(obj);
+%             obj.order_size = max(cell2mat(obj.param_order.values()));
         end
         
         
@@ -45,7 +44,7 @@ classdef solve_consider
                     % Assign the value
                     obj.solve.user_order{order,1} = order;
                     % Add to map
-                    obj.solve.user_map(obj.solve.param{order}) = ...
+                    obj.param_order(obj.solve.param{order}) = ...
                         obj.solve.user_order{order,1};
                 end
             end  
@@ -55,7 +54,7 @@ classdef solve_consider
                     % Assign the value
                     obj.dyn_cons.user_order{order,1} = order + current_len;
                     % Add to map
-                    obj.dyn_cons.user_map(obj.dyn_cons.param{order}) = ...
+                    obj.param_order(obj.dyn_cons.param{order}) = ...
                         obj.dyn_cons.user_order{order,1};
                 end
             end
@@ -65,23 +64,27 @@ classdef solve_consider
                     % Assign the value
                     obj.loc_cons.user_order{order,1} = order + current_len;
                     % Add to map
-                    obj.loc_cons.user_map(obj.loc_cons.param{order}) = ...
+                    obj.param_order(obj.loc_cons.param{order}) = ...
                         obj.loc_cons.user_order{order,1};
                 end
             end
+            obj.solve.user_order
+            obj.dyn_cons.user_order
+            obj.loc_cons.user_order
         end
         
         
         function unmap_params(obj)
-            if (isfield(obj.solve, 'user_map') || isfield(obj.dyn_cons, 'user_map') || isfield(obj.loc_cons, 'user_map'))
-                remove(obj.solve.user_map, obj.solve.user_map.keys());
-                remove(obj.dyn_cons.user_map, obj.dyn_cons.user_map.keys());
-                remove(obj.loc_cons.user_map, obj.loc_cons.user_map.keys());
-            end
+            remove(obj.param_order, obj.param_order.keys());
         end
         
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
+            % containers.Map objects are treated as handles, so the hash is
+            % shared between different instances of the solve_consider
+            % class. We need to make sure we're using the correct hash when
+            % we're running the external force models.
+            
             unmap_params(obj);
             map_params(obj);
             
@@ -100,27 +103,26 @@ classdef solve_consider
 %             x
             % John Gaebler's Code, revised
             [nx,nt] = size(x);
-            dyn_max = max(cell2mat(obj.dyn_cons.user_order))
+            % Preallocate arrays
+            dyn_max = length(obj.solve.user_order) + length(obj.dyn_cons.user_order);
             xDot = zeros(nx,nt);
-%             A = zeros(nx,nx,nt);
             A = zeros(nx,dyn_max,nt);
             Q = zeros(nx,nx,nt);
 
             [Fei,Fsi,Fmi,Fsri]=deal([]);
-%             Fei
-%             obj.dyn_cons.user_map('EARTH-GM')
+
             % Make the code more readable and reduce hash lookups
-            if isKey(obj.dyn_cons.user_map, 'EARTH-GM')
-                Fei = obj.dyn_cons.user_map('EARTH-GM');
+            if isKey(obj.param_order, 'EARTH-GM')
+                Fei = obj.param_order('EARTH-GM');
             end
-            if isKey(obj.dyn_cons.user_map, 'SOLAR-GM')
-                Fsi = obj.dyn_cons.user_map('SOLAR-GM');
+            if isKey(obj.param_order, 'SOLAR-GM')
+                Fsi = obj.param_order('SOLAR-GM');
             end
-            if isKey(obj.dyn_cons.user_map, 'LUNAR-GM')
-                Fmi = obj.dyn_cons.user_map('LUNAR-GM');
+            if isKey(obj.param_order, 'LUNAR-GM')
+                Fmi = obj.param_order('LUNAR-GM');
             end
-            if isKey(obj.dyn_cons.user_map, 'SOLRAD 8')
-                Fsri = obj.dyn_cons.user_map('SOLRAD 8');
+            if isKey(obj.param_order, 'SOLRAD 8')
+                Fsri = obj.param_order('SOLRAD 8');
             end
 
             x=x(1:6,:)*1000; % conversion km -> m

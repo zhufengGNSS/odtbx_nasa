@@ -31,12 +31,21 @@ classdef solve_consider
                 obj.external_func = varargin(4);
             end
             
-            map_params(obj);
-%             obj.order_size = max(cell2mat(obj.param_order.values()));
+            % containers.Map objects are treated as handles class, so every
+            % instance of the solve_consider class point back to the same
+            % Map. 
+            % Because there is no easy way to do deep copy (clone) of a
+            % Map, we have to use a little trick inspired by:
+            % http://www.mathworks.com/matlabcentral/newsreader/view_thread/278249
+            % It's possible to force Matlab to recognize a containers.Map
+            % object as value-based if it's returned from a function.
+            obj.param_order = map_params(obj);
         end
         
         
-        function map_params(obj)
+        function temp_map = map_params(obj)
+%             remove(obj.param_order, obj.param_order.keys());
+            temp_map = containers.Map();
             % Maps all of the consider functions to values representing
             % the order they should be listed in the A matrix.
             if (~isempty(obj.solve.param))
@@ -44,7 +53,7 @@ classdef solve_consider
                     % Assign the value
                     obj.solve.user_order{order,1} = order;
                     % Add to map
-                    obj.param_order(obj.solve.param{order}) = ...
+                    temp_map(obj.solve.param{order}) = ...
                         obj.solve.user_order{order,1};
                 end
             end  
@@ -54,7 +63,7 @@ classdef solve_consider
                     % Assign the value
                     obj.dyn_cons.user_order{order,1} = order + current_len;
                     % Add to map
-                    obj.param_order(obj.dyn_cons.param{order}) = ...
+                    temp_map(obj.dyn_cons.param{order}) = ...
                         obj.dyn_cons.user_order{order,1};
                 end
             end
@@ -64,29 +73,17 @@ classdef solve_consider
                     % Assign the value
                     obj.loc_cons.user_order{order,1} = order + current_len;
                     % Add to map
-                    obj.param_order(obj.loc_cons.param{order}) = ...
+                    temp_map(obj.loc_cons.param{order}) = ...
                         obj.loc_cons.user_order{order,1};
                 end
             end
-            obj.solve.user_order
-            obj.dyn_cons.user_order
-            obj.loc_cons.user_order
-        end
-        
-        
-        function unmap_params(obj)
-            remove(obj.param_order, obj.param_order.keys());
+
+            % temp_map is returned from this function to overcome
+            % shortcomings in the containers.Map objects.
         end
         
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
-            % containers.Map objects are treated as handles, so the hash is
-            % shared between different instances of the solve_consider
-            % class. We need to make sure we're using the correct hash when
-            % we're running the external force models.
-            
-            unmap_params(obj);
-            map_params(obj);
             
             % Interface maintains compatibility with jatForces?
             if (strcmpi(obj.external_func, 'jat'))
@@ -137,7 +134,7 @@ classdef solve_consider
             acc_moon=nan(3,nt);
 
             if( nargout > 1 )
-                A = [];
+%                 A = [];
                 useGravPartial = ( jatWorld.get_j2_gravity_flag() || jatWorld.get_2body_gravity_flag() );
                 useDragPartial = jatWorld.get_drag_flag();
 

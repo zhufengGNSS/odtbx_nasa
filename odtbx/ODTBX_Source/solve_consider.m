@@ -44,7 +44,6 @@ classdef solve_consider
         
         
         function temp_map = map_params(obj)
-%             remove(obj.param_order, obj.param_order.keys());
             temp_map = containers.Map();
             % Maps all of the consider functions to values representing
             % the order they should be listed in the A matrix.
@@ -82,6 +81,10 @@ classdef solve_consider
             % shortcomings in the containers.Map objects.
         end
         
+        
+        % The following functions currently are written into the class
+        % definition, but there's a case to be made for removing them and
+        % just making them separate files. 
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
             
@@ -210,6 +213,7 @@ classdef solve_consider
         function [xDot,A,Q] = gmatForces(obj,t,x,jatWorld)
             % Need GMAT interface info
         end
+        
         
     end
     

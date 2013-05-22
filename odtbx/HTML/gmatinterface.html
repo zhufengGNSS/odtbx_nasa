@@ -17,40 +17,7 @@ conversion.
 <br><br>
 
 <p><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-To start using the interface, follow these steps:
-
-<ol>
-<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-<b>Make a GMAT script file</b> that configures your spacecraft initial state and
-force model. An example of such a file is included in the ODTBX installation at
-the following path: <tt><i>&lt;ODTBX&gt;</i>/gmat/matlab/libCInterface/GmatConfig.script</tt>,
-where <tt><i>&lt;ODTBX&gt;</i></tt> is the location of your ODTBX installation.
-
-<!-- Not needed with current version of opengmat.m
-<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-<b>Copy <tt>gmat_startup_file.txt</tt></b> to the same directory as your ODTBX script.
-An example file is included in the ODTBX installation at the following path:
-<tt><i>&lt;ODTBX&gt;</i>/gmat/bin/gmat_startup_file.txt</tt>.
-
-<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-<b>Adjust the <tt>ROOT_PATH</tt> variable</b> in the new <tt>gmat_startup_file.txt</tt>
-to point to the root directory of ODTBX's GMAT installation. By default, this
-is <tt><i>&lt;ODTBX&gt;</i>/gmat</tt>.
--->
-
-<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-<b>Include <tt>startgmat(<i>&lt;scriptfile&gt;</i>, <i>&lt;propagator&gt;</i>)</tt></b> in your ODTBX script,
-above the first usage of <tt>gmatforces_km</tt>. Replace <tt><i>&lt;scriptfile&gt;</i></tt>
-with the path to the GMAT script you created in step 1, and <tt><i>&lt;propagator&gt;</i></tt>
-with the name of the <tt>Propagator</tt> in the GMAT script that you want to use. You can omit
-this second argument if there is only one <tt>Propagator</tt>.
-
-<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-<b>Use <tt>gmatforces_km</tt> as your <i>dynfun</i></b>.
-
-<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
-<b>Call <tt>closegmat()</tt></b> at the end of your ODTBX script.
-</ol>
+To start using the interface, follow the instructions on the <a href=http://sourceforge.net/apps/trac/odtbx/wiki/GmatInterface>ODTBX GMAT Wiki</a>.
 
 <br><br>
 
@@ -68,6 +35,9 @@ from being used as gravity sources. [GMAT Bug <a href="http://pows003.gsfc.nasa.
 <li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
 On 64-bit Mac, there is a known crash if <tt>startgmat</tt> or <tt>opengmat</tt> is called
 multiple times without calling <tt>closegmat</tt> between.
+<li><font size="4" face="Geneva, Arial, Helvetica, san-serif">
+On 64-bit Mac, the GMAT interface won't start unless Matlab is started from the command line. Instructions for this are on the 
+<a href="http://sourceforge.net/projects/odtbx/files/GMAT%20for%20ODTBX/">GMAT for ODTBX download page</a>. [GMAT Bug <a href="http://li64-187.members.linode.com:8080/browse/GMT-3552">#3552</a>]
 </ul>
 
 <br><br>

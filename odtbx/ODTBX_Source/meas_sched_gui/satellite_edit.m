@@ -1,5 +1,4 @@
-% SATELLITE_EDIT This is a function of MEAS_SCHED used to enter in 
-% satellite information.
+% SATELLITE_EDIT This is a function of MEAS_SCHED used to enter in satellite information.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

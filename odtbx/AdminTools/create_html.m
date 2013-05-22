@@ -8,6 +8,7 @@
 % Create by
 %     Keith Speckman    03/15/2008      Original
 %     Ravi Mathur       11/07/2012      New HTML folder location
+%     Ravi Mathur       05/22/2013      Add meas_sched_gui
 
 f = filesep;
 
@@ -24,4 +25,9 @@ fclose(fid_e);
 % Generate JAT Adapters listing from JAT_Adapters folder
 fid_j = fopen(['..',f,'HTML',f,'jat_adapters.html'],'w');
 fwrite(fid_f,help2html('JAT_Adapters','JAT_Adapters'),'char');
+fclose(fid_j);
+
+% Generate Measurement Scheduling GUI Adapters listing from meas_sched_gui folder
+fid_j = fopen(['..',f,'HTML',f,'meassched_functionlist.html'],'w');
+fwrite(fid_f,help2html('meas_sched_gui','meas_sched_gui'),'char');
 fclose(fid_j);

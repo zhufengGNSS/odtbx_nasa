@@ -45,10 +45,10 @@ state = [r; v]
 T = sqrt((4*pi*pi*r(1)^3)/mu)
 t = 1;
 
-w = 17;
+epoch = 17 + 708941.5; % GMAT to ODTBX epoch
+gfkm_options = setOdtbxOptions('epoch', epoch);
 
-% note, integ makes a copy of w and uses that copy
-[tPlot,xPlot] = integ(@gmatforces_km,[0 T],state,[],w);
+[tPlot,xPlot] = integ(@gmatforces_km,[0 T],state,[],gfkm_options);
 
 figure;
 subplot(3,1,1);plot(tPlot,xPlot(1,:)); ylabel('X axis (km)');
@@ -62,7 +62,7 @@ disp('Starting timing tests...');
 tlen = [1e2 5e2 1e3 5e3 1e4 5e4 1e5 5e5];
 for t = 1:length(tlen)
     tic;
-    [tPlot,xPlot] = integ(@gmatforces_km,[0:tlen(t)]*(T/tlen(t)),state,[],w);
+    [tPlot,xPlot] = integ(@gmatforces_km,[0:tlen(t)]*(T/tlen(t)),state,[],gfkm_options);
     tElapsed(t) = toc;
 end
 figure;

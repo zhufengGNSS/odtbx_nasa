@@ -1,5 +1,4 @@
-% MEAS_EDIT This is a function of MEAS_SCHED used to edit measurement
-% schedules.
+% MEAS_EDIT This is a function of MEAS_SCHED used to edit measurement schedules.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

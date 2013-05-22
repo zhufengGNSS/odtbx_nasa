@@ -1,7 +1,6 @@
-classdef IERSLib < handle
-    
-% This class facilitates the CIO based celestial to terrestrial 
-% transformation.  Defaults to 2010 IERS standards.
+classdef IERSLib < handle    
+% This class facilitates the CIO based celestial to terrestrial transformation.
+% Defaults to 2010 IERS standards.
 %
 % The primary function is:
 %
@@ -82,7 +81,7 @@ classdef IERSLib < handle
 %     AIAA, AAS 06-134, 2006
 %
 % See also: EOPLib
-    
+%
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
 %  more details.)

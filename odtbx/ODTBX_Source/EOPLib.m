@@ -1,12 +1,10 @@
 classdef EOPLib < handle 
-
-% This class facilitates the CIO based celestial to terrestrial 
-% transformation. Its use is related to IERSLib.
+% This class facilitates the CIO based celestial to terrestrial transformation
+% Its use is related to IERSLib.
 %
 % Original Author: Dr. Abel Brown
 %
 % See also: IERSLib
-
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

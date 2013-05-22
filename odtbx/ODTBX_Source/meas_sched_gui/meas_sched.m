@@ -1,5 +1,4 @@
-% MEAS_SCHED This is a graphical tool used for scheduling ground station
-% measurements
+% MEAS_SCHED This is a graphical tool used for scheduling ground station measurements.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

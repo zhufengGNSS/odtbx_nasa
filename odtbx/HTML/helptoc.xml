@@ -7,11 +7,12 @@
 <!--
 <tocitem target="odtbx_about.html" image="$toolbox/matlab/icons/greenarrowicon.gif">About the Orbit Determination Toolbox
 -->
-    <tocitem target="OD_Toolbox_Release_5_5_Help.html#12903">Release Notes</tocitem>
+    <tocitem target="OD_Toolbox_Release_6_0_Help.html#12903">Release Notes</tocitem>
     <tocitem target="odtbx_reqts.html#12903">System Requirements</tocitem>
     <tocitem target="gettingStarted.html#12903">System Description</tocitem>
     <tocitem target="odtbx_doc.html#12903">Supporting Documentation</tocitem>	
     <tocitem target="odtbx_functionlist.html#12903">ODTBX Function Listing</tocitem>
+    <tocitem target="meassched_functionlist.html#12903">Measurement Scheduling GUI Function Listing</tocitem>
     <tocitem target="odtbx_examplelist.html#12903">ODTBX Example Listing</tocitem>
     <tocitem target="matlabjatinterface.html">MATLAB JAT Interface
     <tocitem target="jat_adapters.html">JAT Adapters Listing</tocitem>

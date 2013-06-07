@@ -12,6 +12,7 @@ classdef solve_consider
     
     
     methods
+        %% Constructor
         function obj = solve_consider(varargin)
             % Provides the opportunity to define solve for/consider
             % params when the class is created.
@@ -43,6 +44,7 @@ classdef solve_consider
         end
         
         
+        %% Parameter Mapping
         function temp_map = map_params(obj)
             temp_map = containers.Map();
             % Maps all of the consider functions to values representing
@@ -81,6 +83,8 @@ classdef solve_consider
             % shortcomings of containers.Map objects.
         end
         
+        
+        %% External Force Models
         % ----------------------------------------------------------------
         % The following functions currently are written into the class
         % definition, but there's a case to be made for removing them and
@@ -94,123 +98,11 @@ classdef solve_consider
             
             % Interface maintains compatibility with jatForces?
             if (strcmpi(obj.external_func, 'jat'))
-                [xDot,A,Q] = obj.jatForces(t,x,jatWorld);
+                [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld);
             elseif (strcmpi(obj.external_func, 'gmat'))
                 [xDot,A,Q] = obj.gmatForces(t,x,jatWorld);
             else
                 disp 'External function not recognized.'
-            end
-        end
-        
-        
-        function [xDot,A,Q] = jatForces(obj,t,x,jatWorld)
-%             x
-            % John Gaebler's Code, revised
-            [nx,nt] = size(x);
-            % Preallocate arrays
-            dyn_max = length(obj.solve.user_order) + length(obj.dyn_cons.user_order);
-            xDot = zeros(nx,nt);
-            A = zeros(nx,dyn_max,nt);
-            Q = zeros(nx,nx,nt);
-
-            [Fei,Fsi,Fmi,Fsri]=deal([]);
-
-            % Make the code more readable and reduce hash lookups
-            if isKey(obj.param_order, 'EARTH-GM')
-                Fei = obj.param_order('EARTH-GM');
-            end
-            if isKey(obj.param_order, 'SOLAR-GM')
-                Fsi = obj.param_order('SOLAR-GM');
-            end
-            if isKey(obj.param_order, 'LUNAR-GM')
-                Fmi = obj.param_order('LUNAR-GM');
-            end
-            if isKey(obj.param_order, 'SOLRAD 8')
-                Fsri = obj.param_order('SOLRAD 8');
-            end
-
-            x=x(1:6,:)*1000; % conversion km -> m
-
-            % Check the units
-            for i=1:nt
-                xDot(1:6,i) = jatWorld.derivs(t(i),x(:,i))/1000;  % conversion m -> km
-            end
-
-            SRPjat=nan(3,nt);
-            acc_earth=nan(3,nt);
-            acc_sun=nan(3,nt);
-            acc_moon=nan(3,nt);
-
-            if( nargout > 1 )
-%                 A = [];
-                useGravPartial = ( jatWorld.get_j2_gravity_flag() || jatWorld.get_2body_gravity_flag() );
-                useDragPartial = jatWorld.get_drag_flag();
-
-                for i=1:nt
-                    if useGravPartial
-                        A = zeros(nx,nx,nt);    
-                        A(1:3,4:6,i) = eye(3);
-                        if( useGravPartial )
-                            A(4:6,1:3,i) = A(4:6,1:3,i) + jatWorld.gravityPartials(x(1:3,i));
-                        end
-                    end
-
-                    % JAT Force List order:
-                    % 0 Earth Gravity
-                    % 1 Solar Gravity
-                    % 2 Lunar Gravity
-                    % 3 Drag
-                    % 4 Solar Radiation Force
-                    %
-                    % If a force is not added, all higher slots are shifted.
-                    cur = 0;
-                    if Fei % earth gravity error
-                        % need spacecraft position and earth GM
-                        acc_earth(:,i) = ...
-                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        A(4:6,Fei,i) = A(4:6,Fei,i) + acc_earth(:,i);
-                        cur=cur+1;
-                    end
-                    if Fsi % solar gravity error
-                        % need spacecraft inertial position, sun inertial position,
-                        % and sun GM
-                        acc_sun(:,i) = ...
-                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        A(4:6,Fsi,i) = A(4:6,Fsi,i) + acc_sun(:,i);
-                        cur=cur+1;
-                    end
-                    if Fmi % lunar gravity error
-                        % need spacecraft inertial position, lunar inertial
-                        % position, and lunar GM
-                        acc_moon(:,i) = ...
-                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray/1000;% m -> km
-                        A(4:6,Fmi,i) = A(4:6,Fmi,i) + acc_moon(:,i);
-                        cur=cur+1;
-                    end
-                    if useDragPartial 
-                        A(4:6,1:3,i) = A(4:6,1:3,i) + jatWorld.dragPartials();
-                        cur=cur+1;
-                    end
-                    if Fsri
-                        SRPjat(:,i) = ...
-                            jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray;
-                        A(4:6,Fsri,i) = A(4:6,Fsri,i) + (SRPjat(:,i))/1000;% m -> km          +[-3.05073589;6.75748831;2.03244886]*1e-9
-                        cur=cur+1;
-                    end
-                    
-                    % If there are any more consider parameters, they
-                    % should go here
-                    
-                end
-            end
-
-            if nargout == 3,
-                Q = zeros(nx,nx,nt);
-                Q(4:6,4:6,:) = repmat(diag([1e-9 1e-9 1e-9].^2),[1 1 nt])/1000^2;
-                Q(Fei,Fei,end) = 0;
-                Q(Fsi,Fsi,end) = 0;
-                Q(Fmi,Fmi,end) = 0;
-                Q(Fsri,Fsri,end) = 0;
             end
         end
         
@@ -220,6 +112,7 @@ classdef solve_consider
         end
         
         
+        %% Measurement Models
         function [y,H,R] = gsmeas(obj,t,x,options)
             %% Get values from options
             gsID         = getOdtbxOptions(options, 'gsID', [] );
@@ -245,8 +138,8 @@ classdef solve_consider
             num_lc = length(obj.loc_cons.param);
             if isempty(num_dc),num_dc = 0;end
             if isempty(num_lc),num_lc = 0;end
-            ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3));
-            ind_trop = num_sf + num_dc + find(strncmpi(loc_cons,'TRP',3));
+            ind_iono = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'ION',3));
+            ind_trop = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'TRP',3));
             if size(x,1)<max(ind_iono)
                 ind_iono=[];
             end
@@ -254,7 +147,7 @@ classdef solve_consider
                 ind_trop=[];
             end
 
-            numtypes     = useRange + useRangeRate + useDoppler+3*useUnit;
+            numtypes = useRange + useRangeRate + useDoppler+3*useUnit;
 
             if isempty(gsECEF)
                 if( isempty(gsList) && ~isempty(gsID) ); gsList = createGroundStationList(); end
@@ -263,16 +156,17 @@ classdef solve_consider
                         gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
                 end
             end
-            M            = size(gsECEF,2) * numtypes;
-            N            = length(t);
+            
+            M = size(gsECEF,2) * numtypes;
+            N = length(t);
             if size(t,1)==N, t=t'; end
 
             if isnan(epoch); error('An epoch must be set in the options structure.'); end
 
 
             %% call rrdot with all the options passing straight through
-            y    = nan(M,N);
-            H    = zeros(M,size(x,1),N);  
+            y = nan(M,N);
+            H = zeros(M,size(x,1),N);  
             if uselt
                 %x2 needs states before and after each state in x1 at time steps
                 %comparable to the light time delay in order for the interpolation
@@ -364,6 +258,15 @@ classdef solve_consider
                     indstart                     = 1 + numtypes*(n-1);
                     indstop                      = numtypes*n;
                     y(indstart:indstop, tind)    = y1;
+                    
+                    indstart
+                    indstop
+                    num_sf
+%                     ind_iono(n)
+                    ind_trop(n)
+                    size(H1)
+                    size(H)
+                    
                     if ~isempty(ind_iono) && ~isempty(ind_trop)
                         H(indstart:indstop, [1:num_sf ind_iono(n) ind_trop(n)], tind) = H1; 
                     elseif ~isempty(ind_iono)
@@ -383,7 +286,7 @@ classdef solve_consider
             end
 
             %% Add consider parameter data to H
-            bias = strncmpi(loc_cons,'MEASBI',6);
+            bias = strncmpi(obj.loc_cons.param,'MEASBI',6);
             numbias=sum(bias);
             mbi = find(bias)+ num_sf + num_dc;
 

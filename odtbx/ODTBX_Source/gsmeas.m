@@ -143,6 +143,26 @@ useUnit      = getOdtbxOptions(options, 'useUnit', false );
 useAngles    = getOdtbxOptions(options, 'useAngles', false );
 Sched        = getOdtbxOptions(options, 'Schedule',[]); %Tracking Schedule
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit+2*useAngles;
+Type         = getOdtbxOptions(options, 'rangeType','2way');
+solve        = getOdtbxOptions(options, 'solvefor',[]);
+dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
+loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
+
+num_sf = length(solve);
+num_dc = length(dyn_cons);
+num_lc = length(loc_cons);
+if isempty(num_dc),num_dc = 0;end
+if isempty(num_lc),num_lc = 0;end
+ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3));
+ind_trop = num_sf + num_dc + find(strncmpi(loc_cons,'TRP',3));
+if size(x,1)<max(ind_iono)
+    ind_iono=[];
+end
+if size(x,1)<max(ind_trop)
+    ind_trop=[];
+end
+
+numtypes     = useRange + useRangeRate + useDoppler+3*useUnit;
 
 if isempty(gsECEF)
     if( isempty(gsList) && ~isempty(gsID) ); gsList = createGroundStationList(); end
@@ -160,7 +180,7 @@ if isnan(epoch); error('An epoch must be set in the options structure.'); end
 
 %% call rrdot with all the options passing straight through
 y    = nan(M,N);
-H    = zeros(M,6,N);  
+H    = zeros(M,size(x,1),N);  
 if uselt
     %x2 needs states before and after each state in x1 at time steps
     %comparable to the light time delay in order for the interpolation
@@ -186,7 +206,7 @@ if uselt
             tind = 1:length(t);
         end
         t1  = t(tind);
-        x1  = x(:,tind);
+        x1  = x(1:6,tind);
         
         if ~isempty(t1)
 
@@ -234,10 +254,11 @@ else
         end
         if isempty(tind),continue,end
         t1 = t(tind);
-        x1 = x(:,tind);
+        x1 = x(1:6,tind);
         x2 = gx(:,tind,n);
 
-        [y1,H1] = rrdotang(t1,x1,x2,options);
+		[y1,H1] = rrdotang(t1,x1,x2,options);
+        %[y1,H1] = rrdotCON(t1,x1,x2,options);
 
         % apply the elevation constraint
         Ephem.satPos      = x1(1:3,:)*1000; %ECI satellite coordinates (m)
@@ -252,9 +273,48 @@ else
         indstart                     = 1 + numtypes*(n-1);
         indstop                      = numtypes*n;
         y(indstart:indstop, tind)    = y1;
-        H(indstart:indstop, :, tind) = H1;
+        
+%                 indstart
+%         indstop
+%         num_sf
+% %                     ind_iono(n)
+%         ind_trop(n)
+%         [1:num_sf ind_trop(n)]
+        size(H1)
+        size(H)
+        
+        if ~isempty(ind_iono) && ~isempty(ind_trop)
+            H(indstart:indstop, [1:num_sf ind_iono(n) ind_trop(n)], tind) = H1; 
+        elseif ~isempty(ind_iono)
+            H(indstart:indstop, [1:num_sf ind_iono(n)], tind) = H1; 
+        elseif ~isempty(ind_trop)
+            [1:num_sf ind_trop(n)]
+            H(indstart:indstop, [1:num_sf ind_trop(n)], tind) = H1; 
+        else
+            H(indstart:indstop, 1:num_sf, tind) = H1(:,1:num_sf,:); 
+        end
     end
 end
+
+%% double for 2way measurements
+if strcmpi(Type,'2way')
+    y=2*y;
+    H(:,1:num_sf,:)=2*H(:,1:num_sf,:);
+end
+
+%% Add consider parameter data to H
+bias = strncmpi(loc_cons,'MEASBI',6);
+numbias=sum(bias);
+mbi = find(bias)+ num_sf + num_dc;
+
+if max(mbi)<=size(x,1) % NOT ROBUST SOLUTION!!!!!!!!!!!!!!
+    y(1:2:end,:) = y(1:2:end,:) + x(mbi,:);
+    Hbias = zeros(size(H,1),3);
+    Hbias(1:2:5,:) = diag(ones(1,numbias));
+    H(:,mbi,:)=Hbias(:,:,ones(1,size(H,3)));
+end
+
+
 
 %% Set the measurement covariance output
 if nargout > 2,

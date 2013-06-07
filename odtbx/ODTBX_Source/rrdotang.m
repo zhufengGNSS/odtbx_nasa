@@ -112,6 +112,22 @@ useRangeRate    = getOdtbxOptions(options, 'useRangeRate', true );
 useDoppler      = getOdtbxOptions(options, 'useDoppler', false );
 useUnit         = getOdtbxOptions(options, 'useUnit', false );
 useAngles       = getOdtbxOptions(options, 'useAngles', false );
+% solve        = getOdtbxOptions(options, 'solvefor',[]);
+% dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
+loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
+
+% num_sf = length(solve);
+% num_dc = length(dyn_cons);
+% num_lc = length(loc_cons);
+% if isempty(num_dc),num_dc = 0;end
+% if isempty(num_lc),num_lc = 0;end
+% ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3));
+% if size(x,1)<max(ind_iono)
+%     ind_iono=[];
+% end
+
+cons_iono_flag = any(strncmpi(loc_cons,'ION',3));
+cons_trop_flag = any(strncmpi(loc_cons,'TRP',3));
 
 if( useDoppler && useRangeRate)
     error('rrdotang is not designed to handle both RangeRate and Doppler at the same time')
@@ -119,12 +135,20 @@ end
 
 y = [];
 if useRange
-    r = LOSRange(t, x1(1:3,:), x2(1:3,:), options);
+    if cons_iono_flag || cons_trop_flag
+        [r,H_atm] = LOSRangeCON(t, x1(1:3,:), x2(1:3,:), options);
+    else
+        r = LOSRange(t, x1(1:3,:), x2(1:3,:), options);
+    end
     y = [y; r];
 end
 
 if useRangeRate
-    rdot = LOSRangeRate(t, x1(1:3,:), x1(4:6,:), x2(1:3,:), x2(4:6,:), options);
+    if cons_iono_flag || cons_trop_flag
+        [rdot,Hd_atm] = LOSRangeRateCON(t, x1(1:3,:), x1(4:6,:), x2(1:3,:), x2(4:6,:), options);
+    else
+        rdot = LOSRangeRate(t, x1(1:3,:), x1(4:6,:), x2(1:3,:), x2(4:6,:), options);
+    end
     y    = [y; rdot];
 end
 
@@ -157,7 +181,11 @@ if nargout > 1,
     if( useRange )
         Hrr = shiftdim(udr,-1);
         Hrv = zeros(size(Hrr));
-        H   = [H; [Hrr Hrv] ];
+        if cons_iono_flag || cons_trop_flag
+            H = [ H , [Hrr Hrv reshape(H_atm,1,size(H_atm,1),size(dr,2))]];
+        else
+            H   = [H; [Hrr Hrv] ];
+        end
     end
     if( useRangeRate )
         dv        = x1(4:6,:)-x2(4:6,:); %vel diff vector
@@ -165,7 +193,11 @@ if nargout > 1,
               - dr.*repmat(dot(dr,dv)./rho.^3,3,1),-1);
           % cross(dr,cross(dr,dv))./rho.^3;
         Hvv = shiftdim(udr,-1);
-        H   = [H; [Hvr Hvv] ];
+        if cons_iono_flag || cons_trop_flag
+            H = [ H ;[Hvr Hvv reshape(Hd_atm,1,size(Hd_atm,1),size(dr,2))]];
+        else
+            H   = [H; [Hvr Hvv] ];
+        end
     end
     if( useDoppler )
         dv        = x1(4:6,:)-x2(4:6,:); %vel diff vector

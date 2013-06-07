@@ -85,14 +85,6 @@ classdef solve_consider
         
         
         %% External Force Models
-        % ----------------------------------------------------------------
-        % The following functions currently are written into the class
-        % definition, but there's a case to be made for removing them and
-        % just making them separate files. As long as they have access to
-        % the class variables, they should be fine. That would change the
-        % inputs and outputs of the files, though, as the object would have
-        % to be explicitly passed.
-        % ----------------------------------------------------------------
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
             
@@ -100,7 +92,7 @@ classdef solve_consider
             if (strcmpi(obj.external_func, 'jat'))
                 [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld);
             elseif (strcmpi(obj.external_func, 'gmat'))
-                [xDot,A,Q] = obj.gmatForces(t,x,jatWorld);
+                [xDot,A,Q] = gmatForces(obj,t,x,jatWorld);
             else
                 disp 'External function not recognized.'
             end

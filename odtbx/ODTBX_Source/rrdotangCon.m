@@ -1,4 +1,4 @@
-function [y,H,R] = rrdotang(t,x1,x2,options)
+function [y,H,R] = rrdotangCon(t,x1,x2,options)
 
 % RRDOTANG  Calculate range, range rate, doppler, angles between two objects.
 %

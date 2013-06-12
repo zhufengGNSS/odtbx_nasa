@@ -105,6 +105,11 @@ classdef solve_consider
         
         
         %% Measurement Models
+        
+        function [y,H,R] = meas(obj,t,x,options)
+            [y,H,R] = gsmeasCon(obj,t,x,options);
+            
+        end
     
     end
     

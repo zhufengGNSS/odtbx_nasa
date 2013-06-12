@@ -1,4 +1,4 @@
-function [y,H,R] = gsmeas(t,x,options)
+function [y,H,R] = gsmeasCon(obj,t,x,options)
 % GSMEAS  Makes ground station based measurements.
 %
 % [y,H,R] = GSMEAS(tspan,x,options) creates ground station measurements
@@ -257,8 +257,8 @@ else
         x1 = x(1:6,tind);
         x2 = gx(:,tind,n);
 
-		[y1,H1] = rrdotang(t1,x1,x2,options);
-        %[y1,H1] = rrdotCON(t1,x1,x2,options);
+% 		[y1,H1] = rrdotang(t1,x1,x2,options);
+        [y1,H1] = rrdotangCon(t1,x1,x2,options);
 
         % apply the elevation constraint
         Ephem.satPos      = x1(1:3,:)*1000; %ECI satellite coordinates (m)
@@ -280,15 +280,15 @@ else
 % %                     ind_iono(n)
 %         ind_trop(n)
 %         [1:num_sf ind_trop(n)]
-        size(H1)
-        size(H)
+%         size(H1)
+%         size(H)
         
         if ~isempty(ind_iono) && ~isempty(ind_trop)
             H(indstart:indstop, [1:num_sf ind_iono(n) ind_trop(n)], tind) = H1; 
         elseif ~isempty(ind_iono)
             H(indstart:indstop, [1:num_sf ind_iono(n)], tind) = H1; 
         elseif ~isempty(ind_trop)
-            [1:num_sf ind_trop(n)]
+%             [1:num_sf ind_trop(n)]
             H(indstart:indstop, [1:num_sf ind_trop(n)], tind) = H1; 
         else
             H(indstart:indstop, 1:num_sf, tind) = H1(:,1:num_sf,:); 

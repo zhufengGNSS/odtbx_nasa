@@ -7,7 +7,8 @@ classdef solve_consider
         dyn_cons = struct('param', {''}, 'user_order', {''});
         loc_cons = struct('param', {''}, 'user_order', {''});
         param_order = containers.Map;
-        external_func = 'jat';
+        external_force = 'jat';
+        external_meas = 'gsmeas';
     end
     
     
@@ -20,7 +21,7 @@ classdef solve_consider
                 obj.solve.param = varargin{1};
             end
             if nargin == 2 % If length is two, short state, second is external function
-                obj.external_func = varargin(2);
+                obj.external_force = varargin(2);
             end
             if nargin > 2 % If length is bigger than two, we'll get a full state
                 obj.dyn_cons.param = varargin{2}; 
@@ -29,7 +30,10 @@ classdef solve_consider
                 obj.loc_cons.param = varargin{3};
             end
             if nargin >= 4 % Full state
-                obj.external_func = varargin(4);
+                obj.external_force = varargin(4);
+            end
+            if nargin >= 5 % Full state
+                obj.external_meas = varargin(5);
             end
             
             % containers.Map objects are treated as handles class, so every
@@ -89,12 +93,12 @@ classdef solve_consider
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
             
             % Interface maintains compatibility with jatForces?
-            if (strcmpi(obj.external_func, 'jat'))
+            if (strcmpi(obj.external_force, 'jat'))
                 [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld);
-            elseif (strcmpi(obj.external_func, 'gmat'))
+            elseif (strcmpi(obj.external_force, 'gmat'))
                 [xDot,A,Q] = gmatForces(obj,t,x,jatWorld);
             else
-                disp 'External function not recognized.'
+                disp 'Force function not recognized.'
             end
         end
         
@@ -107,8 +111,11 @@ classdef solve_consider
         %% Measurement Models
         
         function [y,H,R] = meas(obj,t,x,options)
-            [y,H,R] = gsmeasCon(obj,t,x,options);
-            
+            if (strcmpi(obj.external_meas, 'gsmeas'))
+                [y,H,R] = gsmeasCon(obj,t,x,options);
+            else
+                disp 'Measurement function not recognized.'
+            end
         end
     
     end

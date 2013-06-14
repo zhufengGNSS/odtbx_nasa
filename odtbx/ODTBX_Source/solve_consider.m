@@ -21,7 +21,7 @@ classdef solve_consider
                 obj.solve.param = varargin{1};
             end
             if nargin == 2 % If length is two, short state, second is external function
-                obj.external_force = varargin(2);
+                obj.external_force = varargin{2};
             end
             if nargin > 2 % If length is bigger than two, we'll get a full state
                 obj.dyn_cons.param = varargin{2}; 
@@ -30,10 +30,10 @@ classdef solve_consider
                 obj.loc_cons.param = varargin{3};
             end
             if nargin >= 4 % Full state
-                obj.external_force = varargin(4);
+                obj.external_force = varargin{4};
             end
             if nargin >= 5 % Full state
-                obj.external_meas = varargin(5);
+                obj.external_meas = varargin{5};
             end
             
             % containers.Map objects are treated as handles class, so every
@@ -44,12 +44,19 @@ classdef solve_consider
             % http://www.mathworks.com/matlabcentral/newsreader/view_thread/278249
             % It's possible to force Matlab to recognize a containers.Map
             % object as value-based if it's returned from a function.
-            obj.param_order = map_params(obj);
+            [obj, obj.param_order] = map_params(obj);
+            
+            length(obj.solve.param)
+            obj.solve.user_order
+            length(obj.dyn_cons.param)
+            obj.dyn_cons.user_order
+            length(obj.loc_cons.param)
+            obj.loc_cons.user_order
         end
         
         
         %% Parameter Mapping
-        function temp_map = map_params(obj)
+        function [obj,temp_map] = map_params(obj)
             temp_map = containers.Map();
             % Maps all of the consider functions to values representing
             % the order they should be listed in the A matrix.
@@ -85,6 +92,7 @@ classdef solve_consider
 
             % temp_map is returned from this function to overcome
             % shortcomings of containers.Map objects.
+
         end
         
         

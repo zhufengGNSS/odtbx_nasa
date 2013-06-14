@@ -144,17 +144,34 @@ useAngles    = getOdtbxOptions(options, 'useAngles', false );
 Sched        = getOdtbxOptions(options, 'Schedule',[]); %Tracking Schedule
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit+2*useAngles;
 Type         = getOdtbxOptions(options, 'rangeType','2way');
+
 solve        = getOdtbxOptions(options, 'solvefor',[]);
 dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
 loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
 
-num_sf = length(solve);
-num_dc = length(dyn_cons);
-num_lc = length(loc_cons);
+
+num_sf = length(obj.solve.user_order);
+num_dc = length(obj.dyn_cons.user_order);
+num_lc = length(obj.loc_cons.user_order);
 if isempty(num_dc),num_dc = 0;end
 if isempty(num_lc),num_lc = 0;end
-ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3));
-ind_trop = num_sf + num_dc + find(strncmpi(loc_cons,'TRP',3));
+% allfound = regexp(keys(obj.param_order),'\w*(TRP-)\w*','match')
+% notempty = allfound((~cellfun('isempty',allfound)==1))
+% if ~isempty(notempty)
+%     ind_trop = values(obj.param_order,[notempty{:}]')
+% else
+%     ind_trop = [];
+% end
+
+% obj
+% loc_cons
+% obj.loc_cons.param
+% ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3))
+% ind_trop = num_sf + num_dc + find(strncmpi(loc_cons,'TRP',3))
+
+ind_iono = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'ION',3))
+ind_trop = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'TRP',3))
+
 if size(x,1)<max(ind_iono)
     ind_iono=[];
 end
@@ -274,14 +291,14 @@ else
         indstop                      = numtypes*n;
         y(indstart:indstop, tind)    = y1;
         
-%                 indstart
-%         indstop
-%         num_sf
-% %                     ind_iono(n)
-%         ind_trop(n)
-%         [1:num_sf ind_trop(n)]
-%         size(H1)
-%         size(H)
+                indstart
+        indstop
+        num_sf
+%                     ind_iono(n)
+        ind_trop(n)
+        [1:num_sf ind_trop(n)]
+        size(H1)
+        size(H)
         
         if ~isempty(ind_iono) && ~isempty(ind_trop)
             H(indstart:indstop, [1:num_sf ind_iono(n) ind_trop(n)], tind) = H1; 
@@ -303,7 +320,7 @@ if strcmpi(Type,'2way')
 end
 
 %% Add consider parameter data to H
-bias = strncmpi(loc_cons,'MEASBI',6);
+bias = strncmpi(obj.loc_cons.user_order,'MEASBI',6);
 numbias=sum(bias);
 mbi = find(bias)+ num_sf + num_dc;
 

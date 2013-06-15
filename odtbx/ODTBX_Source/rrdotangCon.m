@@ -1,4 +1,4 @@
-function [y,H,R] = rrdotangCon(t,x1,x2,options)
+function [y,H,R] = rrdotangCon(obj,t,x1,x2,options)
 
 % RRDOTANG  Calculate range, range rate, doppler, angles between two objects.
 %
@@ -114,7 +114,7 @@ useUnit         = getOdtbxOptions(options, 'useUnit', false );
 useAngles       = getOdtbxOptions(options, 'useAngles', false );
 % solve        = getOdtbxOptions(options, 'solvefor',[]);
 % dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
-loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
+% loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
 
 % num_sf = length(solve);
 % num_dc = length(dyn_cons);
@@ -126,8 +126,8 @@ loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
 %     ind_iono=[];
 % end
 
-cons_iono_flag = any(strncmpi(loc_cons,'ION',3));
-cons_trop_flag = any(strncmpi(loc_cons,'TRP',3));
+cons_iono_flag = any(strncmpi(obj.loc_cons.param,'ION',3));
+cons_trop_flag = any(strncmpi(obj.loc_cons.param,'TRP',3));
 
 if( useDoppler && useRangeRate)
     error('rrdotang is not designed to handle both RangeRate and Doppler at the same time')
@@ -136,7 +136,7 @@ end
 y = [];
 if useRange
     if cons_iono_flag || cons_trop_flag
-        [r,H_atm] = LOSRangeCON(t, x1(1:3,:), x2(1:3,:), options);
+        [r,H_atm] = LOSRangeCon(obj,t, x1(1:3,:), x2(1:3,:), options);
     else
         r = LOSRange(t, x1(1:3,:), x2(1:3,:), options);
     end
@@ -145,7 +145,7 @@ end
 
 if useRangeRate
     if cons_iono_flag || cons_trop_flag
-        [rdot,Hd_atm] = LOSRangeRateCON(t, x1(1:3,:), x1(4:6,:), x2(1:3,:), x2(4:6,:), options);
+        [rdot,Hd_atm] = LOSRangeRateCon(obj, t, x1(1:3,:), x1(4:6,:), x2(1:3,:), x2(4:6,:), options);
     else
         rdot = LOSRangeRate(t, x1(1:3,:), x1(4:6,:), x2(1:3,:), x2(4:6,:), options);
     end

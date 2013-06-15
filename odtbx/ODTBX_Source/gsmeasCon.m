@@ -145,9 +145,9 @@ Sched        = getOdtbxOptions(options, 'Schedule',[]); %Tracking Schedule
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit+2*useAngles;
 Type         = getOdtbxOptions(options, 'rangeType','2way');
 
-solve        = getOdtbxOptions(options, 'solvefor',[]);
-dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
-loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
+% solve        = getOdtbxOptions(options, 'solvefor',[]);
+% dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
+% loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
 
 
 num_sf = length(obj.solve.user_order);
@@ -275,7 +275,7 @@ else
         x2 = gx(:,tind,n);
 
 % 		[y1,H1] = rrdotang(t1,x1,x2,options);
-        [y1,H1] = rrdotangCon(t1,x1,x2,options);
+        [y1,H1] = rrdotangCon(obj,t1,x1,x2,options);
 
         % apply the elevation constraint
         Ephem.satPos      = x1(1:3,:)*1000; %ECI satellite coordinates (m)
@@ -291,21 +291,20 @@ else
         indstop                      = numtypes*n;
         y(indstart:indstop, tind)    = y1;
         
-                indstart
-        indstop
-        num_sf
-%                     ind_iono(n)
-        ind_trop(n)
-        [1:num_sf ind_trop(n)]
-        size(H1)
-        size(H)
-        
+%         indstart
+%         indstop
+%         num_sf
+% %                     ind_iono(n)
+%         ind_trop(n)
+%         [1:num_sf ind_trop(n)]
+%         size(H1)
+%         size(H)
+%         
         if ~isempty(ind_iono) && ~isempty(ind_trop)
             H(indstart:indstop, [1:num_sf ind_iono(n) ind_trop(n)], tind) = H1; 
         elseif ~isempty(ind_iono)
             H(indstart:indstop, [1:num_sf ind_iono(n)], tind) = H1; 
         elseif ~isempty(ind_trop)
-%             [1:num_sf ind_trop(n)]
             H(indstart:indstop, [1:num_sf ind_trop(n)], tind) = H1; 
         else
             H(indstart:indstop, 1:num_sf, tind) = H1(:,1:num_sf,:); 

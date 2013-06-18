@@ -25,6 +25,7 @@ classdef CCDCamera < Camera
     %  REVISION HISTORY
     %   Author                  Date         	Comment
     %   Kenneth Getzandanner    07/15/2011      Original CCDCamera.m
+    %   Kenneth Getzandanner    06/18/2013      Fixed Kx/Ky calculation
     
     %% Properties
     properties
@@ -56,8 +57,8 @@ classdef CCDCamera < Camera
             obj.s0 = Res(1)/2;
             obj.l0 = Res(2)/2;
             
-            obj.Kx = obj.s0/(2*obj.xmax);
-            obj.Ky = -obj.l0/(2*obj.ymax);
+            obj.Kx = obj.s0/obj.xmax;
+            obj.Ky = -obj.l0/obj.ymax;
         end
         
         %% 

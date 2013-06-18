@@ -389,8 +389,8 @@ end
 [t,Xsref,Phiss] = integ(dynfun.est,tspan,Xbaro,options,dynarg.est);
 Yref = feval(datfun.tru,tspan,Xref,datarg.tru);
 Ybar = feval(datfun.est,tspan,Xsref,datarg.est);
-[~,H,R] = ominusc(datfun.tru,tspan,Xref,Yref,options,[],datarg.tru);
-[~,Hs,Rhat] = ominusc(datfun.est,tspan,Xsref,Ybar,options,[],datarg.est);
+[~,H,R] = ominuscCon(datfun.tru,tspan,Xref,Yref,options,[],datarg.tru);
+[~,Hs,Rhat] = ominuscCon(datfun.est,tspan,Xsref,Ybar,options,[],datarg.est);
 % nmeas = size(Yref,1);
 
 % Assign other input variables dependent on tspan, if needed
@@ -408,7 +408,7 @@ end
 if nargin >= 10, % constant consider map
     C = repmat(varargin{10},[1,1,length(tspan)]);
 end
-file=varargin{11};
+% file=varargin{11};
 
 %% Covariance Analysis
 % Perform a general covariance analysis linearized about the reference.
@@ -705,7 +705,7 @@ for i = lent:-1:1,
 end
 
 % Compute the true measurement error covariance Pdyt
-[~,~,R,Pdyt] = ominusc(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
+[~,~,R,Pdyt] = ominuscCon(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
 
 % NOTE: For the demomode examples plotted below, the pre- and
 % post-multiplication of P_a, P_v, and P_w by S and S',
@@ -783,9 +783,9 @@ end
 % uses the Cholesky decomposition, we have to handle this case separately.
 
 % Check some estimator options
-saveBat(file,t,Pa,Pv,Pw,Phata,Phatv,Phatw,Sigma_a,Xsref,Po,Yref,Xref,Phi)
-varargout{1}=true;
-return
+% saveBat(file,t,Pa,Pv,Pw,Phata,Phatv,Phatw,Sigma_a,Xsref,Po,Yref,Xref,Phi)
+% varargout{1}=true;
+% return
 eopts = chkestopts(options,ncases);
 
 for j = ncases:-1:1,
@@ -823,7 +823,7 @@ parfor j = 1:ncases,
         lentj = length(tj);
         J = inv(Pbaro);
         dY = NaN(size(Y{j}));
-        [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options,[],...
+        [dy,Hs,Rhat] = ominuscCon(datfun.est,tspan,Xbar,Y{j},options,[],...
             datarg.est); %#ok<PFBNS>
         for i = 1:lentj
             k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
@@ -871,67 +871,67 @@ parfor j = 1:ncases,
 end
 
 
-%% Estimation Error Ensemble
-% Generate the time series of estimation errors and residuals for each
-% case.  Due to nonlinearities, the formal variance could be different for
-% each case, so generate the time series of these as well.  Use estval to
-% plot these data if no output arguments are supplied.
-
-clear t Phat
-for j = ncases:-1:1,
-    [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
-    for i = length(t{j}):-1:1,
-        pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
-        Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
-        e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
-    end
-    [y{j},~,~,Pdy{j}] = ominusc(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
-end
-if demomode,
-    estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
-    disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
-    keyboard
-end
-
-% Self-test regression tests
-if testmode && ~demomode,
-    switch testmode
-        case 1
-            load estbat_test1
-        case 2
-            load estbat_test2
-        case 3
-            load estbat_test3
-    end
-    for k = ncases:-1:1,
-        % TODO: use chi2 test like in estseq instead of "9\sigma"
-        dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-        sPhat{k} = Phat_test{k} + Phat{k}; 
-        de{k} = e_test{k} - e{k}; %#ok<USENS>
-        % Is each error sample within 9\sigma of its corresponding test
-        % value?  Is each Phat sample "close enough," in terms of the
-        % matrix 2-norm (largest singular value) to its test value?
-        for i = lent:-1:1,
-            efail(i,k) = ...
-                de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
-                > 81;  %#ok<MINV>
-            Pfail(i,k) = ...
-                norm(unscrunch(dPhat{k}(:,i))) > ...
-                0.1*norm(unscrunch(Phat_test{k}(:,i))); 
-        end
-    end
-    fail = logical([...
-        any(any(any(abs(P_test - P) > 1e-10))), ...
-        any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
-        any(any(any(abs(Pv_test - Pv) > 1e-10))),...
-        any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
-        any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
-        any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
-        any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
-        any(any(efail)), ...
-        any(any(Pfail))]); 
-    varargout{1} = fail;
-end
+% %% Estimation Error Ensemble
+% % Generate the time series of estimation errors and residuals for each
+% % case.  Due to nonlinearities, the formal variance could be different for
+% % each case, so generate the time series of these as well.  Use estval to
+% % plot these data if no output arguments are supplied.
+% 
+% clear t Phat
+% for j = ncases:-1:1,
+%     [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
+%     for i = length(t{j}):-1:1,
+%         pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
+%         Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
+%         e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
+%     end
+%     [y{j},~,~,Pdy{j}] = ominuscCon(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
+% end
+% if demomode,
+%     estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
+%     disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
+%     keyboard
+% end
+% 
+% % Self-test regression tests
+% if testmode && ~demomode,
+%     switch testmode
+%         case 1
+%             load estbat_test1
+%         case 2
+%             load estbat_test2
+%         case 3
+%             load estbat_test3
+%     end
+%     for k = ncases:-1:1,
+%         % TODO: use chi2 test like in estseq instead of "9\sigma"
+%         dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
+%         sPhat{k} = Phat_test{k} + Phat{k}; 
+%         de{k} = e_test{k} - e{k}; %#ok<USENS>
+%         % Is each error sample within 9\sigma of its corresponding test
+%         % value?  Is each Phat sample "close enough," in terms of the
+%         % matrix 2-norm (largest singular value) to its test value?
+%         for i = lent:-1:1,
+%             efail(i,k) = ...
+%                 de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
+%                 > 81;  %#ok<MINV>
+%             Pfail(i,k) = ...
+%                 norm(unscrunch(dPhat{k}(:,i))) > ...
+%                 0.1*norm(unscrunch(Phat_test{k}(:,i))); 
+%         end
+%     end
+%     fail = logical([...
+%         any(any(any(abs(P_test - P) > 1e-10))), ...
+%         any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
+%         any(any(any(abs(Pv_test - Pv) > 1e-10))),...
+%         any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
+%         any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
+%         any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
+%         any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
+%         any(any(efail)), ...
+%         any(any(Pfail))]); 
+%     varargout{1} = fail;
+% end
 
 if nargout >= 3,
     varargout{1} = t;
@@ -941,26 +941,26 @@ end
 if nargout >= 4,
     varargout{4} = e;
 end
-if nargout >= 5,
-    varargout{5} = y;
-end
-if nargout >= 6,
-    varargout{6} = Pa;
-    varargout{7} = Pv;
-    varargout{8} = Pw;
-    varargout{9} = Phata;
-    varargout{10} = Phatv;
-    varargout{11} = Phatw;
-end
-if nargout >= 12,
-    varargout{12} = Sigma_a;
-end
-if nargout >= 13
-    varargout{13} = Pdy;
-end 
-if nargout >= 14
-    varargout{14} = Pdyt;
-end 
+% if nargout >= 5,
+%     varargout{5} = y;
+% end
+% if nargout >= 6,
+%     varargout{6} = Pa;
+%     varargout{7} = Pv;
+%     varargout{8} = Pw;
+%     varargout{9} = Phata;
+%     varargout{10} = Phatv;
+%     varargout{11} = Phatw;
+% end
+% if nargout >= 12,
+%     varargout{12} = Sigma_a;
+% end
+% if nargout >= 13
+%     varargout{13} = Pdy;
+% end 
+% if nargout >= 14
+%     varargout{14} = Pdyt;
+% end 
 end % function
 
 % function x = robustls(A,b)

@@ -169,8 +169,8 @@ if isempty(num_lc),num_lc = 0;end
 % ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3))
 % ind_trop = num_sf + num_dc + find(strncmpi(loc_cons,'TRP',3))
 
-ind_iono = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'ION',3))
-ind_trop = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'TRP',3))
+ind_iono = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'ION',3));
+ind_trop = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'TRP',3));
 
 if size(x,1)<max(ind_iono)
     ind_iono=[];
@@ -344,6 +344,11 @@ if nargout > 2,
     end
     sigma           = diag(sigma);
     R = repmat(sigma.^2,[1,1,N]);
+    
+    if ~any(any(~isnan(y)))
+        keyboard;
+    end
+
 end
 
 

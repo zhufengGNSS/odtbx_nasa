@@ -46,12 +46,12 @@ classdef solve_consider
             % object as value-based if it's returned from a function.
             [obj, obj.param_order] = map_params(obj);
             
-            length(obj.solve.param)
-            obj.solve.user_order
-            length(obj.dyn_cons.param)
-            obj.dyn_cons.user_order
-            length(obj.loc_cons.param)
-            obj.loc_cons.user_order
+%             length(obj.solve.param)
+%             obj.solve.user_order
+%             length(obj.dyn_cons.param)
+%             obj.dyn_cons.user_order
+%             length(obj.loc_cons.param)
+%             obj.loc_cons.user_order
         end
         
         

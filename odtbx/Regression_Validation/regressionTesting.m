@@ -313,7 +313,7 @@ end
 if(nargin >= 4 && ~isempty(varargin{4}))
     finfo=fopen(varargin{4},'rt'); % text read on PC & unix
     if finfo < 0
-        fprintf(fid1,'\n\nScript Error: regressionTestin.m failed to open given info file: %s',varargin{4});
+        fprintf(fid1,'\n\nScript Error: regressionTesting.m failed to open given info file: %s',varargin{4});
     else
         % copy the contents of finfo into fid1
         fprintf(fid1,'\n\n---------------------------------------------------------\n');

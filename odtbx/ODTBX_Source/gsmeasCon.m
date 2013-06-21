@@ -182,7 +182,9 @@ end
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit;
 
 if isempty(gsECEF)
-    if( isempty(gsList) && ~isempty(gsID) ); gsList = createGroundStationList(); end
+    if( isempty(gsList) && ~isempty(gsID) ) 
+        gsList = createGroundStationList(); 
+    end
     gsECEF = zeros(3,length(gsID));
     for n=1:length(gsID)
             gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);

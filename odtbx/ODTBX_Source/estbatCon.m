@@ -852,6 +852,9 @@ parfor j = 1:ncases,
             ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
             Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
             dxo = dxo + Kj*dY(k,i);
+            if any(isnan(dxo))
+                keyboard
+            end
         end
         Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
         disp(['Iteration number: ',num2str(iter)])
@@ -860,6 +863,9 @@ parfor j = 1:ncases,
         disp('sqrt(diag(Phato{j})) = ')
         disp(sqrt(diag(Phato{j}))')
         Xhato{j} = Xhato{j} + dxo;
+%         if any(isnan(Xhato{j}))
+%             keyboard
+%         end
         if iter < niter
             iter = iter + 1;
             Dxo = norm(dxo);
@@ -871,96 +877,97 @@ parfor j = 1:ncases,
 end
 
 
-% %% Estimation Error Ensemble
-% % Generate the time series of estimation errors and residuals for each
-% % case.  Due to nonlinearities, the formal variance could be different for
-% % each case, so generate the time series of these as well.  Use estval to
-% % plot these data if no output arguments are supplied.
-% 
-% clear t Phat
-% for j = ncases:-1:1,
-%     [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
-%     for i = length(t{j}):-1:1,
-%         pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
-%         Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
-%         e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
-%     end
+%% Estimation Error Ensemble
+% Generate the time series of estimation errors and residuals for each
+% case.  Due to nonlinearities, the formal variance could be different for
+% each case, so generate the time series of these as well.  Use estval to
+% plot these data if no output arguments are supplied.
+% keyboard
+clear t Phat
+for j = ncases:-1:1,
+    [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
+    for i = length(t{j}):-1:1,
+        pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
+        Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
+        e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
+    end
 %     [y{j},~,~,Pdy{j}] = ominuscCon(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
-% end
-% if demomode,
-%     estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
-%     disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
-%     keyboard
-% end
-% 
-% % Self-test regression tests
-% if testmode && ~demomode,
-%     switch testmode
-%         case 1
-%             load estbat_test1
-%         case 2
-%             load estbat_test2
-%         case 3
-%             load estbat_test3
-%     end
-%     for k = ncases:-1:1,
-%         % TODO: use chi2 test like in estseq instead of "9\sigma"
-%         dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-%         sPhat{k} = Phat_test{k} + Phat{k}; 
-%         de{k} = e_test{k} - e{k}; %#ok<USENS>
-%         % Is each error sample within 9\sigma of its corresponding test
-%         % value?  Is each Phat sample "close enough," in terms of the
-%         % matrix 2-norm (largest singular value) to its test value?
-%         for i = lent:-1:1,
-%             efail(i,k) = ...
-%                 de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
-%                 > 81;  %#ok<MINV>
-%             Pfail(i,k) = ...
-%                 norm(unscrunch(dPhat{k}(:,i))) > ...
-%                 0.1*norm(unscrunch(Phat_test{k}(:,i))); 
-%         end
-%     end
-%     fail = logical([...
-%         any(any(any(abs(P_test - P) > 1e-10))), ...
-%         any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
-%         any(any(any(abs(Pv_test - Pv) > 1e-10))),...
-%         any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
-%         any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
-%         any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
-%         any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
-%         any(any(efail)), ...
-%         any(any(Pfail))]); 
-%     varargout{1} = fail;
-% end
+end
+if demomode,
+    estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
+    disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
+    keyboard
+end
 
+% Self-test regression tests
+if testmode && ~demomode,
+    switch testmode
+        case 1
+            load estbat_test1
+        case 2
+            load estbat_test2
+        case 3
+            load estbat_test3
+    end
+    for k = ncases:-1:1,
+        % TODO: use chi2 test like in estseq instead of "9\sigma"
+        dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
+        sPhat{k} = Phat_test{k} + Phat{k}; 
+        de{k} = e_test{k} - e{k}; %#ok<USENS>
+        % Is each error sample within 9\sigma of its corresponding test
+        % value?  Is each Phat sample "close enough," in terms of the
+        % matrix 2-norm (largest singular value) to its test value?
+        for i = lent:-1:1,
+            efail(i,k) = ...
+                de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
+                > 81;  %#ok<MINV>
+            Pfail(i,k) = ...
+                norm(unscrunch(dPhat{k}(:,i))) > ...
+                0.1*norm(unscrunch(Phat_test{k}(:,i))); 
+        end
+    end
+    fail = logical([...
+        any(any(any(abs(P_test - P) > 1e-10))), ...
+        any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
+        any(any(any(abs(Pv_test - Pv) > 1e-10))),...
+        any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
+        any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
+        any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
+        any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
+        any(any(efail)), ...
+        any(any(Pfail))]); 
+    varargout{1} = fail;
+end
+% keyboard;
 if nargout >= 3,
     varargout{1} = t;
     varargout{2} = Xhat;
+%     varargout{2} = Xref;
     varargout{3} = Phat;
 end
 if nargout >= 4,
     varargout{4} = e;
 end
-% if nargout >= 5,
-%     varargout{5} = y;
-% end
-% if nargout >= 6,
-%     varargout{6} = Pa;
-%     varargout{7} = Pv;
-%     varargout{8} = Pw;
-%     varargout{9} = Phata;
-%     varargout{10} = Phatv;
-%     varargout{11} = Phatw;
-% end
-% if nargout >= 12,
-%     varargout{12} = Sigma_a;
-% end
-% if nargout >= 13
-%     varargout{13} = Pdy;
-% end 
-% if nargout >= 14
-%     varargout{14} = Pdyt;
-% end 
+if nargout >= 5,
+    varargout{5} = y;
+end
+if nargout >= 6,
+    varargout{6} = Pa;
+    varargout{7} = Pv;
+    varargout{8} = Pw;
+    varargout{9} = Phata;
+    varargout{10} = Phatv;
+    varargout{11} = Phatw;
+end
+if nargout >= 12,
+    varargout{12} = Sigma_a;
+end
+if nargout >= 13
+    varargout{13} = Pdy;
+end 
+if nargout >= 14
+    varargout{14} = Pdyt;
+end 
 end % function
 
 % function x = robustls(A,b)

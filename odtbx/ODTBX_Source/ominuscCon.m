@@ -72,11 +72,11 @@ function [dy,H,R,Pdy] = ominuscCon(datfun,t,x,y,options,P,datarg,isel)
 % NASA Goddard Space Flight Center
 
 % datfun
-size(t)
-size(x)
-size(y)
+% size(t)
+% size(x)
+% size(y)
 % options
-size(P)
+% size(P)
 % datarg
 
 if nargin < 7,

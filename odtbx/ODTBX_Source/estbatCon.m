@@ -731,218 +731,224 @@ if demomode,
     end
 end
 
-%% Sensitivity Mosaics
-% Generate "sensitivity mosaics," which are checkerboard plots of the
-% sensitivity matrices.  For some reason, Matlab's pcolor function does not
-% plot the final row and column, so append an extra row and column to get
-% the correct plot.  Initially plot the sensitivity at the anchor time,
-% and put up a slider that lets the user scan through sensitivities over
-% the batch.
-if demomode,
-    lastfig = ns;
-    figure(lastfig+1)
-    hold off
-    pcolor(eye(ns+1,ns)*Sigma_ao*eye(n,n+1))
-    set(gca,'xtick',1:n,'ytick',1:ns)
-    xlabel('{\it A Priori} State Index')
-    sa = uicontrol(gcf,'style','slider',...
-        'max',tspan(end),'min',tspan(1),...
-        'value',tspan(1),...
-        'sliderstep',[mean(diff(tspan))/tspan(end-1),0.5],...
-        'units','normalized','position',...
-        get(gca,'position')*[1 0 0 0;0 1 0 -.1;0 0 1 0;0 0 0 .1]'); 
-    ca = @(h,e) pcolor(eye(ns+1,ns)*...
-        Sigma_a(:,:,round(get(sa,'value')))*eye(n,n+1));
-    set(sa,'callback', ca)
-    ylabel('Solve-For State Index')
-    set(gca,'ydir','rev','xaxisloc','top')
-    axis equal
-    colorbar
-    title('Sensitivity Mosaic')
-    hold on
-end
-%% Monte Carlo Simulation
-% Always perform at least one actual simulation as a check against
-% linearization problems.  Generate random deviations from the reference as
-% initial conditions for each monte carlo case.  Integrate each deviated
-% case, and use this as truth for measurement simulation and estimation
-% error generation.  Iterate the batch estimator, re-linearizing each time,
-% until a convergence tolerance or an iteration limit is reached.  Do this
-% after plotting the covariance results, so the user can terminate the run
-% if obvious problems occur, since the simulation may be slow, especially
-% if a lot of monte carlo cases are running.
-
-% Generate random deviations from the reference trajectory and simulate
-% measurements from the deviated trajectories.  Remember that Phi(:,:,i) =
-% Phi(ti,to), Qd(:,:,i) = Qd(ti,to), and Phi(:,:,1) = I, Qd(:,:,1) = 0.
-% Since Qd goes from to to ti, we can't use it to generate a time series
-% for wd(ti,to) at time ti, because it would not generate the proper
-% correlations at times prior to ti.  However, the matrix Qtilde
-% explicitly does model these correlations.  Note that the rows and columns
-% of Qtilde corresponding to the anchor time are zero, and since covsmpl
-% uses the Cholesky decomposition, we have to handle this case separately.
-
-% Check some estimator options
-% saveBat(file,t,Pa,Pv,Pw,Phata,Phatv,Phatw,Sigma_a,Xsref,Po,Yref,Xref,Phi)
-% varargout{1}=true;
-% return
-eopts = chkestopts(options,ncases);
-
-for j = ncases:-1:1,
-    xo = covsmpl(Po, 1, eopts.monteseed(j));
-    if nonzeroq,
-        wd{j} = [zeros(size(xo)),...
-            reshape(covsmpl(cell2mat(Qtilde(2:end,2:end))),n,[])]; 
-    else
-        wd{j} = zeros(n,lent); 
-    end
-    [~,xdum] = integ(dynfun.tru,tspan,Xo+xo,options,dynarg.tru);
-    for i = lent:-1:1,
-        %x = Phi(:,:,i)*xo + wd{j}(:,i);
-        X{j}(:,i) = xdum(:,i) + wd{j}(:,i); 
-    end
-    Y{j} = feval(datfun.tru,tspan,X{j},datarg.tru) + covsmpl(R); 
-end
-
-Phato = cell(ncases,1);
-Xhato = cell(ncases,1);
-
-% Run the batch estimator on the measurements generated above.
-Xsref0 = Xsref(:,1); 
-tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
-disp('sqrt(diag(Phatao+Phatvo)) = ')
-disp(sqrt(diag(Phatao+Phatvo))')
-disp('sqrt(diag(Pao+Pvo+Pwo)) = ')
-disp(sqrt(diag(Pao+Pvo+Pwo))')
-parfor j = 1:ncases,
-    Dxo = Inf;
-    iter = 0;
-    Xhato{j} = Xsref0;
-    while Dxo > tol
-        [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); %#ok<PFBNS>
-        lentj = length(tj);
-        J = inv(Pbaro);
-        dY = NaN(size(Y{j}));
-        [dy,Hs,Rhat] = ominuscCon(datfun.est,tspan,Xbar,Y{j},options,[],...
-            datarg.est); %#ok<PFBNS>
-        for i = 1:lentj
-            k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
-            if ~isempty(k)
-                dY(k,i) = dy(k,i);
-                J = J + Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)) ...
-                    *Hs(k,:,i)*Phiss(:,:,i);
-            end
-        end
-        fullrank = (prod(svd(J))>0);
-        if ~fullrank
-            error('ESTBAT:notobserv',['System is not observable.  ',...
-                'Rank of Normal Matrix = ', num2str(rank(J))])
-        end 
-        dxo = 0;
-        for i = 1:lentj,
-            if i == 1,
-                ImKHsj = eye(ns);
-                Pbarfoj = Pbaro;
-                Pbarfoj(isinf(Pbaro))=0; %infinite values are set to zero.
-                Phato{j} = 0;
-            end
-            k = find(~isnan(Y{j}(:,i)));
-            %Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
-            Kj = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
-            ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
-            Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
-            dxo = dxo + Kj*dY(k,i);
-            if any(isnan(dxo))
-                keyboard
-            end
-        end
-        Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
-        disp(['Iteration number: ',num2str(iter)])
-        disp('dxo = ')
-        disp(dxo')
-        disp('sqrt(diag(Phato{j})) = ')
-        disp(sqrt(diag(Phato{j}))')
-        Xhato{j} = Xhato{j} + dxo;
-%         if any(isnan(Xhato{j}))
-%             keyboard
+% %% Sensitivity Mosaics
+% % Generate "sensitivity mosaics," which are checkerboard plots of the
+% % sensitivity matrices.  For some reason, Matlab's pcolor function does not
+% % plot the final row and column, so append an extra row and column to get
+% % the correct plot.  Initially plot the sensitivity at the anchor time,
+% % and put up a slider that lets the user scan through sensitivities over
+% % the batch.
+% if demomode,
+%     lastfig = ns;
+%     figure(lastfig+1)
+%     hold off
+%     pcolor(eye(ns+1,ns)*Sigma_ao*eye(n,n+1))
+%     set(gca,'xtick',1:n,'ytick',1:ns)
+%     xlabel('{\it A Priori} State Index')
+%     sa = uicontrol(gcf,'style','slider',...
+%         'max',tspan(end),'min',tspan(1),...
+%         'value',tspan(1),...
+%         'sliderstep',[mean(diff(tspan))/tspan(end-1),0.5],...
+%         'units','normalized','position',...
+%         get(gca,'position')*[1 0 0 0;0 1 0 -.1;0 0 1 0;0 0 0 .1]'); 
+%     ca = @(h,e) pcolor(eye(ns+1,ns)*...
+%         Sigma_a(:,:,round(get(sa,'value')))*eye(n,n+1));
+%     set(sa,'callback', ca)
+%     ylabel('Solve-For State Index')
+%     set(gca,'ydir','rev','xaxisloc','top')
+%     axis equal
+%     colorbar
+%     title('Sensitivity Mosaic')
+%     hold on
+% end
+% %% Monte Carlo Simulation
+% % Always perform at least one actual simulation as a check against
+% % linearization problems.  Generate random deviations from the reference as
+% % initial conditions for each monte carlo case.  Integrate each deviated
+% % case, and use this as truth for measurement simulation and estimation
+% % error generation.  Iterate the batch estimator, re-linearizing each time,
+% % until a convergence tolerance or an iteration limit is reached.  Do this
+% % after plotting the covariance results, so the user can terminate the run
+% % if obvious problems occur, since the simulation may be slow, especially
+% % if a lot of monte carlo cases are running.
+% 
+% % Generate random deviations from the reference trajectory and simulate
+% % measurements from the deviated trajectories.  Remember that Phi(:,:,i) =
+% % Phi(ti,to), Qd(:,:,i) = Qd(ti,to), and Phi(:,:,1) = I, Qd(:,:,1) = 0.
+% % Since Qd goes from to to ti, we can't use it to generate a time series
+% % for wd(ti,to) at time ti, because it would not generate the proper
+% % correlations at times prior to ti.  However, the matrix Qtilde
+% % explicitly does model these correlations.  Note that the rows and columns
+% % of Qtilde corresponding to the anchor time are zero, and since covsmpl
+% % uses the Cholesky decomposition, we have to handle this case separately.
+% 
+% % Check some estimator options
+% % saveBat(file,t,Pa,Pv,Pw,Phata,Phatv,Phatw,Sigma_a,Xsref,Po,Yref,Xref,Phi)
+% % varargout{1}=true;
+% % return
+% eopts = chkestopts(options,ncases);
+% 
+% for j = ncases:-1:1,
+%     xo = covsmpl(Po, 1, eopts.monteseed(j));
+%     if nonzeroq,
+%         wd{j} = [zeros(size(xo)),...
+%             reshape(covsmpl(cell2mat(Qtilde(2:end,2:end))),n,[])]; 
+%     else
+%         wd{j} = zeros(n,lent); 
+%     end
+%     [~,xdum] = integ(dynfun.tru,tspan,Xo+xo,options,dynarg.tru);
+%     for i = lent:-1:1,
+%         %x = Phi(:,:,i)*xo + wd{j}(:,i);
+%         X{j}(:,i) = xdum(:,i) + wd{j}(:,i); 
+%     end
+%     Y{j} = feval(datfun.tru,tspan,X{j},datarg.tru) + covsmpl(R); 
+% end
+% 
+% Phato = cell(ncases,1);
+% Xhato = cell(ncases,1);
+% 
+% % Run the batch estimator on the measurements generated above.
+% Xsref0 = Xsref(:,1); 
+% tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
+% disp('sqrt(diag(Phatao+Phatvo)) = ')
+% disp(sqrt(diag(Phatao+Phatvo))')
+% disp('sqrt(diag(Pao+Pvo+Pwo)) = ')
+% disp(sqrt(diag(Pao+Pvo+Pwo))')
+% parfor j = 1:ncases,
+%     Dxo = Inf;
+%     iter = 0;
+%     Xhato{j} = Xsref0;
+%     while Dxo > tol
+%         [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); %#ok<PFBNS>
+%         lentj = length(tj);
+%         J = inv(Pbaro);
+%         dY = NaN(size(Y{j}));
+%         [dy,Hs,Rhat] = ominuscCon(datfun.est,tspan,Xbar,Y{j},options,[],...
+%             datarg.est); %#ok<PFBNS>
+%         for i = 1:lentj
+%             k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
+%             if ~isempty(k)
+%                 dY(k,i) = dy(k,i);
+%                 J = J + Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)) ...
+%                     *Hs(k,:,i)*Phiss(:,:,i);
+%             end
 %         end
-        if iter < niter
-            iter = iter + 1;
-            Dxo = norm(dxo);
-        else
-            warning('ESTBAT:maxit','Max iterations reached in estbat');
-            break
-        end
-    end
-end
+%         fullrank = (prod(svd(J))>0);
+%         if ~fullrank
+%             error('ESTBAT:notobserv',['System is not observable.  ',...
+%                 'Rank of Normal Matrix = ', num2str(rank(J))])
+%         end 
+%         dxo = 0;
+%         for i = 1:lentj,
+%             if i == 1,
+%                 ImKHsj = eye(ns);
+%                 Pbarfoj = Pbaro;
+%                 Pbarfoj(isinf(Pbaro))=0; %infinite values are set to zero.
+%                 Phato{j} = 0;
+%             end
+%             k = find(~isnan(Y{j}(:,i)));
+%             %Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+%             Kj = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+%             ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
+%             Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
+%             dxo = dxo + Kj*dY(k,i);
+%             if any(isnan(dxo))
+%                 keyboard
+%             end
+%         end
+%         Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
+%         disp(['Iteration number: ',num2str(iter)])
+%         disp('dxo = ')
+%         disp(dxo')
+%         disp('sqrt(diag(Phato{j})) = ')
+%         disp(sqrt(diag(Phato{j}))')
+%         Xhato{j} = Xhato{j} + dxo;
+% %         if any(isnan(Xhato{j}))
+% %             keyboard
+% %         end
+%         if iter < niter
+%             iter = iter + 1;
+%             Dxo = norm(dxo);
+%         else
+%             warning('ESTBAT:maxit','Max iterations reached in estbat');
+%             break
+%         end
+%     end
+% end
+% 
+% 
+% %% Estimation Error Ensemble
+% % Generate the time series of estimation errors and residuals for each
+% % case.  Due to nonlinearities, the formal variance could be different for
+% % each case, so generate the time series of these as well.  Use estval to
+% % plot these data if no output arguments are supplied.
+% % keyboard
+% clear t Phat
+% for j = ncases:-1:1,
+%     [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
+%     for i = length(t{j}):-1:1,
+%         pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
+%         Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
+%         e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
+%     end
+% %     [y{j},~,~,Pdy{j}] = ominuscCon(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
+% end
+% if demomode,
+%     estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
+%     disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
+%     keyboard
+% end
+% 
+% % Self-test regression tests
+% if testmode && ~demomode,
+%     switch testmode
+%         case 1
+%             load estbat_test1
+%         case 2
+%             load estbat_test2
+%         case 3
+%             load estbat_test3
+%     end
+%     for k = ncases:-1:1,
+%         % TODO: use chi2 test like in estseq instead of "9\sigma"
+%         dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
+%         sPhat{k} = Phat_test{k} + Phat{k}; 
+%         de{k} = e_test{k} - e{k}; %#ok<USENS>
+%         % Is each error sample within 9\sigma of its corresponding test
+%         % value?  Is each Phat sample "close enough," in terms of the
+%         % matrix 2-norm (largest singular value) to its test value?
+%         for i = lent:-1:1,
+%             efail(i,k) = ...
+%                 de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
+%                 > 81;  %#ok<MINV>
+%             Pfail(i,k) = ...
+%                 norm(unscrunch(dPhat{k}(:,i))) > ...
+%                 0.1*norm(unscrunch(Phat_test{k}(:,i))); 
+%         end
+%     end
+%     fail = logical([...
+%         any(any(any(abs(P_test - P) > 1e-10))), ...
+%         any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
+%         any(any(any(abs(Pv_test - Pv) > 1e-10))),...
+%         any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
+%         any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
+%         any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
+%         any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
+%         any(any(efail)), ...
+%         any(any(Pfail))]); 
+%     varargout{1} = fail;
+% end
+% % keyboard;
 
-
-%% Estimation Error Ensemble
-% Generate the time series of estimation errors and residuals for each
-% case.  Due to nonlinearities, the formal variance could be different for
-% each case, so generate the time series of these as well.  Use estval to
-% plot these data if no output arguments are supplied.
-% keyboard
-clear t Phat
-for j = ncases:-1:1,
-    [t{j},Xhat{j},Phiss] = integ(dynfun.est,tspan,Xhato{j},options,dynarg.est); 
-    for i = length(t{j}):-1:1,
-        pji = Phiss(:,:,i)*Phato{j}*Phiss(:,:,i)';
-        Phat{j}(:,i) = scrunch((pji+pji')/2); % avoids symmetry warnings
-        e{j}(:,i) = Xhat{j}(:,i) - S(:,:,i)*X{j}(:,i); 
-    end
-%     [y{j},~,~,Pdy{j}] = ominuscCon(datfun.est,t{j},Xhat{j},Y{j},options,unscrunch(Phat{j}),datarg.est); 
-end
-if demomode,
-    estval(t,e,Phat,scrunch(P),gcf) % ESTVAL expects covs to be scrunched
-    disp('You are in the workspace of ESTBAT; type ''return'' to exit.')
-    keyboard
-end
-
-% Self-test regression tests
-if testmode && ~demomode,
-    switch testmode
-        case 1
-            load estbat_test1
-        case 2
-            load estbat_test2
-        case 3
-            load estbat_test3
-    end
-    for k = ncases:-1:1,
-        % TODO: use chi2 test like in estseq instead of "9\sigma"
-        dPhat{k} = Phat_test{k} - Phat{k}; %#ok<USENS>
-        sPhat{k} = Phat_test{k} + Phat{k}; 
-        de{k} = e_test{k} - e{k}; %#ok<USENS>
-        % Is each error sample within 9\sigma of its corresponding test
-        % value?  Is each Phat sample "close enough," in terms of the
-        % matrix 2-norm (largest singular value) to its test value?
-        for i = lent:-1:1,
-            efail(i,k) = ...
-                de{k}(:,i)'*inv(unscrunch(sPhat{k}(:,i)))*de{k}(:,i) ...
-                > 81;  %#ok<MINV>
-            Pfail(i,k) = ...
-                norm(unscrunch(dPhat{k}(:,i))) > ...
-                0.1*norm(unscrunch(Phat_test{k}(:,i))); 
-        end
-    end
-    fail = logical([...
-        any(any(any(abs(P_test - P) > 1e-10))), ...
-        any(any(any(abs(Pa_test - Pa) > 1e-10))), ...
-        any(any(any(abs(Pv_test - Pv) > 1e-10))),...
-        any(any(any(abs(Pw_test - Pw) > 1e-10))), ...
-        any(any(any(abs(Phatv_test - Phatv) > 1e-10))), ...
-        any(any(any(abs(Phata_test - Phata) > 1e-10))), ...
-        any(any(any(abs(Sigma_a_test - Sigma_a) > 1e-10))), ...
-        any(any(efail)), ...
-        any(any(Pfail))]); 
-    varargout{1} = fail;
+for i = 1:length(S)
+    e(:,i) = Xsref(:,i) - S(:,:,i)*Xref(:,i); 
 end
 % keyboard;
+
 if nargout >= 3,
     varargout{1} = t;
-    varargout{2} = Xhat;
-%     varargout{2} = Xref;
+%     varargout{2} = Xhat;
+    varargout{2} = Xsref;
     varargout{3} = Phat;
 end
 if nargout >= 4,

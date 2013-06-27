@@ -707,6 +707,10 @@ end
 % Compute the true measurement error covariance Pdyt
 [~,~,R,Pdyt] = ominuscCon(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
 
+% Estimated
+[y,~,~,Pdy] = ominuscCon(datfun.est,t,Xsref,Ybar,options,Phat,datarg.est); 
+
+
 % NOTE: For the demomode examples plotted below, the pre- and
 % post-multiplication of P_a, P_v, and P_w by S and S',
 % respectively, have been ignored for simplicity since the
@@ -955,6 +959,7 @@ if nargout >= 4,
     varargout{4} = e;
 end
 if nargout >= 5,
+%     varargout{5} = Ybar;
     varargout{5} = y;
 end
 if nargout >= 6,

@@ -121,15 +121,15 @@ for n = 1:N
 			satPosECEF = jatDCM('eci2ecef',Ephem.Epoch(n))*Ephem.satPos(:,n);
 
 		end
-	end
-
-	for m = 1:M
+    end
+    
+    for m = 1:M
 
 		% Convert Lat Lon Height to ECEF Vector if necessary
-		if strcmpi(Ephem.StationInfo,'LatLonHeight') & n == 1
-            % LLA2ecef is deg & km in, km out, so convert to meters
-			Ephem.staPos(:,m) = LLA2ecef(Ephem.lat(m),Ephem.lon(m),Ephem.height(m))*1000;
-		end
+% 		if ((strcmpi(Ephem.StationInfo,'LatLonHeight')) && (n == 1))
+%             % LLA2ecef is deg & km in, km out, so convert to meters
+% 			Ephem.staPos(:,m) = LLA2ecef(Ephem.lat(m),Ephem.lon(m),Ephem.height(m))*1000;
+% 		end
 
 		% Create Java station object (input in m)
 		station = jat.groundstations.GroundStation('tmp',Ephem.staPos(:,m));

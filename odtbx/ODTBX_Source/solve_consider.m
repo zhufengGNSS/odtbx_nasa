@@ -119,6 +119,17 @@ classdef solve_consider
         %% Measurement Models
         
         function [y,H,R] = meas(obj,t,x,options)
+            cons_iono_flag = any(strncmpi(obj.loc_cons.param,'ION',3));
+            cons_trop_flag = any(strncmpi(obj.loc_cons.param,'TRP',3));
+            
+            if cons_iono_flag == true
+                options=setOdtbxOptions(options,'useIonosphere',true);
+            end
+            if cons_trop_flag == true
+                options=setOdtbxOptions(options,'useTroposphere',true);
+            end
+            
+            
             if (strcmpi(obj.external_meas, 'gsmeas'))
                 [y,H,R] = gsmeasCon(obj,t,x,options);
             else

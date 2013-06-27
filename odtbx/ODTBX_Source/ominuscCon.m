@@ -102,13 +102,13 @@ if nargout == 4,
     Pdy = NaN(m,m,mt);
     ig = [];
     for k = 1:m
-        ig=union(ig,find(~isnan(dy(k,:))))
+        ig=union(ig,find(~isnan(dy(k,:))));
     end
     for k = ig
         if nargin == 8
-            ikeep = ~isnan(dy(:,k)) & isel(:,k)
+            ikeep = ~isnan(dy(:,k)) & isel(:,k);
         else
-            ikeep = ~isnan(dy(:,k))
+            ikeep = ~isnan(dy(:,k));
         end
 %         size(ikeep)
 %         size(k)

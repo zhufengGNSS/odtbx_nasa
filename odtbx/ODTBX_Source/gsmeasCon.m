@@ -1,10 +1,18 @@
 function [y,H,R] = gsmeasCon(obj,t,x,options)
 % GSMEAS  Makes ground station based measurements.
 %
-% [y,H,R] = GSMEAS(tspan,x,options) creates ground station measurements
+% [y,H,R] = gsmeasCon(obj,tspan,x,options) creates ground station measurements
 % based on the information in OPTIONS. The measurement types that can be 
 % returned are LOSRANGE, LOSRANGERATE, LOSDOPPLER. See the OD Toolbox 
 % function of the same name for details of each measurement type.
+%
+% Consider parameters currently accepted: 
+% loc_cons parameters are placeholders. There are no designated keys-
+% ionospheric or tropospheric consider parameters must start with 'ION' or
+% 'TRP', respectively. Beyond that, they may be called anything. The user
+% must just make sure that there are a sufficient amount of placeholders
+% created for the number of groundstations being used.
+%
 %
 %   INPUTS
 %   VARIABLE        SIZE    DESCRIPTION (Optional/Default)
@@ -128,6 +136,8 @@ function [y,H,R] = gsmeasCon(obj,t,x,options)
 %                                         using the NDOSL list at every 
 %                                         time step
 %   Russell Carpenter   02/11/2011      Added useAngles option
+%   Phillip Anderson    06/28/2013      Incorporated solve for and consider
+%                                       functionality from John Gaebler
 
 %% Get values from options
 gsID         = getOdtbxOptions(options, 'gsID', [] );
@@ -145,30 +155,16 @@ Sched        = getOdtbxOptions(options, 'Schedule',[]); %Tracking Schedule
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit+2*useAngles;
 Type         = getOdtbxOptions(options, 'rangeType','2way');
 
-% solve        = getOdtbxOptions(options, 'solvefor',[]);
-% dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
-% loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
-
 
 num_sf = length(obj.solve.user_order);
 num_dc = length(obj.dyn_cons.user_order);
 num_lc = length(obj.loc_cons.user_order);
 if isempty(num_dc),num_dc = 0;end
 if isempty(num_lc),num_lc = 0;end
-% allfound = regexp(keys(obj.param_order),'\w*(TRP-)\w*','match')
-% notempty = allfound((~cellfun('isempty',allfound)==1))
-% if ~isempty(notempty)
-%     ind_trop = values(obj.param_order,[notempty{:}]')
-% else
-%     ind_trop = [];
-% end
 
-% obj
-% loc_cons
-% obj.loc_cons.param
-% ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3))
-% ind_trop = num_sf + num_dc + find(strncmpi(loc_cons,'TRP',3))
-
+% Ionospheric or Tropospheric consider parameters must start with 'ION' or
+% 'TRP', respectively. These titles are placeholders, so beyond that they
+% can be called anything.
 ind_iono = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'ION',3));
 ind_trop = num_sf + num_dc + find(strncmpi(obj.loc_cons.param,'TRP',3));
 
@@ -293,15 +289,6 @@ else
         indstop                      = numtypes*n;
         y(indstart:indstop, tind)    = y1;
         
-%         indstart
-%         indstop
-%         num_sf
-% %                     ind_iono(n)
-%         ind_trop(n)
-%         [1:num_sf ind_trop(n)]
-%         size(H1)
-%         size(H)
-%         
         if ~isempty(ind_iono) && ~isempty(ind_trop)
             H(indstart:indstop, [1:num_sf ind_iono(n) ind_trop(n)], tind) = H1; 
         elseif ~isempty(ind_iono)
@@ -321,7 +308,7 @@ if strcmpi(Type,'2way')
 end
 
 %% Add consider parameter data to H
-bias = strncmpi(obj.loc_cons.user_order,'MEASBI',6);
+bias = strncmpi(obj.loc_cons.param,'MEASBI',6);
 numbias=sum(bias);
 mbi = find(bias)+ num_sf + num_dc;
 

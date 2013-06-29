@@ -1,7 +1,7 @@
 function [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld)
 % JATFORCESCON  Returns derivatives of JAT Force models (state in meters).
 %
-%   xDot = jatForces(t,x,jatWorld) returns the derivatives of the JAT
+%   xDot = jatForcesCon(obj,t,x,jatWorld) returns the derivatives of the JAT
 %   force models specified in the given jatWorld java object for an 
 %   Earth-centric orbit. jatWorld is created by calling CREATEJATWORLD once
 %   prior to simulation/integration.
@@ -9,7 +9,7 @@ function [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld)
 %   JAT expects the input state to be in units of m and m/s. This file
 %   expects the same input units and keeps the same units for the outputs.
 %
-%   [xDot,A] = jatForces(t,x,jatWorld) also returns the Jacobian (the state
+%   [xDot,A] = jatForcesCon(obj,t,x,jatWorld) also returns the Jacobian (the state
 %   derivatives of the equations of motion) if possible; otherwise an []
 %   empty matrix is returned. Partials are only returned from JAT for
 %   atmospheric drag and gravity. The gravitational partials are either
@@ -22,13 +22,17 @@ function [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld)
 %   function or in a user-provided wrapper function that calls this 
 %   function.
 %
-%   [xDot,A,Q] = jatForces(t,x,jatWorld) also returns the process noise
+%   [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld) also returns the process noise
 %   matrix that is hardcoded within this file.
+%
+%   Consider parameters currently accepted: 'EARTH-GM', 'SOLAR-GM',
+%   'LUNAR-GM', 'SOLRAD 8'
+%
 %
 %   INPUTS
 %   VARIABLE        SIZE    	DESCRIPTION (Optional/Default)
 %       obj         object      Object containing solve for and consider
-%                               paramters
+%                               parameters (solve_consider.m)
 %       t           (1xn)       Time since start of simulation (secs)
 %       x           (6xn)       Input state (x,y,z position in meters 
 %                               followed by x,y,z velocity in m/s)
@@ -93,6 +97,10 @@ function [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld)
     if isKey(obj.param_order, 'SOLRAD 8')
         Fsri = obj.param_order('SOLRAD 8');
     end
+    % To add parameters, introduce a new key here:
+%     if isKey(obj.param_order, 'MYNEWKEY')
+%         Fmynewkey = obj.param_order('MYNEWKEY');
+%     end
 
     x=x(1:6,:)*1000; % conversion km -> m
 
@@ -128,6 +136,7 @@ function [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld)
             % 4 Solar Radiation Force
             %
             % If a force is not added, all higher slots are shifted.
+            % Put additional parameters after these
             cur = 0;
             
             % See ODEAS spec for more information as to these derivations
@@ -154,20 +163,26 @@ function [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld)
                 A(4:6,Fmi,i) = A(4:6,Fmi,i) + acc_moon(:,i);
                 cur=cur+1;
             end
-            if useDragPartial 
+            if useDragPartial % Drag
                 A(4:6,1:3,i) = A(4:6,1:3,i) + jatWorld.dragPartials();
                 cur=cur+1;
             end
-            if Fsri
+            if Fsri % Solar radiation
                 SRPjat(:,i) = ...
                     jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray;
                 A(4:6,Fsri,i) = A(4:6,Fsri,i) + (SRPjat(:,i))/1000;% m -> km          +[-3.05073589;6.75748831;2.03244886]*1e-9
                 cur=cur+1;
             end
 
-            % If there are any more consider parameters, they
-            % should go here
-
+            % If there are any other consider parameters, their data
+            % collection should go here.
+            % Reference ODEAS spec to find dForce/dError
+%             if Fmynewkey % New key as defined above
+%                 Accel(:,i) = ...
+%                     jatWorld.spacetime.getForce(cur).acceleration(jatWorld.spacetime.time,jatWorld.spacetime.earthRef,jatWorld.sc).getArray;
+%                 A(4:6,Fmynewkey,i) = A(4:6,Fmynewkey,i) + (Accel(:,i))/1000;% m -> km          +[-3.05073589;6.75748831;2.03244886]*1e-9
+%                 cur=cur+1;
+%             end
         end
     end
 

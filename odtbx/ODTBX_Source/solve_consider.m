@@ -99,8 +99,9 @@ classdef solve_consider
         %% External Force Models
         
         function [xDot,A,Q] = extForces(obj,t,x,jatWorld)
-            
-            % Interface maintains compatibility with jatForces?
+        % See individual functions to see which consider parameters are
+        % accepted
+
             if (strcmpi(obj.external_force, 'jat'))
                 [xDot,A,Q] = jatForcesCon(obj,t,x,jatWorld);
             elseif (strcmpi(obj.external_force, 'gmat'))
@@ -119,6 +120,10 @@ classdef solve_consider
         %% Measurement Models
         
         function [y,H,R] = meas(obj,t,x,options)
+            % loc_cons parameters are placeholders- they save a spot in P
+            % for the results. If the user declares that they want those
+            % out, we should make sure that the parameters are actually
+            % used in the options structure.
             cons_iono_flag = any(strncmpi(obj.loc_cons.param,'ION',3));
             cons_trop_flag = any(strncmpi(obj.loc_cons.param,'TRP',3));
             
@@ -129,7 +134,7 @@ classdef solve_consider
                 options=setOdtbxOptions(options,'useTroposphere',true);
             end
             
-            
+            % Call the desired function
             if (strcmpi(obj.external_meas, 'gsmeas'))
                 [y,H,R] = gsmeasCon(obj,t,x,options);
             else

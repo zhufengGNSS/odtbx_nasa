@@ -231,12 +231,8 @@ function [failed] = estbatCon_test
     % Load data for regression testing:
     load estbatCon_test.mat;
 
-%     size(t{:})
-%     fprintf('%7.1f\n',t_b)
-    t_a = cell2mat(t);
     for(a=1:length(t_b))
-        dt = t_a(a) - t_b(a);
-%         fprintf('%7.1f\n',dt)
+        dt = t(a) - t_b(a);
         if(any(dt))
             failed = 1;
             fprintf(2, '\n *** estbatCon_test: t test failed.\n');
@@ -245,7 +241,6 @@ function [failed] = estbatCon_test
     
     dx_max = 0.6;
     
-%     xhat_a = cell2mat(xhat);
     for(a=1:length(xhat))
         dx = abs(xhat(a) - xhat_b(a));
         if(max(max(dx)) > dx_max)
@@ -256,10 +251,8 @@ function [failed] = estbatCon_test
     end
     disp(max(max(dx)))
     
-%     dP_max = 3.5e-7;
-    dP_max = 3.5e-5;
-%     00006
-%     Phat_a = cell2mat(Phat);
+    dP_max = 3.5e-7;
+%     dP_max = 3.5e-5;
     for(a=1:length(Phat))
         dP = abs(Phat(a) - Phat_b(a));
         if(max(max(dP)) > dP_max)
@@ -271,9 +264,8 @@ function [failed] = estbatCon_test
     
     de_max = 0.85;
     
-    e_a = cell2mat(e);
     for(a=1:length(e))
-        de = abs(e_a(a) - e_b(a));
+        de = abs(e(a) - e_b(a));
         if(max(max(de)) > de_max)
             failed = 1;
             disp(max(max(de)))
@@ -283,7 +275,6 @@ function [failed] = estbatCon_test
     
     dy_max = 0.75;
     
-%     y_a = cell2mat(Yref);
     for(a=1:length(y_b))
         dy = abs(Yref(a) - y_b(a));
         if(max(max(dy)) > dy_max)
@@ -293,42 +284,36 @@ function [failed] = estbatCon_test
         end
     end
     
-%     Pa_a = cell2mat(Pa);
     if((max(max(max(abs(Pa - Pa_b))))) > eps)
         failed = 1;
         disp(max(max(max(abs(Pa - Pa_b)))));
         fprintf(2, '\n *** estbatCon_test: Pa test failed.\n');
     end
     
-%     Pv_a = cell2mat(Pv);
     if((max(max(max(abs(Pv - Pv_b))))) > eps)
         failed = 1;
         disp(max(max(max(abs(Pv - Pv_b)))));
         fprintf(2, '\n *** estbatCon_test: Pv test failed.\n');
     end
     
-%     Pw_a = cell2mat(Pw);
     if((max(max(max(abs(Pw - Pw_b))))) > eps)
         failed = 1;
         disp(max(max(max(abs(Pw - Pw_b)))));
         fprintf(2, '\n *** estbatCon_test: Pw test failed.\n');
     end
     
-%     Phata_a = cell2mat(Phata);
     if((max(max(max(abs(Phata - Phata_b))))) > eps)
         failed = 1;
         disp(max(max(max(abs(Phata - Phata_b)))));
         fprintf(2, '\n *** estbatCon_test: Phata test failed.\n');
     end
     
-%     Phatv_a = cell2mat(Phatv);
     if((max(max(max(abs(Phatv - Phatv_b))))) > eps)
         failed = 1;
         disp(max(max(max(abs(Phatv - Phatv_b)))));
         fprintf(2, '\n *** estbatCon_test: Phatv test failed.\n');
     end
     
-%     Phatw_a = cell2mat(Phatw);
     if((max(max(max(abs(Phatw - Phatw_b))))) > eps)
         failed = 1;
         disp(max(max(max(abs(Phatw - Phatw_b)))));

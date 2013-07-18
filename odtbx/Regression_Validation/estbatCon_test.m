@@ -76,16 +76,30 @@ function [failed] = estbatCon_test
     % sigc=[0.3;0.3e-6;10e-6;1.37e-6;15e-3;15e-3;15e-3;1.0;1.0;1.0];
     sigc=[0.3;0.3e-6;10e-6;1.37e-6;15e-3;15e-3;15e-3;0.045;0.045;0.045];
 
-    %% Build time span
+%% Build time span
 
-    % Basic output requirements
-    obt=0:1:2880; % every 60 min for 48 hrs
+% Basic output requirements
+% obt=0:1:2880; % [h] - every 60 min for 48 hrs - INCORRECT
+obt=0:60:100; % [m] - every 60 min for 48 hrs
 
-    GStimes=[37:10/60:259,283:10/60:751,752:10/60:1080]; % every 10 seconds during three contacts
+GStimes=[37:10/60:259,283:10/60:751,752:10/60:1080]; % [m] - every 10 seconds during three contacts
 
-    tspan=union(GStimes,obt)*60;
+% The simulation is only run over the interval obt, no matter what the
+% scheduled ground station times are
+index = 1;
+GS_in_time_range = [];
+for time = 1:length(GStimes)
+    if GStimes(time) > min(obt) && GStimes(time) < max(obt)
+%         fprintf('%4i < %4.2f < %4i\n',min(obt),GStimes(time),max(obt))
+        GS_in_time_range(index) = GStimes(time);
+        index = index + 1;
+    end
+end
 
-    clear GStimes obt
+% tspan=union(GStimes,obt)*60;
+tspan = union(GS_in_time_range, obt) * 60;
+
+clear GStimes obt
 
     %% DYNAMICS
 
@@ -231,7 +245,7 @@ function [failed] = estbatCon_test
     % Load data for regression testing:
     load estbatCon_test.mat;
 
-    for(a=1:length(t_b))
+    for a=1:length(t_b)
         dt = t(a) - t_b(a);
         if(any(dt))
             failed = 1;
@@ -241,7 +255,7 @@ function [failed] = estbatCon_test
     
     dx_max = 0.6;
     
-    for(a=1:length(xhat))
+    for a=1:length(xhat)
         dx = abs(xhat(a) - xhat_b(a));
         if(max(max(dx)) > dx_max)
             failed = 1;
@@ -253,7 +267,7 @@ function [failed] = estbatCon_test
     
     dP_max = 3.5e-7;
 %     dP_max = 3.5e-5;
-    for(a=1:length(Phat))
+    for a=1:length(Phat)
         dP = abs(Phat(a) - Phat_b(a));
         if(max(max(dP)) > dP_max)
             failed = 1;
@@ -264,7 +278,7 @@ function [failed] = estbatCon_test
     
     de_max = 0.85;
     
-    for(a=1:length(e))
+    for a=1:length(e)
         de = abs(e(a) - e_b(a));
         if(max(max(de)) > de_max)
             failed = 1;
@@ -275,7 +289,7 @@ function [failed] = estbatCon_test
     
     dy_max = 0.75;
     
-    for(a=1:length(y_b))
+    for a=1:length(y_b)
         dy = abs(Yref(a) - y_b(a));
         if(max(max(dy)) > dy_max)
             failed = 1;

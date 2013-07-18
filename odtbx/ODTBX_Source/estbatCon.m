@@ -708,7 +708,8 @@ end
 [~,~,R,Pdyt] = ominuscCon(datfun.tru,tspan,Xref,Yref,options,P,datarg.tru);
 
 % Estimated
-[y,~,~,Pdy] = ominuscCon(datfun.est,t,Xsref,Ybar,options,Phat,datarg.est); 
+% [y,~,~,Pdy] = ominuscCon(datfun.est,t,Xsref,Ybar,options,Phat,datarg.est); 
+[~,~,~,Pdy] = ominuscCon(datfun.est,t,Xsref,Ybar,options,Phat,datarg.est); 
 
 
 % NOTE: For the demomode examples plotted below, the pre- and
@@ -947,12 +948,12 @@ end
 for i = 1:length(S)
     e(:,i) = Xsref(:,i) - S(:,:,i)*Xref(:,i); 
 end
-% keyboard;
 
 if nargout >= 3,
     varargout{1} = t;
 %     varargout{2} = Xhat;
     varargout{2} = Xsref;
+    xhat = Xsref;
     varargout{3} = Phat;
 end
 if nargout >= 4,
@@ -960,7 +961,8 @@ if nargout >= 4,
 end
 if nargout >= 5,
 %     varargout{5} = Ybar;
-    varargout{5} = y;
+%     varargout{5} = y;
+    varargout{5} = Yref;
 end
 if nargout >= 6,
     varargout{6} = Pa;
@@ -979,6 +981,10 @@ end
 if nargout >= 14
     varargout{14} = Pdyt;
 end 
+
+% save('estbatCon_test','t','xhat','Phat','e','Yref','Pa','Pv','Pw',...
+%     'Phata','Phatv','Phatw','Sigma_a','Pdy','Pdyt');
+
 end % function
 
 % function x = robustls(A,b)

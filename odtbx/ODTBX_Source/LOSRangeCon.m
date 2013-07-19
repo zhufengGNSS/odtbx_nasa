@@ -31,18 +31,31 @@ function varargout = LOSRangeCon(obj, t, r1, r2, options)
 % OUTPUTS
 %      range     (1xN)  range (km)
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.  
+%  These have been moved to LOSRange_test.m in the regression testing
+%  framework to conform with the new testing format.  
 %
 % keyword: measurement
 % See also LOSRANGERATE, LOSDOPPLER, RRDOT, RRDOTLT
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
 %  REVISION HISTORY
 %   Author      		Date         	Comment
@@ -60,26 +73,8 @@ function varargout = LOSRangeCon(obj, t, r1, r2, options)
 %                                       jatStaAzEl.m
 %   Kevin Berry         06/25/2009      Fixed time scale discrepancy in 
 %                                       GPSIono
-
-%% Determine whether this is an actual call to the program or a test
-
-if strcmpi(t,'ValidationTest')||strcmpi(t,'RegressionTest')
-    range = losrange_validation_test();  
-else
-    if nargout==2
-        [range,H]=GetRange(obj,t,r1,r2,options);
-        varargout{1}=range;
-        varargout{2}=H;
-    elseif nargout==1
-        range=GetRange(obj,t,r1,r2,options);
-        varargout{1}=range;
-    end
-end
-end
-
-
-%% Main function
-function varargout = GetRange(obj, t, r1, r2, options)
+%   Phillip Anderson    07/81/2013      Updated to support object-oriented
+%                                       code
 
 useGPSIono = getOdtbxOptions(options, 'useGPSIonosphere', false );
 useIono    = getOdtbxOptions(options, 'useIonosphere', false );
@@ -181,41 +176,41 @@ end
 end
 
 %% Validation Test
-
-function failed = losrange_validation_test()
-
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-fprintf('%20s%28s%25s%20s\n','Pos 1 (km)','Pos 2 (km)','R-Expected (km)','R-Calculated (km)')
-fprintf('%s\n\n',char(ones(1,92)*'-'));
-
-tol = 1e-7;
-options = odtbxOptions('measurement');
-options = setOdtbxOptions(options,'epoch',datenum('Jan 1 2006'));
-options = setOdtbxOptions(options,'useGPSIonosphere',false);
-options = setOdtbxOptions(options,'useIonosphere',false);
-options = setOdtbxOptions(options,'useTroposphere',false);
-options = setOdtbxOptions(options,'useChargedParticle',false);
-
-t=(1:9)*60*60;
-e1 = [10000; 0; 0]; e2 = [0; 10000; 0]; e3 = [0; 0; 10000];
-r1 = [e1 e1 e1 e2 e2 e2 e3 e3 e3];
-r2 = [e1 e2 e3 e1 e2 e3 e1 e2 e3];    
-
-ExRange = [0 sqrt(2e8) sqrt(2e8) sqrt(2e8) 0 sqrt(2e8) sqrt(2e8) sqrt(2e8) 0];
-Range = GetRange(t, r1, r2, options);
-
-fprintf('%8.2f %8.2f %8.2f %10.2f %8.2f %8.2f %16.6f %16.6f\n',...
-    [r1; r2; ExRange; Range]);
-
-passed = tol > max( abs( ExRange - Range ) );
-failed = ~passed;
-if failed
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
-end
-end
+%
+%function failed = losrange_validation_test()
+%
+%disp(' ')
+%disp('Performing Test....')
+%disp(' ')
+%fprintf('%20s%28s%25s%20s\n','Pos 1 (km)','Pos 2 (km)','R-Expected (km)','R-Calculated (km)')
+%fprintf('%s\n\n',char(ones(1,92)*'-'));
+%
+%tol = 1e-7;
+%options = odtbxOptions('measurement');
+%options = setOdtbxOptions(options,'epoch',datenum('Jan 1 2006'));
+%options = setOdtbxOptions(options,'useGPSIonosphere',false);
+%options = setOdtbxOptions(options,'useIonosphere',false);
+%options = setOdtbxOptions(options,'useTroposphere',false);
+%options = setOdtbxOptions(options,'useChargedParticle',false);
+%
+%t=(1:9)*60*60;
+%e1 = [10000; 0; 0]; e2 = [0; 10000; 0]; e3 = [0; 0; 10000];
+%r1 = [e1 e1 e1 e2 e2 e2 e3 e3 e3];
+%r2 = [e1 e2 e3 e1 e2 e3 e1 e2 e3];    
+%
+%ExRange = [0 sqrt(2e8) sqrt(2e8) sqrt(2e8) 0 sqrt(2e8) sqrt(2e8) sqrt(2e8) 0];
+%Range = GetRange(t, r1, r2, options);
+%
+%fprintf('%8.2f %8.2f %8.2f %10.2f %8.2f %8.2f %16.6f %16.6f\n',...
+%    [r1; r2; ExRange; Range]);
+%
+%passed = tol > max( abs( ExRange - Range ) );
+%failed = ~passed;
+%if failed
+%    disp(' ')
+%    disp('Test Failed!')
+%else
+%    disp(' ')
+%    disp('Test Passed.')
+%end
+%end

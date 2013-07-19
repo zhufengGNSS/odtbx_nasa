@@ -114,6 +114,8 @@ function [y,H,R] = tdrssmeasCon(obj,t,X,options)
 %   Kevin Berry         02/03/2010      Changed to faster gsmeas options
 %   Kevin Berry         04/30/2012      Added default TDRSS locations
 %   Ravi Mathur         08/28/2012      Extracted regression test
+%   Phillip Anderson    07/18/2013      Updated to use object-oriented
+%                                       code, support consider parameters
 
 %% Get values from options
 epoch = getOdtbxOptions(options, 'epoch', NaN); %UTC
@@ -178,7 +180,7 @@ if strcmpi(tdrss.type, 'keplerian')
 
 elseif strcmpi(tdrss.type, 'spephem')
     for n=1:length(tdrss.sat) % More accurate
-        [tdrss.t tdrss.x{n}] = read_spephem(tdrss.sat(n).filename);
+        [tdrss.t, tdrss.x{n}] = read_spephem(tdrss.sat(n).filename);
         tdrss.sat(n).epoch   = tdrss.t(1); %UTC
         epdiff               = (epoch-tdrss.sat(n).epoch)*86400; %secs from tdrss epoch to scenario epoch
         tdrss.sat(n).tspan   = (tdrss.t - tdrss.t(1))*86400 - epdiff;

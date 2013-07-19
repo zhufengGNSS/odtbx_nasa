@@ -137,6 +137,8 @@ classdef solve_consider
             % Call the desired function
             if (strcmpi(obj.external_meas, 'gsmeas'))
                 [y,H,R] = gsmeasCon(obj,t,x,options);
+            elseif (strcmpi(obj.external_meas, 'tdrssmeas'))
+                [y,H,R] = tdrssmeasCon(obj,t,x,options);
             else
                 disp 'Measurement function not recognized.'
             end

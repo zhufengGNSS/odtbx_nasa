@@ -112,19 +112,6 @@ useRangeRate    = getOdtbxOptions(options, 'useRangeRate', true );
 useDoppler      = getOdtbxOptions(options, 'useDoppler', false );
 useUnit         = getOdtbxOptions(options, 'useUnit', false );
 useAngles       = getOdtbxOptions(options, 'useAngles', false );
-% solve        = getOdtbxOptions(options, 'solvefor',[]);
-% dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
-% loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
-
-% num_sf = length(solve);
-% num_dc = length(dyn_cons);
-% num_lc = length(loc_cons);
-% if isempty(num_dc),num_dc = 0;end
-% if isempty(num_lc),num_lc = 0;end
-% ind_iono = num_sf + num_dc + find(strncmpi(loc_cons,'ION',3));
-% if size(x,1)<max(ind_iono)
-%     ind_iono=[];
-% end
 
 cons_iono_flag = any(strncmpi(obj.loc_cons.param,'ION',3));
 cons_trop_flag = any(strncmpi(obj.loc_cons.param,'TRP',3));

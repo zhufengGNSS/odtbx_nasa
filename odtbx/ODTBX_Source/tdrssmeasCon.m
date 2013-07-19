@@ -1,4 +1,4 @@
-function [y,H,R] = tdrssmeasCon(t,X,options)
+function [y,H,R] = tdrssmeasCon(obj,t,X,options)
 % TDRSSMEAS  Makes TDRSS based measurements.
 %
 %   [y,H,R] = TDRSSMEAS(t,x,options) creates TDRSS measurements
@@ -33,15 +33,14 @@ function [y,H,R] = tdrssmeasCon(t,X,options)
 %   trdss               structure(km, radians) Structure of all TDRS data
 %       Keplerian Version:
 %           tdrss.type         = 'Keplerian';
-%           tdrss.sat(i).epoch = datenum([2008  9 26  0  0   .000]); %UTC
-%           tdrss.sat(i).sma   = 42165.3431; %semi-major axis in km
-%           tdrss.sat(i).ecc   = 0.00026248; %eccentricity
-%           tdrss.sat(i).incl  = 1.7350*pi/180; %inclination in radians
-%           tdrss.sat(i).raan  = 278.2107*pi/180; %right ascension of the
-%                                                 ascending node in radians
-%           tdrss.sat(i).argp  = 270.1285*pi/180; %argument of periapse in
-%                                                 radians
-%           tdrss.sat(i).tran  = 135.9336*pi/180; %true anomaly in radians
+%           tdrss.sat(i).epoch = datenum('30 Apr 2012 18:00:00.000'); %UTC
+%           tdrss.sat(i).sma   = 42164.1363; %semi-major axis in km
+%           tdrss.sat(i).ecc   = 0; %eccentricity
+%           tdrss.sat(i).incl  = 0; %inclination in radians
+%           tdrss.sat(i).raan  = 88*pi/180; %right ascension of the
+%                                            ascending node in radians
+%           tdrss.sat(i).argp  = 0; %argument of periapse in radians
+%           tdrss.sat(i).tran  = 0; %true anomaly in radians
 %       Ephem Version:
 %           tdrss.type            = 'SPEphem';
 %           tdrss.sat(1).filename = 'TD0_SPephem_2008270.txt'; %TDRS-East
@@ -74,19 +73,32 @@ function [y,H,R] = tdrssmeasCon(t,X,options)
 %      H            (Mx6xN) measurement partials matrix
 %      R            (MxMxN) measurement covariance
 %
-% VALIDATION TEST
+% VALIDATION/REGRESSION TEST
 %
-%  To perform a validation test, pass in 'ValidationTest' as the
-%  only input argument and specify only one output argument.
-%
-% REGRESSION TEST
-%
-%  To perform a regression test, pass in 'RegressionTest' as the
-%  only input argument and specify only one output argument.
+%   These tests have been moved to EarthOrbitPlot_test.m to conform to
+%   the new regression testing format.
 %
 %   keyword: measurement
 %   See also LOSRANGE, LOSRANGERATE, LOSDOPPLER, ODTBXOPTIONS, GSMEAS,
 %   READ_SPEPHEM
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
 %  REVISION HISTORY
 %   Author      		Date         	Comment
@@ -100,20 +112,8 @@ function [y,H,R] = tdrssmeasCon(t,X,options)
 %   Kevin Berry         06/25/2009      Added time scale comments
 %   Brandon Farzad      08/06/2009      Added Scheduling capabilities
 %   Kevin Berry         02/03/2010      Changed to faster gsmeas options
-
-%% Determine whether this is an actual call to the program or a test
-
-if strcmpi(t,'ValidationTest')||strcmpi(t,'RegressionTest')
-    y = tdrssmeas_test();
-else
-    [y,H,R] = Get_tdrssmeas(t,X,options);
-end
-end
-
-
-%% Main function
-function [y,H,R] = Get_tdrssmeas(t,X,options)
-
+%   Kevin Berry         04/30/2012      Added default TDRSS locations
+%   Ravi Mathur         08/28/2012      Extracted regression test
 
 %% Get values from options
 epoch = getOdtbxOptions(options, 'epoch', NaN); %UTC
@@ -128,25 +128,35 @@ numtypes     = useRange + useRangeRate + useDoppler;
 ephemer   = getOdtbxOptions(options, 'EphemerisError',[]); % ephem has const,growth,Ei
 
 if isnan(epoch); error('An epoch must be set in the options structure.'); end
-if isempty(tdrss); error('tdrss state information must be set in the options structure'); end
 if size(t,1)==length(t), t=t'; end
+if isempty(tdrss) % Use default tdrss locations
+    % From http://nssdc.gsfc.nasa.gov/multi/tdrs.html, The operational 
+    % spacecraft are located at 41°, 174° and 275° West longitude
+    w = [0;0;JATConstant('wEarth')];
+    D = jatDCM('ecef2eci', epoch, 0);
+    M = rotransf(-D*w,D);
+    
+    tdrss.type = 'Keplerian';
+    tdrss.sat(1).epoch = epoch; %UTC
+    tdrss.sat(1).sma   = 42164.1363; %semi-major axis in km
+    tdrss.sat(1).ecc   = 0; %eccentricity
+    tdrss.sat(1).incl  = 0; %inclination in radians
+    X_ecef=[42164.1363*cosd(-41);42164.1363*sind(-41);0;0;0;0];
+    X_eci = M(1:6,1:6)*X_ecef;
+    tdrss.sat(1).raan  = atan2(X_eci(2),X_eci(1)); %right ascension of the ascending node in radians
+    tdrss.sat(1).argp  = 0; %argument of periapse in radians
+    tdrss.sat(1).tran  = 0; %true anomaly in radians
 
-x=X(1:6,:);
-if isfield(ephemer,'const') && size(X,1)==7 % assume ephem only appears in truth options...
-    xf=X(7,1); % PULL FIRST ELEMENT BECAUSE IT SHOULD BE CONSTANT!!!!!!
-%     if ~isfield(ephem,'phi')
-%         ephem.phi=rand*2*pi;
-%         ephem.theta=rand*2*pi;
-%     end
-    omega=0.7272205217e-4;
-    eflag=true;
-    hsize=7;
-else
-    eflag=false;
-    hsize=6;
+    tdrss.sat(2) = tdrss.sat(1);    
+    X_ecef=[42164.1363*cosd(-174);42164.1363*sind(-174);0;0;0;0];
+    X_eci = M(1:6,1:6)*X_ecef;
+    tdrss.sat(2).raan  = atan2(X_eci(2),X_eci(1)); %right ascension of the ascending node in radians
+    
+    tdrss.sat(3) = tdrss.sat(1);  
+    X_ecef=[42164.1363*cosd(-275);42164.1363*sind(-275);0;0;0;0];
+    X_eci = M(1:6,1:6)*X_ecef;
+    tdrss.sat(3).raan  = atan2(X_eci(2),X_eci(1)); %right ascension of the ascending node in radians
 end
-theta=cell(size(tdrss.sat));
-dx=cell(size(tdrss.sat));
 
 %% Get TDRS state
 if strcmpi(tdrss.type, 'keplerian')
@@ -163,9 +173,7 @@ if strcmpi(tdrss.type, 'keplerian')
         epdiff = (epoch-tdrss.sat(n).epoch)*86400; %secs from tdrss epoch to scenario epoch
 
         GM         = JATConstant('muEarth')/10^9;
-        KOEf = kepprop2b(tdrss.sat(n),tdrss.sat(n).tspan+epdiff,GM);
-%         theta{n}=KOEf.tran;
-        tdrss.x{n} = kep2cart(KOEf,GM);
+        tdrss.x{n} = kep2cart(kepprop2b(tdrss.sat(n),tdrss.sat(n).tspan+epdiff,GM),GM);
     end
 
 elseif strcmpi(tdrss.type, 'spephem')
@@ -174,35 +182,16 @@ elseif strcmpi(tdrss.type, 'spephem')
         tdrss.sat(n).epoch   = tdrss.t(1); %UTC
         epdiff               = (epoch-tdrss.sat(n).epoch)*86400; %secs from tdrss epoch to scenario epoch
         tdrss.sat(n).tspan   = (tdrss.t - tdrss.t(1))*86400 - epdiff;
-        KOEf = kepprop2b(tdrss.sat(n),tdrss.sat(n).tspan+epdiff,GM);
-%         theta{n} = KOEf.tran;
     end
 else
     error([tdrss.type ' is not a supported state type'])
 end
 
-if eflag
-%     thetaC=[0 2*pi/3 4*pi/3];
-    for n=1:length(tdrss.sat)
-        if ephemer.const
-%             theta{n}(:)=thetaC(n);
-%             E=epherr(ephemer.Ei,omega,theta{n},ephemer.growth);
-            zt=zeros(size(t));
-            E=epherr(ephemer.Ei,omega,zt,ephemer.growth,ephemer.theta(n),ephemer.phi(n));
-        else
-%             E=epherr(ephemer.Ei,omega,theta{n},ephemer.growth);
-            E=epherr(ephemer.Ei,omega,t,ephemer.growth,ephemer.theta(n),ephemer.phi(n));
-        end
-        [~,dx{n}] = rot2cart(tdrss.sat(n).tspan,tdrss.x{n},[],E); % RIC -> XYZ
-        dx{n}=dx{n}{:};
-        tdrss.x{n} = tdrss.x{n} + xf*dx{n};
-    end
-end
-
 %% Loop over all TDRS Satellites
 %initialize Y and H and R
 y    = nan(length(tdrss.sat)*numtypes,length(t));
-H    = zeros(length(tdrss.sat)*numtypes,hsize,length(t));
+%H    = zeros(length(tdrss.sat)*numtypes,hsize,length(t));
+H    = zeros(length(tdrss.sat)*numtypes,6,length(t));
 R = [];
 
 % gsIDs    = {'WSGT','GTSS'};
@@ -258,13 +247,12 @@ for n=1:length(tdrss.x)
                 options); %calculate the Space leg
             if length(t2_lt)==2 %then it was a 2way measurement
                 options       = setOdtbxOptions(options,'rangeType','1wayFWD');
-                [yg1,Hg1]      = gsmeas(t2_lt{1}, x2_lt{1}, options); %calculate the FWD Ground leg
+                yg1     = gsmeas(t2_lt{1}, x2_lt{1}, options); %calculate the FWD Ground leg
                 options       = setOdtbxOptions(options,'rangeType','1wayRTN');
-                [yg2,Hg2]     = gsmeas(t2_lt{2}, x2_lt{2}, options); %calculate the RTN Ground leg
+                yg2           = gsmeas(t2_lt{2}, x2_lt{2}, options); %calculate the RTN Ground leg
                 yg            = (yg1+yg2)/2; %average the ground legs
-                Hg            = (Hg1+Hg2)/2; % average the ground legs
             else %else it was a 1way measurement and gsmeas will know which way
-                [yg, Hg] = gsmeas(t2_lt{1}, x2_lt{1}, options); %calculate the Ground legl
+                yg = gsmeas(t2_lt{1}, x2_lt{1}, options); %calculate the Ground legl
             end
         else
             if isequal(tdrss.sat(n).tspan,t1)
@@ -272,8 +260,8 @@ for n=1:length(tdrss.x)
             else
                 x2 = interp1(tdrss.sat(n).tspan,tdrss.x{n}',t1,'spline')'; %interpolate the TDRS position to time t1
             end
-            [ys, Hs] = rrdot(t1,x1,x2,options); %calculate the Space leg
-            [yg, Hg] = gsmeas(t1,x2,options); %calculate the Ground leg
+            [ys, Hs] = rrdotangCon(obj,t1,x1,x2,options); %calculate the Space leg
+            yg = gsmeasCon(obj,t1,x2,options); %calculate the Ground leg
         end
 
         %% Apply the antenna constraints
@@ -306,15 +294,6 @@ for n=1:length(tdrss.x)
         indstart = 1 + numtypes*(n-1);
         indstop  = numtypes*n;
         y(indstart:indstop, tind)    = ys+ yg;
-        Hf=zeros(numtypes,1,length(tind));
-        if eflag
-            for nt=1:numtypes
-                for dN=1:length(tind)
-                    Hf(nt,1,dN) = (Hg(nt,:,dN)-Hs(nt,:,dN))*dx{n}(:,tind(dN));
-                end
-            end
-            H(indstart:indstop,7,tind) = Hf;
-        end
         H(indstart:indstop, 1:6, tind) = Hs;%the ground leg drops out of the partial derivatives
     end
 end
@@ -331,132 +310,6 @@ if nargout > 2,
     end
     sigma           = diag(sigma);
     R = repmat(sigma.^2,[1,1,size(y,2)]);
-end
-
-end
-
-%% Validation Test
-
-function failed = tdrssmeas_test()
-%gsList = createGroundStationList();
-disp(' ')
-disp(' ')
-disp('Performing Test....')
-disp(' ')
-
-tol = 1e-7;
-tdrss.type  = 'Keplerian'; % Input TDRS States as Keplarian Elements
-% TDRS East
-tdrss.sat(1).epoch = datenum([2008  9 26  0  0   .000]); %UTC epoch
-tdrss.sat(1).sma  = 42165.3431; %semi-major axis
-tdrss.sat(1).ecc  = 0.00026248; %eccentricity
-tdrss.sat(1).incl = 1.7350*pi/180; %inclination
-tdrss.sat(1).raan = 278.2107*pi/180; %right ascension of the ascending node
-tdrss.sat(1).argp = 270.1285*pi/180; %argument of periapse
-tdrss.sat(1).mean = 135.9127*pi/180; %mean anomaly
-% TDRS West
-tdrss.sat(2).epoch = datenum([2008  9 26  0  0   .000]); %UTC epoch
-tdrss.sat(2).sma  = 42166.4487; %semi-major axis
-tdrss.sat(2).ecc  = 0.00030059; %eccentricity
-tdrss.sat(2).incl = 8.5680*pi/180; %inclination
-tdrss.sat(2).raan = 61.9693*pi/180; %right ascension of the ascending node
-tdrss.sat(2).argp = 92.0025*pi/180; %argument of periapse
-tdrss.sat(2).mean = 37.3454*pi/180; %mean anomaly
-% TDRS Spare
-tdrss.sat(3).epoch = datenum([2008  9 26  0  0   .000]); %UTC epoch
-tdrss.sat(3).sma  = 42167.6194; %semi-major axis
-tdrss.sat(3).ecc  = 0.00025831; %eccentricity
-tdrss.sat(3).incl = 9.8973*pi/180; %inclination
-tdrss.sat(3).raan = 54.8622*pi/180; %right ascension of the ascending node
-tdrss.sat(3).argp = 138.8066*pi/180; %argument of periapse
-tdrss.sat(3).mean = 125.6643*pi/180; %mean anomaly
-% Convert mean anomaly to true anomaly
-for n=1:length(tdrss.sat)
-    S.M = tdrss.sat(n).mean;
-    S.ecc = tdrss.sat(n).ecc;
-    tdrss.sat(n).tran = kepanom(S, 'nu'); %true anomaly
-end
-
-% Input TDRS Antenna Data
-tdrss.sat(1).antenna.maxrange  = 70000; %km
-tdrss.sat(1).antenna.halfangle = 13*pi/180; %radians
-tdrss.sat(2).antenna.maxrange  = 70000; %km
-tdrss.sat(2).antenna.halfangle = 13*pi/180; %radians
-tdrss.sat(3).antenna.maxrange  = 70000; %km
-tdrss.sat(3).antenna.halfangle = 13*pi/180; %radians
-
-% Set propagator information
-epoch  = datenum([2008  9 26  0  0   .000]); %UTC epoch
-tspan  = 0:600:3600;
-x0     = [6878;0.00;0.00;0.00;0.00;8.0]; %in km & km/sec
-jOptions = odtbxOptions('force');
-jOptions = setOdtbxOptions(jOptions, 'epoch', epoch); %datenum format
-jatWorld = createJATWorld(jOptions); %creates a java object that stores the
-% default information for propagating Earth-centric orbits using JAT
-% force models.
-eOpts = odtbxOptions('estimator');
-eOpts = setOdtbxOptions(eOpts,'ValidationCase', 0);
-[t,x] = integ(@jatForces_km,tspan,x0,eOpts,jatWorld);
-
-% Measurement Options
-measOptions = odtbxOptions('measurement');
-measOptions = setOdtbxOptions(measOptions,'epoch',epoch); %UTC
-measOptions = setOdtbxOptions(measOptions,'useRange', true);
-measOptions = setOdtbxOptions(measOptions,'useRangeRate', false);
-measOptions = setOdtbxOptions(measOptions,'useDoppler', true);
-measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
-measOptions = setOdtbxOptions(measOptions,'useLightTime', false);
-measOptions = setOdtbxOptions(measOptions,'EarthAtmMaskRadius',6478.12); %km
-measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
-
-% Set Expected Results
-y_expected = [
-    77143.8676829857  2835.46917821229               NaN               NaN  77941.4862100122 -6249.96951871453;
-    78228.5123284356 -20780.2992395048               NaN               NaN  79843.3003057668 -25420.8497100346;
-    81412.4520066554 -32498.1098036057   81376.442501345   34456.437489037  83240.3532719398 -31819.6509120546;
-    85144.6557209073 -31141.3680452223  77380.2041620424  33700.8409138789  86685.8437713931 -27168.8751418441;
-    NaN               NaN  74065.7701163095  22895.1417907037               NaN               NaN;
-    NaN               NaN  72406.4859646846  5497.55474322249               NaN               NaN;
-    NaN               NaN  72840.7066213739 -12693.5108798617               NaN               NaN]';
-
-% Display Expected Results
-fprintf('%s\n',char(ones(1,96)*'-'));
-disp('Expected TDRSS Measurements (East, West, and Spare) by time:')
-fprintf('%s\n',char(ones(1,96)*'-'));
-fprintf('%-6s %14s %14s %14s %14s %14s %14s\n','Time','East Range','East Doppler','West Range','West Doppler','Spare Range','Spare Doppler');
-fprintf('%4s %13s %14s %14s %14s %14s %14s\n','(s)','(km)','(Hz)','(km)','(Hz)','(km)','(Hz)');
-fprintf('%s\n',char(ones(1,96)*'-'));
-for n=1:7
-    fprintf('%-6i %14.5f %14.5f %14.5f %14.5f %14.5f %14.5f\n',t(n),y_expected(:,n))
-end
-disp(' ')
-disp(' ')
-
-% Run tdrssmeas
-[y,H,R] = tdrssmeas(t,x,measOptions); %#ok<NASGU>
-% Even though I don't use H and R here, I still need to generate them to
-% test the portion of tdrssmeas that calculates them. If they aren't
-% requested as outputs, then the "nargout > 2" check won't be true.
-
-% Display Results
-fprintf('%s\n',char(ones(1,96)*'-'));
-disp('Calculated TDRSS Measurements (East, West, and Spare) by time:')
-fprintf('%s\n',char(ones(1,96)*'-'));
-fprintf('%-6s %14s %14s %14s %14s %14s %14s\n','Time','East Range','East Doppler','West Range','West Doppler','Spare Range','Spare Doppler');
-fprintf('%4s %13s %14s %14s %14s %14s %14s\n','(s)','(km)','(Hz)','(km)','(Hz)','(km)','(Hz)');
-fprintf('%s\n',char(ones(1,96)*'-'));
-for n=1:7
-    fprintf('%-6i %14.5f %14.5f %14.5f %14.5f %14.5f %14.5f\n',t(n),y(:,n))
-end
-
-passed = tol > max( max( abs( y - y_expected ) ) );
-failed = ~passed;
-if failed
-    disp(' ')
-    disp('Test Failed!')
-else
-    disp(' ')
-    disp('Test Passed.')
 end
 
 end

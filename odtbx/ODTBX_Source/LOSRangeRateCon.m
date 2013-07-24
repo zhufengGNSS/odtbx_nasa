@@ -77,9 +77,6 @@ useGPSIono = getOdtbxOptions(options, 'useGPSIonosphere', false );
 useIono    = getOdtbxOptions(options, 'useIonosphere', false );
 useTropo   = getOdtbxOptions(options, 'useTroposphere', false );
 useChPart  = getOdtbxOptions(options, 'useChargedParticle', false );
-% solve        = getOdtbxOptions(options, 'solvefor',[]);
-% dyn_cons     = getOdtbxOptions(options, 'dynamicConsider',[]);
-% loc_cons     = getOdtbxOptions(options, 'localConsider',[]);
 
 cons_iono_flag = any(strncmpi(obj.loc_cons.param,'ION',3));
 cons_trop_flag = any(strncmpi(obj.loc_cons.param,'TRP',3));

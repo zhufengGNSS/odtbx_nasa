@@ -216,6 +216,7 @@ end
 addpath(fullfile(odtbxPath,'ODTBX_Source'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','JAT_Adapters'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','GMAT_Adapters'));
+addpath(fullfile(odtbxPath,'ODTBX_Source','Integrators'));
 addpath(fullfile(odtbxPath,'ODTBX_Source','meas_sched_gui'));
 addpath(fullfile(odtbxPath,'ODTBX_Examples'));
 addpath(fullfile(odtbxPath,'HTML'));

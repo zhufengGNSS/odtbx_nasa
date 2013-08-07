@@ -54,7 +54,7 @@ VENDOR="$HOME/projects/odtbxsync-git/vendor"
 LOG_PATH="$HOME/log"
 INFO_LOG_FILE="$LOG_PATH/supporting_info.txt"
 
-echo \e "\nODTBX Regression Test script running on `date`" | tee $INFO_LOG_FILE
+echo -e "\nODTBX regression test script running on `date` from $USER@`hostname`.`dnsdomainname`" | tee $INFO_LOG_FILE
 echo "ODTBX Directory = $ODTBX"
 echo "ODTBX Vendor Directory = $VENDOR"
 
@@ -191,7 +191,7 @@ echo -e "\nAfter merge, develop commit = $nextcommit" | tee -a $INFO_LOG_FILE
 # nothing was done during the merge, so there's nothing to test.
 # But if the "-f" flag was given, then always run the regression test.
 if [ "$prevcommit" == "$nextcommit" ] && ! $FORCE ; then
-	echo "Branch develop has not changed. Nothing to test." >> $INFO_LOG_FILE
+	echo "Branch develop has not changed. Nothing to test." | tee -a $INFO_LOG_FILE
 	exit 0
 fi
 
@@ -217,5 +217,5 @@ matlab -nodisplay -r "\
         basePath = '$ODTBX';\
         addpath(basePath);\
         startup();\
-	$MATLABCMD;\
+        $MATLABCMD;\
         quit;"

@@ -1,5 +1,4 @@
-% GS_OPTIONS This is a function of MEAS_SCHED used to select options for
-% the measurement structure.
+% GS_OPTIONS This is a function of MEAS_SCHED used to select options for the measurement structure.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

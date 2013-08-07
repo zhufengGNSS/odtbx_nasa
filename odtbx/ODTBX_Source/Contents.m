@@ -40,6 +40,8 @@
 %   estspf                   - Sigma-Point Filter. 
 %   estsrif                  - Square-Root Information Filter (SRIF)
 %   estval                   - Evaluation of estimator outputs (plotting).
+%   EOPLib                   - This class facilitates the CIO based celestial to terrestrial transformation
+%   IERSLib                  - This class facilitates the CIO based celestial to terrestrial transformation.
 %   fgprop                   - Lagrangian two-body propagation.
 %   fixzoom                  - Fixes the zoom function so that zero stays in view when vertically zooming.
 %   FilterEstCnoThresh       - Filters GPS data structs against an estimated C/No threshold.
@@ -88,7 +90,6 @@
 %   makeGpsTXID              - Creates a blank data structure for describing a GPS transmitter.
 %   makePpData               - Creates a blank data structure for holding GPS physical parameters.
 %   nbodypm                  - N-Body Point Mass dynamics equations.
-%   meas_sched               - GUI tool to interactively edit the ODTBX Options structure.
 %   observ                   - Observability grammian, and possibly mapped innovations.
 %   odtbxOptions             - Returns a valid ODTBX options structure of the input type 
 %   ominusc                  - Innovations, meas. partials, and possibly innovation covariance.
@@ -111,6 +112,7 @@
 %   relativityLightDelay     - Returns light time delay error from relativistic effects
 %   rinexo2gpsdata           - Read RINEX 2.x formatted GPS observation data into a makeGpsData struct.
 %   RinexOReader             - Reads a RINEX 2.x formatted GPS observation data file.
+%   rotate_results           - 3D rotation for estimator output
 %   rotransf                 - Rotational Transformation of Position, Velocity, & Acceleration.
 %   rrdotang                 - Calculate range, range rate, doppler, angles between two objects.
 %   rrdotlt                  - Calls rrdotang with the light time correction

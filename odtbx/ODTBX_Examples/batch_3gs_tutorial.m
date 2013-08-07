@@ -1,10 +1,9 @@
 %% OD Toolbox Tutorial 2: Batch Estimation with Multiple Ground Stations
-%
 % This tutorial will teach you how to use OD Toolbox functions to simulate
 % measurements. In particular, you will learn how to perform the following 
 % analysis with ODTBX:
 %
-% # Perform coordinate transformations
+% # Transform Keplerian elements to Cartesian inertial states
 % # Use ODTBX dynamics functions
 % # Use ODTBX measurement-generation functions
 % # Manipulate the ODTBX Options structure to specify options for the ODTBX
@@ -15,9 +14,8 @@
 % See also: pancake_tutorial
 
 %% Introduction
-%
-% There are 3 ground stations on the Earth, each of which are tracking the
-% same satellite that is in a specified two-body orbit. In this tutorial, your goal is
+% There are 3 ground stations on the Earth, each of which are tracking a 
+% satellite that is in a specified two-body orbit. In this tutorial, your goal is
 % to estimate the satellite's position and velocity using measurements from
 % all ground stations.
 
@@ -174,3 +172,18 @@ plot_results(t,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,Pdy,Pdyt);
 % orbits around a texture-mapped Earth.
 
 EarthOrbitPlot(xhat{1});
+
+%% License 
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.

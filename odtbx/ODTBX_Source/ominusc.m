@@ -91,10 +91,15 @@ if nargout == 4,
     end
     [m,n] = size(dy);
     Pdy = NaN(m,m,mt);
-    ig = [];
-    for k = 1:m
-        ig=union(ig,find(~isnan(dy(k,:))));
-    end
+    
+    % Find the indices of each column of dy that contains at least one
+    % number (i.e. not all NaNs)
+%     ig = [];
+%     for k = 1:m
+%         ig=union(ig,find(~isnan(dy(k,:))),'legacy');
+%     end
+    ig = find(any(~isnan(dy)));
+    
     for k = ig
         if nargin == 8
             ikeep = ~isnan(dy(:,k)) & isel(:,k);

@@ -1,6 +1,5 @@
-% TIME_INFO This is a function of MEAS_SCHED used to change the time
-% visible on the axes.
-
+% TIME_INFO This is a function of MEAS_SCHED used to change the time visible on the axes.
+%
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
 %  more details.)

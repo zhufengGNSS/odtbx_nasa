@@ -13,7 +13,10 @@ function [t,x,te,xe,Phi,Phie,S,Se] = integev(dynfun,tspan,x0,options,dynarg,evtf
 %
 %   [T,X,TE,XE] = INTEGEV(DYNFUN,TSPAN,X0,OPTIONS,DYNARG,EVTFUN) will detect
 %   events specifed by EVTFUN and return the event times and states in TE
-%   and XE.  Event functions have the form 
+%   and XE. 
+%   THIS SIGNATURE WILL SOON BE DEPRECATED. You should specify evtfun
+%   within the ODTBX options structure.
+%   Event functions have the form 
 %      [VALUE,ISTERMINAL,DIRECTION] = EVTFUN(T,X,VARARGIN)
 %   where VALUE, ISTERMINAL, and DIRECTION are vectors for which the ith
 %   element corresponds to the ith event function:
@@ -71,37 +74,51 @@ function [t,x,te,xe,Phi,Phie,S,Se] = integev(dynfun,tspan,x0,options,dynarg,evtf
 
 nx = length(x0);
 nx2 = nx^2;
+
 if nargin < 4 || isempty(options)
     options = odtbxOptions;
 end
+
 if nargin == 6
+    warning('ODTBX:integev', ...
+            ['Function argument evtfun will be deprecated in a future ODTBX version. ' ...
+             'An event function should be specified within the odtbxOptions structure.']);
     options = setOdtbxOptions(options,'OdeSolvOpts',...
-        odeset(options.OdeSolvOpts,'events',evtfun));
+        odeset(options.OdeSolvOpts,'Events',evtfun));
 end
+
 if nargout > 6 % Output process noise
     z0(nx+nx2+1:nx+2*nx2,:) = zeros(nx2,1);
 end
+
 if nargout > 4 % Output STM
     z0(nx+1:nx+nx2,:) = reshape(eye(nx),nx2,1);
 end
+
 z0(1:nx,:) = x0;
 odesolv = getOdtbxOptions(options,'OdeSolver',@ode113);
 odeopts = getOdtbxOptions(options,'OdeSolvOpts',...
-    odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10)); 
-if nargin == 6
+    odeset('reltol',1e-9,'abstol',1e-9,'initialstep',10));
+useevent = ~isempty(odeget(odeopts,'Events')); % Check if an event is defined
+
+if useevent
     [t,z,te,ze] = feval(odesolv,@odefun,tspan,z0,odeopts,options,dynfun,nx,dynarg);
 else
     [t,z] = feval(odesolv,@odefun,tspan,z0,odeopts,options,dynfun,nx,dynarg);
 end
+
 x = z(:,1:nx)';
+
 if nargout > 4 % STM
     nt = length(t);
     Phi = reshape(z(:,nx+1:nx+nx2)',nx,nx,nt);
 end
+
 if nargout > 6 % Process noise
     S = reshape(z(:,nx+nx2+1:end)',nx,nx,nt);
 end
-if nargin == 6 && ~isempty(ze)
+
+if useevent && ~isempty(ze)
     xe = ze(:,1:nx)';
     if nargout > 5
         nte = length(te);

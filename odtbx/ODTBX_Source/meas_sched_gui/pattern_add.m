@@ -1,5 +1,4 @@
-% PATTERN_ADD This is a function of MEAS_SCHED used to create repeating
-% measurements.
+% PATTERN_ADD This is a function of MEAS_SCHED used to create repeating measurements.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

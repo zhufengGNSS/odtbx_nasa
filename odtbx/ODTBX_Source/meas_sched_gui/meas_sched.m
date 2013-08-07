@@ -1,5 +1,4 @@
-% MEAS_SCHED This is a graphical tool used for scheduling ground station
-% measurements
+% MEAS_SCHED This is a graphical tool used for scheduling ground station measurements.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -1708,12 +1707,17 @@ function change_satellite(hObject, eventdata, handles)
                                'vel_z', []);
     end
     
+    global propagator;
+    if (isempty(propagator))
+        propagator = struct('dynfun', [], ...
+                            'dynarg', []);
+    end
+    
     % GUI will gather the data and save it to the structures
     output = satellite_edit('meas_sched', handles.figure1);
     if (~strcmp(output, 'Cancel'))
         % Do the actual propagation of the cartesian state using the specified
         % function
-        global propagator;
         time = time_prop.begin:time_prop.increment:time_prop.end;
         coords = [sat_state_prop.pos_x;
                   sat_state_prop.pos_y;
@@ -1721,15 +1725,20 @@ function change_satellite(hObject, eventdata, handles)
                   sat_state_prop.vel_x;
                   sat_state_prop.vel_y;
                   sat_state_prop.vel_z];
+                      
+        % Pull in the dynarg from the workspace      
+        dynarg = evalin('base',propagator.dynarg);
 
         % Set numerical integration tolerances
         opts = odeset('reltol',1e-9,'abstol',1e-9);      
-        mu = 3.986e5;           % Pancake gravitational parameter
         
+        % Get access to variables where results are stored
         global T;
         global X;
+        
+        % Calculate
         try
-            [T,X] = integ(propagator, time, coords, opts, mu);
+            [T,X] = integ(propagator.dynfun, time, coords, opts, dynarg);
         catch exceptions
             errordlg(exceptions.message, 'Propagation Error!');
         end

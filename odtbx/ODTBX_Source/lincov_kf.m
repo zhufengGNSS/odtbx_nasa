@@ -63,7 +63,16 @@ dynfun=varargin{17};
 dynarg=varargin{18};
 demomode=varargin{19};
 ischmidt=varargin{20};
-options=varargin{21};
+
+% The input ODTBX options structure can be specified singly, or separately
+% for truth and estimated states.
+if all(isfield(varargin{21}, {'tru','est'})),
+    options = varargin{21};
+else
+    options.tru = varargin{21};
+    options.est = options.tru;
+end
+
 
 if nargin > 21
     Pao = varargin{22};
@@ -97,9 +106,9 @@ lentr = length(titer);
 m = size(Yref,1);
 lents = length(tspan);
 % Indices within tint that point back to tspan, i.e., tint(ispan)=tspan
-[~,ispan] = ismember(tspan,tint);
+[~,ispan] = ismember(tspan,tint,'legacy');
 % Find indices within titer that point back to tint
-[~,iint] = ismember(tint,titer);
+[~,iint] = ismember(tint,titer,'legacy');
 
 ns = size(S(:,:,1),1);
 nc = size(C(:,:,1),1);
@@ -255,7 +264,7 @@ for i = 1:lents,
         thisint = iint(ispan(i-1)):iint(ispan(i))-niter;
 
         % True covariance
-        [~,~,Phi,sdum] = integ(dynfun.tru,titer(thisint),Xref(:,ispan(i-1)),options,dynarg.tru);
+        [~,~,Phi,sdum] = integ(dynfun.tru,titer(thisint),Xref(:,ispan(i-1)),options.tru,dynarg.tru);
         if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
             Phi(:,:,2) = Phi(:,:,end);
             Phi = Phi(:,:,1:2);
@@ -275,7 +284,7 @@ for i = 1:lents,
         % Assumed covariance
         % If ischmidt=1, the Phiss corresponds to the full state transition
         % matrix, and not just the solved-for states.  Similarly for Qdhat.
-         [~,~,Phiss,sdum] = integ(dynfun.est,titer(thisint),Xsref(:,ispan(i-1)),options,dynarg.est);
+         [~,~,Phiss,sdum] = integ(dynfun.est,titer(thisint),Xsref(:,ispan(i-1)),options.est,dynarg.est);
          if length(thisint) == 2 % This is because for time vector of length 2, ode outputs >2
              Phiss(:,:,2) = Phiss(:,:,end);
              Phiss = Phiss(:,:,1:2);

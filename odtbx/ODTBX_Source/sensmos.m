@@ -47,7 +47,7 @@ sa = uicontrol(gcf,'style','slider',...
     'units','normalized','position',...
     get(gca,'position')*[1 0 0 0;0 1 0 -.1;0 0 1 0;0 0 0 .1]');
     function ca(~,~)
-        j = get(sa,'value');
+        j = round(get(sa,'value'));
         pcolor(eye(ns+1,ns)*Sig_sa(:,:,j)*eye(n,n+1));
         set(th,'string',datestr(t(j),'HH:MM'))
     end

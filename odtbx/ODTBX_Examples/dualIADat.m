@@ -1,6 +1,8 @@
 function [y H R] = dualIADat(t,x,options)
-% dualIADat Data file for chaser_target_demo example.
-
+% Get measurement values for the chaser_target tutorial.
+% This function is a wrapper for 2 measurement functions: a GPS measurement
+% (via the ODTBX gpsmeas function) and a 'pose' measurement (using range).
+%
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
 %  more details.)
@@ -19,27 +21,27 @@ function [y H R] = dualIADat(t,x,options)
 % with this program (in a file named License.txt); if not, write to the 
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
-sig = options.sig;
+sig = options.sig; % Extract sigma from input options
 
 lent = length(t);
 I = eye(3,3);
 O = zeros(3,3);
 
-xc = x(1:3,:);
-xt = x(7:9,:);
+xc = x(1:3,:); % Chaser state
+xt = x(7:9,:); % Target state
+yp = xt - xc;  % Compute the 'pose' range measurement
 
-q = repmat([0 0 0 1]',1,lent);
+% Compute the chaser's state via GPS
+q = repmat([0; 0; 0; 1],1,lent);
 [yg Hg Rg] = gpsmeas(t,x(1:6,:),options,q);
 
-n = size(yg,1);
+y = [yp;yg]; % The output measurement is a concatenation of the pose and GPS measurements
 
-yp = xt-xc;
-
-y = [yp;yg];
-
+% Compute the measurement partials and noise covariance
+pad = zeros(size(yg,1), 6);
 for i=lent:-1:1
-    H(:,:,i) = [-I O I O; Hg(:,:,i) zeros(n,6)];
-    R(:,:,i) = blkdiag(diag(sig.^2),Rg(:,:,i));
+    H(:,:,i) = [-I O I O; Hg(:,:,i) pad];       % Measurement partials
+    R(:,:,i) = blkdiag(diag(sig.^2),Rg(:,:,i)); % Measurement noise covariance
 end
 
 end

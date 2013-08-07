@@ -2,6 +2,7 @@
 %
 %   pancake_tutorial             - OD Toolbox Tutorial 1: Planet Pancake
 %   batch_3gs_tutorial           - OD Toolbox Tutorial 2: Batch Estimation with Multiple Ground Stations
+%   chaser_target_tutorial       - OD Toolbox Tutorial 3: Chaser-Target Estimation with Multiple Dynamics/Measurement Models
 %
 % ODTBX Examples
 %
@@ -9,7 +10,6 @@
 %   batch_example_1              - Example for the ODTBX Batch Estimator, estbat.m, using range and range rate measurements.
 %   batch_example_2              - Example for the ODTBX Batch Estimator, estbat.m, using GSMEAS measurements.
 %   batch_example_3              - Example for the ODTBX Batch Estimator, estbat.m, similar to batch_example_1 with no process noise.
-%   chaser_target_demo           - Demo showing the estimation of relative position in a chaser-target situation.
 %   ddormeas_example             - This demonstrates the use of the ddor measurement model.
 %   example_estspf               - This file is an example for the ODTBX Sigma Point Filter Estimator, estspf.m, with Monte Carlo runs.
 %   example_estspf_2             - This file is an example for the ODTBX Sigma Point Filter Estimator, estspf.m. 
@@ -29,13 +29,12 @@
 %
 % Support Functions (used by tutorials & examples)
 %
-%   dualIADat                    - dualIADat Data file for chaser_target_demo example.
-%   dualIADyn                    - dualIADyn Get dynamics & estimation values for the pancake_demo example.
+%   dualIADat                    - Get measurement values for the chaser_target tutorial.
+%   dualIADyn                    - Get dynamics & estimation values for the chaser_target tutorial.
 %   editratio_test               - Specify the initial reference state.
-%   estseq_testcases_description - estseq.m Self-Test Cases Descriptions
 %   gps_antenna_tools_support    - Support script to gps_antenna_tools_demo.m
-%   pancake_dat                  - pancake_dat Data file for pancake_demo example.
-%   pancake_dyn                  - pancake_dyn Get dynamics & estimation values for the chaser_target_demo example.
+%   pancake_dat                  - Get measurement data for the pancake tutorial.
+%   pancake_dyn                  - Get dynamics & estimation values for the pancake tutorial.
 %   plot_results                 - Plots estimator error, measurment residuals, variance sandpiles 
 %   plot_results_ric             - Plots estimator error, measurment residuals, variance sandpiles in the Radial-In-track-Cross-track directions.
 %   pr2bp                        - Planar restricted two-body problem dynamics equations.

@@ -1,6 +1,17 @@
-function [AntLB] = antennaCalc()
-    AntLB{ANT} = struct('Halpha_r',[],'Hvis_beta',[],'Hvis_CN0',[],...
+function [AntLB] = antennaCalc(out,RXpattern,params,nn,d2r,...
+    RX_link,TX_link,TXpattern,alpha_t,TX_az,beta_r, beta_t,CN0_lim, ...
+    Hvis_earth)
+
+    AntLB = struct('Halpha_r',[],'Hvis_beta',[],'Hvis_CN0',[],...
     'HCN0',[],'HAd',[],'HAr',[],'HAP',[],'HRP',[],'HAt',[]);
+
+    % Adaptions
+    rec_pattern_dim = params.rec_pattern_dim;
+    xmit_pattern_dim = params.xmit_pattern_dim;
+    GPS_SIZE = params.GPS_SIZE;
+    health = out.health;
+    Hrange = out.range;
+
     
     CN0 = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
     Ar = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
@@ -10,7 +21,7 @@ function [AntLB] = antennaCalc()
     RP = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
     
     % The receiver elevation angle (rad)
-    alpha_r = out.RX_el(:,:,ANT)*d2r;
+    alpha_r = out.RX_el(:,:)*d2r;
     
     % Set alpha_r for non-existent/unhealthy SVs to 180 deg
     alpha_r(~health) = pi;
@@ -21,19 +32,19 @@ function [AntLB] = antennaCalc()
     % elevation (2-D) and compute the receiver gain
     if rec_pattern_dim == 2 
         % 2D receive antenna
-
+        
         for j = 1:GPS_SIZE
             if xmit_pattern_dim == 1 
                 % 1D transmitter
                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
                     RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), out.RX_az(:,j)*d2r, ...
+                    RXpattern, alpha_r(:,j), out.RX_az(:,j)*d2r, ...
                     TXpattern, alpha_t(:,j), []);
             else
                 % 2D transmitter
                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
                     RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), out.RX_az(:,j)*d2r, ...
+                    RXpattern, alpha_r(:,j), out.RX_az(:,j)*d2r, ...
                     TXpattern, alpha_t(:,j), TX_az(:,j));
             end
         end
@@ -46,13 +57,13 @@ function [AntLB] = antennaCalc()
                 % 1D transmitter
                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
                     RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), [], ...
+                    RXpattern, alpha_r(:,j), [], ...
                     TXpattern, alpha_t(:,j), []);
             else
                 % 2D transmitter
                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
                     RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), [], ...
+                    RXpattern, alpha_r(:,j), [], ...
                     TXpattern, alpha_t(:,j), TX_az(:,j));
             end
         end
@@ -60,7 +71,7 @@ function [AntLB] = antennaCalc()
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle
-    if beta_r < (max(RXpattern{ANT}(:,1)))*pi/180
+    if beta_r < (max(RXpattern(:,1)))*pi/180
         % Check and apply additional mask angle penalty to:
         % Ar, RP, CN0
         % Note, the gpslinkbudget already applies a penalty for those 
@@ -103,29 +114,29 @@ function [AntLB] = antennaCalc()
     vis_CN0 = CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
-    AntLB{ANT}.Halpha_r = alpha_r';             % [GPS_SIZE,nn]
-    AntLB{ANT}.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
-    AntLB{ANT}.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HCN0 = CN0';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAd = Ad';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAr = Ar';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAP = AP';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HRP = RP';             % [GPS_SIZE,nn]
+    AntLB.Halpha_r = alpha_r';             % [GPS_SIZE,nn]
+    AntLB.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
+    AntLB.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
+    AntLB.HCN0 = CN0';             % [GPS_SIZE,nn]
+    AntLB.HAd = Ad';             % [GPS_SIZE,nn]
+    AntLB.HAr = Ar';             % [GPS_SIZE,nn]
+    AntLB.HAP = AP';             % [GPS_SIZE,nn]
+    AntLB.HRP = RP';             % [GPS_SIZE,nn]
     % Note: this variable can be used to pass out other values as well
-    AntLB{ANT}.HAt = At';             % [GPS_SIZE,nn]
+    AntLB.HAt = At';             % [GPS_SIZE,nn]
 
     % Mask undefined values for SV dependent parameters using (Health,
     %  Earth blockage, and xmit antennna masks)
     VIS_sv = vis_beta_t' & Hvis_earth & health';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAd(~VIS_sv) = -300;             % [GPS_SIZE,nn]
-    AntLB{ANT}.HRP(~VIS_sv) = -300;             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAP(~VIS_sv) = -300;             % [GPS_SIZE,nn]
+    AntLB.HAd(~VIS_sv) = -300;             % [GPS_SIZE,nn]
+    AntLB.HRP(~VIS_sv) = -300;             % [GPS_SIZE,nn]
+    AntLB.HAP(~VIS_sv) = -300;             % [GPS_SIZE,nn]
 
     % Mask undefined values for Antenna dependent parameters using
     % (Health, Earth blockage, and both antennna masks)
     VIS_ant = vis_beta' & Hvis_earth & health';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HCN0(~VIS_ant) = -300;             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAt(~VIS_ant) = -300;             % [GPS_SIZE,nn]
+    AntLB.HCN0(~VIS_ant) = -300;             % [GPS_SIZE,nn]
+    AntLB.HAt(~VIS_ant) = -300;             % [GPS_SIZE,nn]
     
     
 end

@@ -595,75 +595,78 @@ betar_gss = 180*d2r; %Aperature mask (half angle) used with rcv antennas in GSS 
 AntVis = cell(loop,1); % cell array of structs to hold visibility data
                       % for each antenna
 for ANT=1:loop
-
-    AntVis{ANT} = struct('Hvis_gss',[],'Hel',[],'Hvis',[],...
-        'Hvis_CN0dyn',[],'Hvisdyn',[]);
     
-    % Compute visibility for each antenna
-    % Visibility for the GSS simulator, takes the form:
-    % HXvis_gss = Health & Hvis_earth & (HXalpha_r <= betar_gss);
-%    eval(sprintf('H%dvis_gss = health'' & Hvis_earth & (H%dalpha_r <= betar_gss);',ANT*ones(1,2)));
-    AntVis{ANT}.Hvis_gss = health' & Hvis_earth & (AntLB{ANT}.Halpha_r <= betar_gss);
-
-    % User elevation angle with respect to antenna boresite
-    % Set non-existent/unhealthy SVs to -90 deg
-%    eval(sprintf('H%del = (pi/2) - H%dalpha_r;',ANT*ones(1,2)));    % (nn,GPS_SIZE)
-    AntVis{ANT}.Hel = (pi/2) - AntLB{ANT}.Halpha_r;    % (nn,GPS_SIZE)
-%    eval(sprintf('H%del(~health'') = -pi/2;',ANT));
-    AntVis{ANT}.Hel(~health'') = -pi/2;
+    [AntVis{ANT}, HVIScases{2*ANT-1}, HVIScases{2*ANT}] = antennaVis(health, Hvis_earth, AntLB{ANT}, betar_gss, ...
+        Hvis_atm, GPS_SIZE, CN0_lim, dyn_range, HVIS, HVISdyn, ANT, HRP, HCN0);
     
-    % Compute sat_pos in lla
-    % (commented out because results were unused)
-    %[sat_lla(1,:),sat_lla(2,:),sat_lla(3,:)] = ecef2LLA(sat_pos);
-
-    % Compute visibility based on dynamic CN0 threshold (imposes limit on range of simultaneous C/No values)
-    % Compute maximum CN0 for VISIBLE SV at each time step
-
-    % Compute normal visibility for each antenna
-    %finalstring = sprintf('H%dvis = health''.*Hvis_earth.*H%dvis_beta.*Hvis_atm.*H%dvis_CN0',ANT*ones(1,3));
-    %   H1vis = Health.*Hvis_earth.*H1vis_beta.*Hvis_atm.*H1vis_CN0;   % (GPS_SIZE,mm)
-    %eval([finalstring,';']);
-    AntVis{ANT}.Hvis = health' .* Hvis_earth .* AntLB{ANT}.Hvis_beta .* ...
-        Hvis_atm .* AntLB{ANT}.Hvis_CN0;   % (GPS_SIZE,mm)
-
-%    eval(sprintf('maxCN0 = max(H%dvis.*H%dCN0);',ANT*ones(1,2)));
-    maxCN0 = max(AntVis{ANT}.Hvis .* AntLB{ANT}.HCN0);
-    
-    % Compute the visibility based on the dynamic CN0 limit at each time step
-    CN0_lim_dyn = ones(GPS_SIZE,1)*max(CN0_lim,(maxCN0 - dyn_range));
-    %eval(sprintf('H%dvis_CN0dyn = H%dCN0 >= CN0_lim_dyn;',ANT*ones(1,2)));
-    AntVis{ANT}.Hvis_CN0dyn = AntLB{ANT}.HCN0 >= CN0_lim_dyn;
-    %clear maxCN0 CN0_lim_dyn
-
-    % Compute visibility for each antenna using dynamic tracking threshold
-    %finalstring = sprintf('H%dvisdyn = health''.*Hvis_earth.*H%dvis_beta.*Hvis_atm.*H%dvis_CN0dyn',ANT*ones(1,3));
-    %   H1visdyn = Health.*Hvis_earth.*H1vis_beta.*Hvis_atm.*H1vis_CN0dyn;   % (GPS_SIZE,mm)
-    %eval([finalstring,';']);
-    AntVis{ANT}.Hvisdyn = health' .* Hvis_earth .* AntLB{ANT}.Hvis_beta...
-        .* Hvis_atm .* AntVis{ANT}.Hvis_CN0dyn;   % (GPS_SIZE,mm)
-
-    %eval(sprintf('HVIS = HVIS | H%dvis;',ANT));
-    HVIS = HVIS | AntVis{ANT}.Hvis;
-
-    %eval(sprintf('HVISdyn = HVISdyn | H%dvis_CN0dyn;',ANT));
-    HVISdyn = HVISdyn | AntVis{ANT}.Hvis_CN0dyn;
-    
-    %HVIScases=eval(sprintf('union(HVIScases, ''H%dvis'');',ANT));
-    %HVIScases=eval(sprintf('union(HVIScases, ''AntVis{%d}.Hvis'');',ANT));
-    %HVIScases = union(HVIScases, ['AntVis{',num2str(ANT),'}.Hvis']);
-    HVIScases{2*ANT-1} = AntVis{ANT}.Hvis;
-    
-    %HVIScases=eval(sprintf('union(HVIScases, ''H%dvis_CN0dyn'');',ANT));
-    %HVIScases=eval(sprintf('union(HVIScases, ''AntVis{%d}.Hvis_CN0dyn'');',ANT));
-    %HVIScases = union(HVIScases, ['AntVis{',num2str(ANT),'}.Hvis_CN0dyn']);
-    HVIScases{2*ANT} = AntVis{ANT}.Hvis_CN0dyn;
-
-    % Compute composite RP, C/No across all simulated antennas (take the max C/No)
-    %eval(sprintf('HRP = max(HRP,H%dRP);',ANT));
-    HRP = max(HRP, AntLB{ANT}.HRP);
-    
-    % eval(sprintf('HCN0 = max(HCN0,H%dCN0);',ANT));
-    HCN0 = max(HCN0, AntLB{ANT}.HCN0);
+%     AntVis{ANT} = struct('Hvis_gss',[],'Hel',[],'Hvis',[],...
+%         'Hvis_CN0dyn',[],'Hvisdyn',[]);
+%
+%     % Compute visibility for each antenna
+%     % Visibility for the GSS simulator, takes the form:
+%     % HXvis_gss = Health & Hvis_earth & (HXalpha_r <= betar_gss);
+% %    eval(sprintf('H%dvis_gss = health'' & Hvis_earth & (H%dalpha_r <= betar_gss);',ANT*ones(1,2)));
+%     AntVis{ANT}.Hvis_gss = health' & Hvis_earth & (AntLB{ANT}.Halpha_r <= betar_gss);
+% 
+%     % User elevation angle with respect to antenna boresite
+%     % Set non-existent/unhealthy SVs to -90 deg
+% %    eval(sprintf('H%del = (pi/2) - H%dalpha_r;',ANT*ones(1,2)));    % (nn,GPS_SIZE)
+%     AntVis{ANT}.Hel = (pi/2) - AntLB{ANT}.Halpha_r;    % (nn,GPS_SIZE)
+% %    eval(sprintf('H%del(~health'') = -pi/2;',ANT));
+%     AntVis{ANT}.Hel(~health'') = -pi/2;
+%     
+%     % Compute sat_pos in lla
+%     % (commented out because results were unused)
+%     %[sat_lla(1,:),sat_lla(2,:),sat_lla(3,:)] = ecef2LLA(sat_pos);
+% 
+%     % Compute visibility based on dynamic CN0 threshold (imposes limit on range of simultaneous C/No values)
+%     % Compute maximum CN0 for VISIBLE SV at each time step
+% 
+%     % Compute normal visibility for each antenna
+%     %finalstring = sprintf('H%dvis = health''.*Hvis_earth.*H%dvis_beta.*Hvis_atm.*H%dvis_CN0',ANT*ones(1,3));
+%     %   H1vis = Health.*Hvis_earth.*H1vis_beta.*Hvis_atm.*H1vis_CN0;   % (GPS_SIZE,mm)
+%     %eval([finalstring,';']);
+%     AntVis{ANT}.Hvis = health' .* Hvis_earth .* AntLB{ANT}.Hvis_beta .* ...
+%         Hvis_atm .* AntLB{ANT}.Hvis_CN0;   % (GPS_SIZE,mm)
+% 
+% %    eval(sprintf('maxCN0 = max(H%dvis.*H%dCN0);',ANT*ones(1,2)));
+%     maxCN0 = max(AntVis{ANT}.Hvis .* AntLB{ANT}.HCN0);
+%     
+%     % Compute the visibility based on the dynamic CN0 limit at each time step
+%     CN0_lim_dyn = ones(GPS_SIZE,1)*max(CN0_lim,(maxCN0 - dyn_range));
+%     %eval(sprintf('H%dvis_CN0dyn = H%dCN0 >= CN0_lim_dyn;',ANT*ones(1,2)));
+%     AntVis{ANT}.Hvis_CN0dyn = AntLB{ANT}.HCN0 >= CN0_lim_dyn;
+%     %clear maxCN0 CN0_lim_dyn
+% 
+%     % Compute visibility for each antenna using dynamic tracking threshold
+%     %finalstring = sprintf('H%dvisdyn = health''.*Hvis_earth.*H%dvis_beta.*Hvis_atm.*H%dvis_CN0dyn',ANT*ones(1,3));
+%     %   H1visdyn = Health.*Hvis_earth.*H1vis_beta.*Hvis_atm.*H1vis_CN0dyn;   % (GPS_SIZE,mm)
+%     %eval([finalstring,';']);
+%     AntVis{ANT}.Hvisdyn = health' .* Hvis_earth .* AntLB{ANT}.Hvis_beta...
+%         .* Hvis_atm .* AntVis{ANT}.Hvis_CN0dyn;   % (GPS_SIZE,mm)
+% 
+%     %eval(sprintf('HVIS = HVIS | H%dvis;',ANT));
+%     HVIS = HVIS | AntVis{ANT}.Hvis;
+% 
+%     %eval(sprintf('HVISdyn = HVISdyn | H%dvis_CN0dyn;',ANT));
+%     HVISdyn = HVISdyn | AntVis{ANT}.Hvis_CN0dyn;
+%     
+%     %HVIScases=eval(sprintf('union(HVIScases, ''H%dvis'');',ANT));
+%     %HVIScases=eval(sprintf('union(HVIScases, ''AntVis{%d}.Hvis'');',ANT));
+%     %HVIScases = union(HVIScases, ['AntVis{',num2str(ANT),'}.Hvis']);
+%     HVIScases{2*ANT-1} = AntVis{ANT}.Hvis;
+%     
+%     %HVIScases=eval(sprintf('union(HVIScases, ''H%dvis_CN0dyn'');',ANT));
+%     %HVIScases=eval(sprintf('union(HVIScases, ''AntVis{%d}.Hvis_CN0dyn'');',ANT));
+%     %HVIScases = union(HVIScases, ['AntVis{',num2str(ANT),'}.Hvis_CN0dyn']);
+%     HVIScases{2*ANT} = AntVis{ANT}.Hvis_CN0dyn;
+% 
+%     % Compute composite RP, C/No across all simulated antennas (take the max C/No)
+%     %eval(sprintf('HRP = max(HRP,H%dRP);',ANT));
+%     HRP = max(HRP, AntLB{ANT}.HRP);
+%     
+%     % eval(sprintf('HCN0 = max(HCN0,H%dCN0);',ANT));
+%     HCN0 = max(HCN0, AntLB{ANT}.HCN0);
 
 end
 HVIScases{2*loop+1} = HVIS;

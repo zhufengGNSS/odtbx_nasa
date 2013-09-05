@@ -96,6 +96,7 @@ EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of 
 measOptions.('epoch')             = epoch;                  % Time associated with start of simulation, datenum format
 measOptions.('useRange')          = true;                   % Compute range measurements
 measOptions.('useRangeRate')      = true;                   % Compute range rate measurements
+measOptions.('useLightTimeCor')   = true;               % Move GPS Position to account for travel time
 % The rSigma parameter is not demonstrated in this example, this parameter
 % is only required when calculating the measurement covariance, R, as in:
 % [y, H, R] = gpsmeas(t, x, measOptions);
@@ -126,8 +127,15 @@ measOptions.('PrecnNutnExpire')   = 0.1;                    % Length of time an 
 
 
 %% GPSMeas function call, calculating measurements only
-y = gpsmeas(t, x, measOptions); 
+ %[y,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions); 
 
+y2=[];
+qatt=[];
+for sv=1:32
+    GeneratingPRN=sv
+    [ym,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions,qatt,sv);
+    y2=[y2;ym];
+end
 
 %% Plot the results
 % The output measurements, y, are controlled by the 'useRange' and
@@ -140,9 +148,17 @@ r = 1:2:64; % Pick out the range measurements from the data
 d = 2:2:64; % Pick out the range rate measurements from the data
 
 subplot(2,1,1),plot(y(r,:)','.');
-title('gpsmeas() Range Measurements (per GPS satellite)');
+title('gpsmeas() Range Measurements  (per GPS satellite)');
 ylabel('Range (Km)');
 subplot(2,1,2),plot(y(d,:)','.');
+title('gpsmeas() Range Rate Measurements (per GPS satellite)');
+ylabel('Range Rate (Km/s');
+
+figure;
+subplot(2,1,1),plot(y2(r,:)','.');
+title('gpsmeas() Range Measurements  (per GPS satellite)');
+ylabel('Range (Km)');
+subplot(2,1,2),plot(y2(d,:)','.');
 title('gpsmeas() Range Rate Measurements (per GPS satellite)');
 ylabel('Range Rate (Km/s');
 

@@ -304,6 +304,7 @@ if isempty(healthy_ind)
     out.GPS_yaw = zeros(nn,GPS_SIZE);
     out.rgps_mag = zeros(nn,GPS_SIZE);
     out.health = zeros(nn,GPS_SIZE);
+    out.dtsv   = zeros(nn,GPS_SIZE);
     out.prn = [];
     if params.doH == 1 % Following only needed for Jacobian computation
         out.eciRotation = zeros(9,9,nn);
@@ -321,9 +322,10 @@ end
 gps_pos = zeros(3,nn,GPS_SIZE);
 gps_vel = zeros(3,nn,GPS_SIZE);
 gps_vel_tot = gps_vel;
+tTrans = zeros(nn,GPS_SIZE);
 
 % GPS position and velocity in and relative to ECEF frame
-[pos,vel,vel_tot] = alm2xyz(time(:)',gps_alm(healthy_ind,:),1);	% [3,nn,mm] arrays
+[pos,vel,vel_tot,dtsv] = alm2xyz(time(:)',gps_alm(healthy_ind,:),1);	% [3,nn,mm] arrays
 if GPS_SIZE == 1
     % one SV calc only, PRN is in out.prn
     gps_pos(:,:,1) = pos; %km
@@ -334,6 +336,38 @@ else
     gps_pos(:,:,prns) = pos; %km
     gps_vel(:,:,prns) = vel; %km, omega-cross term removed
     gps_vel_tot(:,:,prns) = vel_tot;
+end
+
+% The following block does the light time correction, which needs to be turned on with a paramater
+% Now that we have the pos/vel of all the healthy GPS satellites and the
+% pos/vel/time of the receiver we need to determine the original time of
+% transmission of the GPS signals.  Note, this time does not have the GPS
+% satellite clock bias applied, but this is stored in dtsv returned from
+% alm2xyz, and passed back as out.dtsv
+useLightTimeCor    = getOdtbxOptions(options, 'useLightTimeCor', false );
+if useLightTimeCor
+    if GPS_SIZE == 1
+    gpsState(1:3,:,1) = pos; % km
+    gpsState(4:6,:,1) = vel;
+else
+    gpsState(1:3,:,prns) = pos;
+    gpsState(4:6,:,prns) = vel;
+end
+
+for sv = 1: GPS_SIZE
+for i = 1:nn % only give GPS positions near time of interest (10 points) and watch out for data boundaries
+        if i < 3
+            [tTrans_i, gpsState_i] = lightTimeCorrection(t(i),x(:,i),t(i:i+2),gpsState(:,i:i+2,sv),options,-1);
+        else
+            [tTrans_i, gpsState_i] = lightTimeCorrection(t(i),x(:,i),t(i-2:i),gpsState(:,i-2:i,sv),options,-1);
+        end
+        
+        % Store GPS ECI pos/vel at time of transmission and time of transmission data, per PRN
+             gps_pos(1:3,n,sv) = gpsState_i(1:3);    
+             gps_vel(1:3,n,sv) = gpsState_i(4:6);
+             tTrans(i,sv) = tTrans_i;
+    end
+end
 end
 
 %% Compute Visibility
@@ -441,6 +475,7 @@ out.RX_az = RX_az;
 out.RX_el = RX_el;
 out.range = los_mag';
 out.rrate = rrate';
+out.dtsv = dtsv;
 out.GPS_yaw = GPS_yaw;
 out.rgps_mag = rgps_mag;
 out.health = health;

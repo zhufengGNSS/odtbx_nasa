@@ -191,7 +191,7 @@ if (exist('RX_antenna','var') && isfield(RX_antenna,'pattern') && ~isempty(RX_an
     % I have questions about the logic in this section. The original
     % version had ~isempty(pattern). If we're looking to see if it's
     % empty (no inputs), wouldn't we want isempty(pattern)?
-elseif (~exist('RX_antenna','var')) || ~isstruct(RX_antenna) || ...
+elseif (~exist('RX_antenna','var')) || (~isstruct(RX_antenna)) || ...
         (~isfield(RX_antenna,'pattern') || isempty(RX_antenna.pattern)) && ...
         (~isfield(RX_antenna,'el') || isempty(RX_antenna.el)) && ...
         (~isfield(RX_antenna,'az') || isempty(RX_antenna.az))
@@ -220,7 +220,7 @@ if have_tx
     if(size(TX_antenna.tx_pattern,2) > 2)
         
         % arg check:
-        if (~exist('TX_antenna','var') || ~isfield(TX_antenna,'tx_az') || isempty(TX_antenna.tx_az))
+        if (~exist('TX_antenna','var') || ~isstruct(TX_antenna) || ~isfield(TX_antenna,'tx_az') || isempty(TX_antenna.tx_az))
             error('Presented 2D transmit model without azimuth angles - aborting.');
         end
         

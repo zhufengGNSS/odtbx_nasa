@@ -589,58 +589,30 @@ for ANT=1:loop
     % Set alpha_r for non-existent/unhealthy SVs to 180 deg
     alpha_r(~health) = pi;
     
-    % Encapsulate RX and TX data
-%     RX_antenna = struct('rx_pattern', RXpattern{ANT}, ...
-%         'rx_el', alpha_r, 'rx_az', out.RX_az(:,j)*d2r);
-%     TX_antenna = struct('tx_pattern', TXpattern, ...
-%         'tx_el', alpha_t(:,j), 
-%     
-    
     % Compute gain/attenuation of receiving antenna pattern
 
     % Determine if the pattern is elevation only (1-D) or azimuth and
     % elevation (2-D) and compute the receiver gain
-    if rec_pattern_dim == 2 
-        % 2D receive antenna
-
-        for j = 1:GPS_SIZE
-            if xmit_pattern_dim == 1 
-                % 1D transmitter
-%                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = linkbudget(Hrange(j,:)', ...
-%                     RX_link, TX_link, ...
-%                     RX_antenna, TX_antenna, []);
-                [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
-                    RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), out.RX_az(:,j)*d2r, ...
-                    TXpattern, alpha_t(:,j), []);
-            else
-                % 2D transmitter
-                [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
-                    RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), out.RX_az(:,j)*d2r, ...
-                    TXpattern, alpha_t(:,j), TX_az(:,j));
-            end
+    for j = 1:GPS_SIZE
+        % Encapsulate RX and TX data
+        % Originally set to be 1D receive, 1D transmit patterns
+        RX_antenna = struct('pattern', RXpattern{ANT}, ...
+            'el', alpha_r);
+        TX_antenna = struct('pattern', TXpattern, ...
+            'el', alpha_t(:,j));
+        
+        % Change dimensions on transmit patterns from 1D to 2D, if required
+        if rec_pattern_dim == 2
+            % 1D receive antenna
+            RX_antenna.az = out.RX_az(:,j)*d2r;
         end
-
-    else
-        % 1D receive antenna
-
-        for j = 1:GPS_SIZE
-            if xmit_pattern_dim == 1 
-                % 1D transmitter
-                [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
-                    RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), [], ...
-                    TXpattern, alpha_t(:,j), []);
-            else
-                % 2D transmitter
-                [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
-                    RX_link, TX_link, ...
-                    RXpattern{ANT}, alpha_r(:,j), [], ...
-                    TXpattern, alpha_t(:,j), TX_az(:,j));
-            end
+        if xmit_pattern_dim == 2
+            % 1D transmit antenna
+            TX_antenna.az = TX_az(:,j);
         end
-
+        
+        [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = linkbudget(Hrange(j,:)', ...
+            RX_link, TX_link, RX_antenna, TX_antenna);
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle

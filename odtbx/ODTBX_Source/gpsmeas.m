@@ -588,7 +588,14 @@ for ANT=1:loop
     
     % Set alpha_r for non-existent/unhealthy SVs to 180 deg
     alpha_r(~health) = pi;
-
+    
+    % Encapsulate RX and TX data
+%     RX_antenna = struct('rx_pattern', RXpattern{ANT}, ...
+%         'rx_el', alpha_r, 'rx_az', out.RX_az(:,j)*d2r);
+%     TX_antenna = struct('tx_pattern', TXpattern, ...
+%         'tx_el', alpha_t(:,j), 
+%     
+    
     % Compute gain/attenuation of receiving antenna pattern
 
     % Determine if the pattern is elevation only (1-D) or azimuth and
@@ -599,6 +606,9 @@ for ANT=1:loop
         for j = 1:GPS_SIZE
             if xmit_pattern_dim == 1 
                 % 1D transmitter
+%                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = linkbudget(Hrange(j,:)', ...
+%                     RX_link, TX_link, ...
+%                     RX_antenna, TX_antenna, []);
                 [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = gpslinkbudget(Hrange(j,:)', ...
                     RX_link, TX_link, ...
                     RXpattern{ANT}, alpha_r(:,j), out.RX_az(:,j)*d2r, ...

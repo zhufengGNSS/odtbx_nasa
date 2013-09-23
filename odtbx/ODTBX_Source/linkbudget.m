@@ -53,14 +53,14 @@ function [CN0, Ar, At, Ad, AP, RP] = linkbudget(los_mag, RX_link, TX_link, RX_an
 %
 %   RX_antenna      struct  1       struct of receiver antenna information
 %                                   with the following fields:
-%       .rx_pattern double  AxG,[]  receive antenna gain pattern (deg & dB),
+%       .pattern double  AxG,[]  receive antenna gain pattern (deg & dB),
 %                                   NOTE: can be 1D or 2D, optional: can be
 %                                   empty if given CN0 with tx_pattern, or
 %                                   can be empty if using an omni antenna
-%       .rx_el      double  Nx1     receiver antenna boresight
+%       .el      double  Nx1     receiver antenna boresight
 %                                   elevation angle (rad), optional: can be
 %                                   empty if using an omni antenna
-%       .rx_az      double  Nx1,[]  receiver antenna boresight
+%       .az      double  Nx1,[]  receiver antenna boresight
 %                                   azimuth angle (rad), optional: use with
 %                                   a 2D rx_pattern
 %
@@ -183,23 +183,23 @@ else
     CN0 = [];
 end
 
-if (exist('RX_antenna','var') && isfield(RX_antenna,'rx_pattern') && ~isempty(RX_antenna.rx_pattern))
-    if (isfield(RX_antenna,'rx_el') && ~isempty(RX_antenna.rx_el))
+if (exist('RX_antenna','var') && isfield(RX_antenna,'pattern') && ~isempty(RX_antenna.pattern))
+    if (isfield(RX_antenna,'el') && ~isempty(RX_antenna.el))
         have_rx = 1; % we have a pattern and elevation angles
     end
     
     % I have questions about the logic in this section. The original
-    % version had ~isempty(rx_pattern). If we're looking to see if it's
-    % empty (no inputs), wouldn't we want isempty(rx_pattern)?
+    % version had ~isempty(pattern). If we're looking to see if it's
+    % empty (no inputs), wouldn't we want isempty(pattern)?
 elseif (~exist('RX_antenna','var')) || ...
-        (~isfield(RX_antenna,'rx_pattern') || isempty(RX_antenna.rx_pattern)) && ...
-        (~isfield(RX_antenna,'rx_el') || isempty(RX_antenna.rx_el)) && ...
-        (~isfield(RX_antenna,'rx_az') || isempty(RX_antenna.rx_az))
+        (~isfield(RX_antenna,'pattern') || isempty(RX_antenna.pattern)) && ...
+        (~isfield(RX_antenna,'el') || isempty(RX_antenna.el)) && ...
+        (~isfield(RX_antenna,'az') || isempty(RX_antenna.az))
     have_rx = 1;
     have_rx_omni = 1; % no inputs means omni
 end
 
-if (exist(TX_antenna,'var') && isfield(TX_antenna,'tx_pattern') && ~isempty(TX_antenna.tx_pattern))
+if (exist('TX_antenna','var') && isstruct(TX_antenna) && isfield(TX_antenna,'tx_pattern') && ~isempty(TX_antenna.tx_pattern))
     if (isfield(TX_antenna,'tx_el') && ~isempty(TX_antenna.tx_el))
         have_tx = 1; % we have a pattern and elevation angles
     end
@@ -220,7 +220,7 @@ if have_tx
     if(size(TX_antenna.tx_pattern,2) > 2)
         
         % arg check:
-        if (~exist('TX_antenna','var') || (~isfield(TX_antenna,'tx_az') || isempty(TX_antenna.tx_az))
+        if (~exist('TX_antenna','var') || ~isfield(TX_antenna,'tx_az') || isempty(TX_antenna.tx_az))
             error('Presented 2D transmit model without azimuth angles - aborting.');
         end
         
@@ -253,30 +253,30 @@ if have_rx
     else
         % Determine if the pattern is elevation only (1-D) or azimuth and
         % elevation (2-D)
-        if(size(RX_antenna.rx_pattern,2) > 2)
+        if(size(RX_antenna.pattern,2) > 2)
 
             % arg check:
-            if (~exist('RX_antenna.rx_az','var') || isempty(RX_antenna.rx_az))
+            if (~exist('RX_antenna.az','var') || isempty(RX_antenna.az))
                 error('Presented 2D receiver model without azimuth angles - aborting.');
             end
 
             % use both receiver azimuth and elevation to compute gain from a
             % 2D antenna model
-            Ar = interp2(RX_antenna.rx_pattern(1,2:end)*pi/180,RX_antenna.rx_pattern(2:end,1)*pi/180,RX_antenna.rx_pattern(2:end,2:end),RX_antenna.rx_az,RX_antenna.rx_el,'spline');
+            Ar = interp2(RX_antenna.pattern(1,2:end)*pi/180,RX_antenna.pattern(2:end,1)*pi/180,RX_antenna.pattern(2:end,2:end),RX_antenna.az,RX_antenna.el,'spline');
 
         else
             % use only receiver elevation angle to compute gain from a 1D
             % antenna model
-            Ar = interp1((RX_antenna.rx_pattern(:,1))*pi/180,RX_antenna.rx_pattern(:,2),RX_antenna.rx_el,'spline');
+            Ar = interp1((RX_antenna.pattern(:,1))*pi/180,RX_antenna.pattern(:,2),RX_antenna.el,'spline');
 
         end
 
         % The anglemask is the max angle for which gain will be evaluated.  It
         % is  the minimum of the max defined angle for the antenna pattern.
-        anglemask = (max(RX_antenna.rx_pattern(:,1)))*pi/180;  % [1,1]
+        anglemask = (max(RX_antenna.pattern(:,1)))*pi/180;  % [1,1]
 
         % Remove gains computed for angles outside the pattern
-        Ar(RX_antenna.rx_el>anglemask) = -100;
+        Ar(RX_antenna.el>anglemask) = -100;
     end
 end
 

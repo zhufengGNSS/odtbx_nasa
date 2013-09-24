@@ -1,7 +1,7 @@
 % An example script that demonstrates the use of the GPS measurement model, gpsmeas.
 %
 % Calculates and plots range and range rate measurements at each time point
-% for a GPS receiver in a specified Earth-Centered, Inertial (ECI) 
+% for a GPS receiver in a specified Earth-Centered, Inertial (ECI)
 % trajectory from each GPS satellite in a given GPS almanac.  All of the
 % parameters of the transmit-receive system link budget are specified
 % as input options to gpsmeas.
@@ -13,17 +13,17 @@
 %  more details.)
 
 % ODTBX: Orbit Determination Toolbox
-% 
+%
 % Copyright (c) 2003-2011 United States Government as represented by the
 % administrator of the National Aeronautics and Space Administration. All
 % Other Rights Reserved.
-% 
+%
 % This file is distributed "as is", without any warranty, as part of the
 % ODTBX. ODTBX is free software; you can redistribute it and/or modify it
 % under the terms of the NASA Open Source Agreement, version 1.3 or later.
-% 
+%
 % You should have received a copy of the NASA Open Source Agreement along
-% with this program (in a file named License.txt); if not, write to the 
+% with this program (in a file named License.txt); if not, write to the
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
 close all
@@ -37,7 +37,7 @@ yuma_file = 'Yuma1134_example.txt';
 % Specify the appropriate antenna pattern settings.
 ant_pat{1} = 'sensysmeas_ant.txt';
 
-% Specify the appropriate antenna pointing profile.  [1] is a zenith 
+% Specify the appropriate antenna pointing profile.  [1] is a zenith
 % pointing antenna profile.  See gpsmeas.m's AntennaPointing option.
 ant_point = 1;
 
@@ -49,13 +49,14 @@ ant_point = 1;
 truth = load('gpsmeas_testtraj.mat');
 
 %  Provide the epoch as a datenum
-epoch = datenum(truth.sim_start_utc);
+% epoch = datenum(truth.sim_start_utc);
+epoch = datenum([2013 1 1 0 0 0]);
 
 % Create the time vector using the same time intervals, referenced from the
 % first time
-t = truth.time - truth.time(1); 
+t = truth.time - truth.time(1);
 
-    
+
 % Set up satellite state in Km and Km/s
 % This truth data is in the Earth-Centered, Earth-Fixed (ECEF) frame.
 xecef(1:3,:) = truth.sat_pos/1000;
@@ -84,7 +85,7 @@ x(4:6,:) = tmp_sat_vel; % km/s, eci
 
 %% Set the options for the call
 
-% gpsmeas uses atmosphere height above earth for 'AtmosphereMask' below, 
+% gpsmeas uses atmosphere height above earth for 'AtmosphereMask' below,
 % gpstools uses a total distance from the earth's center.  This is how
 % gpsmeas defines the earth radius and adds it to 'AtmosphereMask'.
 
@@ -96,7 +97,7 @@ EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of 
 measOptions.('epoch')             = epoch;                  % Time associated with start of simulation, datenum format
 measOptions.('useRange')          = true;                   % Compute range measurements
 measOptions.('useRangeRate')      = true;                   % Compute range rate measurements
-measOptions.('useLightTimeCor')   = true;               % Move GPS Position to account for travel time
+measOptions.('useLightTime')   = true;               % Move GPS Position to account for travel time
 % The rSigma parameter is not demonstrated in this example, this parameter
 % is only required when calculating the measurement covariance, R, as in:
 % [y, H, R] = gpsmeas(t, x, measOptions);
@@ -127,8 +128,11 @@ measOptions.('PrecnNutnExpire')   = 0.1;                    % Length of time an 
 
 
 %% GPSMeas function call, calculating measurements only
- %[y,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions); 
 
+[y,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions);
+
+% When different GPS Satellite Block Types are used per PRN, gpsmeas()
+% needs to be called satellite by satellite.  
 y2=[];
 qatt=[];
 for sv=1:32
@@ -137,12 +141,13 @@ for sv=1:32
     y2=[y2;ym];
 end
 
+
 %% Plot the results
 % The output measurements, y, are controlled by the 'useRange' and
 % 'useRangeRate' input options.  If both are enabled, then the measurements
-% are interleaved as column vectors of range then range rate for each GPS 
+% are interleaved as column vectors of range then range rate for each G
 % satellite at a given time.  If there are 32 satellites then there will be
-% 64 outputs.  Also note that NaN are possible if there are geometric or 
+% 64 outputs.  Also note that NaN are possible if there are geometric or
 % signal constraints.
 r = 1:2:64; % Pick out the range measurements from the data
 d = 2:2:64; % Pick out the range rate measurements from the data
@@ -160,5 +165,7 @@ title('gpsmeas() Range Measurements  (per GPS satellite)');
 ylabel('Range (Km)');
 subplot(2,1,2),plot(y2(d,:)','.');
 title('gpsmeas() Range Rate Measurements (per GPS satellite)');
-ylabel('Range Rate (Km/s');
+ylabel('Range Rate (Km/s')
+
+
 

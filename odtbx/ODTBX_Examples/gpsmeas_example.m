@@ -129,16 +129,16 @@ measOptions.('PrecnNutnExpire')   = 0.1;                    % Length of time an 
 
 %% GPSMeas function call, calculating measurements only
 
-[y,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions);
+% [y,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions);
 
 % When different GPS Satellite Block Types are used per PRN, gpsmeas()
 % needs to be called satellite by satellite.  
-y2=[];
+y=[];
 qatt=[];
 for sv=1:32
     GeneratingPRN=sv
     [ym,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions,qatt,sv);
-    y2=[y2;ym];
+    y=[y;ym];
 end
 
 
@@ -152,6 +152,7 @@ end
 r = 1:2:64; % Pick out the range measurements from the data
 d = 2:2:64; % Pick out the range rate measurements from the data
 
+figure;
 subplot(2,1,1),plot(y(r,:)','.');
 title('gpsmeas() Range Measurements  (per GPS satellite)');
 ylabel('Range (Km)');
@@ -159,13 +160,6 @@ subplot(2,1,2),plot(y(d,:)','.');
 title('gpsmeas() Range Rate Measurements (per GPS satellite)');
 ylabel('Range Rate (Km/s');
 
-figure;
-subplot(2,1,1),plot(y2(r,:)','.');
-title('gpsmeas() Range Measurements  (per GPS satellite)');
-ylabel('Range (Km)');
-subplot(2,1,2),plot(y2(d,:)','.');
-title('gpsmeas() Range Rate Measurements (per GPS satellite)');
-ylabel('Range Rate (Km/s')
 
 
 

@@ -596,7 +596,7 @@ for ANT=1:loop
         % Encapsulate RX and TX data
         % Originally set to be 1D receive, 1D transmit patterns
         RX_antenna = struct('pattern', RXpattern{ANT}, ...
-            'el', alpha_r);
+            'el', alpha_r(:,j));
         TX_antenna = struct('pattern', TXpattern, ...
             'el', alpha_t(:,j));
         
@@ -616,12 +616,12 @@ for ANT=1:loop
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle
-    if beta_r < (max(RX_antenna.pattern(:,1)))*pi/180
+    if beta_r < (max(RXpattern{ANT}(:,1)))*pi/180
         % Check and apply additional mask angle penalty to:
         % Ar, RP, CN0
         % Note, the gpslinkbudget already applies a penalty for those 
         % angles outside the pattern so don't doubly-apply a penalty.
-        Ar_mask_ind = (RX_antenna.el > beta_r) & (Ar ~= -100.0);
+        Ar_mask_ind = (alpha_r > beta_r) & (Ar ~= -100.0);
         if sum(sum((Ar_mask_ind))) > 0
             Ar(Ar_mask_ind) = -100; % change Ar
             % alter dependent values:
@@ -632,12 +632,12 @@ for ANT=1:loop
     
     % Apply the transmit gain penalty for the user-defined
     % mask angle
-    if beta_t < (max(TX_antenna.pattern(:,1)))*pi/180
+    if beta_t < (max(TXpattern(:,1)))*pi/180
         % Check and apply additional mask angle penalty to: 
         % At, AP, RP, CN0
         % Note, the gpslinkbudget already applies a penalty for those 
         % angles outside the pattern so don't doubly-apply a penalty.
-        At_mask_ind = (tx_angle_vector > beta_t)  & (At ~= -100.0);
+        At_mask_ind = (tx_angle-vector > beta_t)  & (At ~= -100.0);
         if sum(sum((At_mask_ind))) > 0
             At(At_mask_ind) = -100; % change At
             % alter dependent values:
@@ -652,14 +652,14 @@ for ANT=1:loop
 
     %  Set prns visible if los within antenna mask angles
     %  So far, alpha_t was computed assuming GPS antenna is nadir pointing
-    vis_beta_t = (TX_antenna.el <= beta_t);
-    vis_beta = vis_beta_t & (RX_antenna.el <= beta_r);    % (nn,GPS_SIZE)
+    vis_beta_t = (alpha_t <= beta_t);
+    vis_beta = vis_beta_t & (alpha_r <= beta_r);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
     vis_CN0 = CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
-    AntLB{ANT}.Halpha_r = RX_antenna.el';             % [GPS_SIZE,nn]
+    AntLB{ANT}.Halpha_r = alpha_r';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
     AntLB{ANT}.HCN0 = CN0';             % [GPS_SIZE,nn]

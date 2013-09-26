@@ -344,8 +344,8 @@ end
 % transmission of the GPS signals.  Note, this time does not have the GPS
 % satellite clock bias applied, but this is stored in dtsv returned from
 % alm2xyz, and passed back as out.dtsv
-useLightTimeCor    = getOdtbxOptions(options, 'useLightTimeCor', false );
-if useLightTimeCor
+useLightTime    = getOdtbxOptions(options, 'useLightTime', false );
+if useLightTime
     if GPS_SIZE == 1
     gpsState(1:3,:,1) = pos; % km
     gpsState(4:6,:,1) = vel;

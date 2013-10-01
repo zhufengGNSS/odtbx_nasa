@@ -571,6 +571,7 @@ beta_r = rcv_ant_mask;   % User input from options
 AntLB = cell(loop,1); % cell array of structs to hold link budget data
                       % for each antenna
 
+
 for ANT=1:loop
     
     AntLB{ANT} = struct('Halpha_r',[],'Hvis_beta',[],'Hvis_CN0',[],...
@@ -616,7 +617,7 @@ for ANT=1:loop
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle
-    if beta_r < (max(RXpattern{ANT}(:,1)))*pi/180
+    if beta_r < (max(RX_antenna.pattern(:,1)))*pi/180
         % Check and apply additional mask angle penalty to:
         % Ar, RP, CN0
         % Note, the gpslinkbudget already applies a penalty for those 
@@ -632,7 +633,7 @@ for ANT=1:loop
     
     % Apply the transmit gain penalty for the user-defined
     % mask angle
-    if beta_t < (max(TXpattern(:,1)))*pi/180
+    if beta_t < (max(TX_antenna.pattern(:,1)))*pi/180
         % Check and apply additional mask angle penalty to: 
         % At, AP, RP, CN0
         % Note, the gpslinkbudget already applies a penalty for those 

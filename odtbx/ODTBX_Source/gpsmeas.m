@@ -577,6 +577,8 @@ for ANT=1:loop
     AntLB{ANT} = struct('Halpha_r',[],'Hvis_beta',[],'Hvis_CN0',[],...
         'HCN0',[],'HAd',[],'HAr',[],'HAP',[],'HRP',[],'HAt',[]);
     
+    AntLB_raw = struct('CN0',[],'Ad',[],'Ar',[],'AP',[],'RP',[],'At',[]);
+    
     CN0 = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
     Ar = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
     At = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
@@ -612,41 +614,49 @@ for ANT=1:loop
         end
         
          % Compute gain/attenuation of receiving antenna pattern
-        [CN0(:,j), Ar(:,j), At(:,j), Ad(:,j), AP(:,j), RP(:,j)] = linkbudget(Hrange(j,:)', ...
-            RX_link, TX_link, RX_antenna, TX_antenna);
+        [AntLB_raw.CN0(:,j), AntLB_raw.Ar(:,j), AntLB_raw.At(:,j), ...
+            AntLB_raw.Ad(:,j), AntLB_raw.AP(:,j), AntLB_raw.RP(:,j)] = ...
+            linkbudget(Hrange(j,:)', RX_link, TX_link, RX_antenna, TX_antenna);
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle
-    if beta_r < (max(RX_antenna.pattern(:,1)))*pi/180
-        % Check and apply additional mask angle penalty to:
-        % Ar, RP, CN0
-        % Note, the gpslinkbudget already applies a penalty for those 
-        % angles outside the pattern so don't doubly-apply a penalty.
-        Ar_mask_ind = (alpha_r > beta_r) & (Ar ~= -100.0);
-        if sum(sum((Ar_mask_ind))) > 0
-            Ar(Ar_mask_ind) = -100; % change Ar
-            % alter dependent values:
-            RP(Ar_mask_ind) = RP(Ar_mask_ind) - 100;
-            CN0(Ar_mask_ind) = CN0(Ar_mask_ind) - 100;
-        end
-    end
+    AntLB_raw = gainpenalty_mask(RX_antenna, AntLB_raw, alpha_r, beta_r);
+    
+%     % Apply the receiver gain penalty for the user-defined mask angle
+%     if beta_r < (max(RX_antenna.pattern(:,1)))*pi/180
+%         % Check and apply additional mask angle penalty to:
+%         % Ar, RP, CN0
+%         % Note, the gpslinkbudget already applies a penalty for those 
+%         % angles outside the pattern so don't doubly-apply a penalty.
+%         Ar_mask_ind = (alpha_r > beta_r) & (Ar ~= -100.0);
+%         if sum(sum((Ar_mask_ind))) > 0
+%             Ar(Ar_mask_ind) = -100; % change Ar
+%             % alter dependent values:
+%             RP(Ar_mask_ind) = RP(Ar_mask_ind) - 100;
+%             CN0(Ar_mask_ind) = CN0(Ar_mask_ind) - 100;
+%         end
+%     end
     
     % Apply the transmit gain penalty for the user-defined
     % mask angle
-    if beta_t < (max(TX_antenna.pattern(:,1)))*pi/180
-        % Check and apply additional mask angle penalty to: 
-        % At, AP, RP, CN0
-        % Note, the gpslinkbudget already applies a penalty for those 
-        % angles outside the pattern so don't doubly-apply a penalty.
-        At_mask_ind = (tx_angle-vector > beta_t)  & (At ~= -100.0);
-        if sum(sum((At_mask_ind))) > 0
-            At(At_mask_ind) = -100; % change At
-            % alter dependent values:
-            AP(At_mask_ind) = AP(At_mask_ind) - 100;
-            RP(At_mask_ind) = RP(At_mask_ind) - 100;
-            CN0(At_mask_ind) = CN0(At_mask_ind) - 100;
-        end
-    end
+    AntLB_raw = gainpenalty_mask(TX_antenna, AntLB_raw, alpha_t, beta_t);
+    
+%     % Apply the transmit gain penalty for the user-defined
+%     % mask angle
+%     if beta_t < (max(TX_antenna.pattern(:,1)))*pi/180
+%         % Check and apply additional mask angle penalty to: 
+%         % At, AP, RP, CN0
+%         % Note, the gpslinkbudget already applies a penalty for those 
+%         % angles outside the pattern so don't doubly-apply a penalty.
+%         At_mask_ind = (tx_angle-vector > beta_t)  & (At ~= -100.0);
+%         if sum(sum((At_mask_ind))) > 0
+%             At(At_mask_ind) = -100; % change At
+%             % alter dependent values:
+%             AP(At_mask_ind) = AP(At_mask_ind) - 100;
+%             RP(At_mask_ind) = RP(At_mask_ind) - 100;
+%             CN0(At_mask_ind) = CN0(At_mask_ind) - 100;
+%         end
+%     end
     
     %------------------------------------------------------------------------------
     % EVALUATION OF GEOMETRIC CONSTRAINTS
@@ -657,19 +667,19 @@ for ANT=1:loop
     vis_beta = vis_beta_t & (alpha_r <= beta_r);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
-    vis_CN0 = CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
+    vis_CN0 = AntLB_raw.CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
     AntLB{ANT}.Halpha_r = alpha_r';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HCN0 = CN0';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAd = Ad';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAr = Ar';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HAP = AP';             % [GPS_SIZE,nn]
-    AntLB{ANT}.HRP = RP';             % [GPS_SIZE,nn]
+    AntLB{ANT}.HCN0 = AntLB_raw.CN0';             % [GPS_SIZE,nn]
+    AntLB{ANT}.HAd = AntLB_raw.Ad';             % [GPS_SIZE,nn]
+    AntLB{ANT}.HAr = AntLB_raw.Ar';             % [GPS_SIZE,nn]
+    AntLB{ANT}.HAP = AntLB_raw.AP';             % [GPS_SIZE,nn]
+    AntLB{ANT}.HRP = AntLB_raw.RP';             % [GPS_SIZE,nn]
     % Note: this variable can be used to pass out other values as well
-    AntLB{ANT}.HAt = At';             % [GPS_SIZE,nn]
+    AntLB{ANT}.HAt = AntLB_raw.At';             % [GPS_SIZE,nn]
 
     % Mask undefined values for SV dependent parameters using (Health,
     %  Earth blockage, and xmit antennna masks)

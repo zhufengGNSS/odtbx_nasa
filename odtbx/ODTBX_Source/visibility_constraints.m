@@ -1,4 +1,4 @@
-function [HVIS] = visibility_constraints(link_budget, options, health, Hvis_earth, Hvis_atm, GPS_SIZE)
+function [HVIS] = visibility_constraints(link_budget, options, health, Hvis_earth, Hvis_atm)
 CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
 CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
 rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
@@ -15,6 +15,8 @@ dyn_range       = getOdtbxOptions(options, 'DynamicTrackRange', 15 ); % dB
                 % in snrs between two satellites is more that dyn_range,
                 % the weaker of the two will not be considered visible. 
 
+GPS_SIZE = size(health,2);
+                
 % Set receiver antenna loop number
 loop = max([1,num_ant]);
 

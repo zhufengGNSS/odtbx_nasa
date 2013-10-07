@@ -1,4 +1,25 @@
-function [HVIS] = visibility_constraints(link_budget, options, health, loop )
+function [HVIS] = visibility_constraints(link_budget, options, health, Hvis_earth, Hvis_atm, GPS_SIZE)
+CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
+CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
+rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
+                %  Specify antenna pattern for each antenna, existing antennas are:
+                %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+                %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+                %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+                %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+                %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
+dyn_range       = getOdtbxOptions(options, 'DynamicTrackRange', 15 ); % dB
+       			% Dynamic tracking range of receiver, or maximum difference  
+                % in power levels tracked simultaneously. If the difference
+                % in snrs between two satellites is more that dyn_range,
+                % the weaker of the two will not be considered visible. 
+
+% Set receiver antenna loop number
+loop = max([1,num_ant]);
+
+%% Initialize - Combine results across multiple antennas
+
 d2r = pi/180;
 
 HVIS = zeros(size(health'));

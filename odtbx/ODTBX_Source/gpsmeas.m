@@ -516,7 +516,9 @@ out = getgpsmeas(t,x,options,qatt,params);
 % the physical parameter results:
 epoch = out.epoch;       % epoch of first time [1x1]
 TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
-alpha_t = out.TX_el*d2r; % The transmitter elevation angle (rad) [nn x GPS_SIZE]
+TX_link.alpha = out.TX_el*d2r; % The transmitter elevation angle (rad) [nn x GPS_SIZE]
+RX_link.alpha = out.RX_el*d2r;
+
 % Note, the receiver angles from "out" are below, in the ANT loop
 Hrange = out.range;      % [GPS_SIZE x nn]
 Hrrate = out.rrate;      % [GPS_SIZE x nn]
@@ -535,7 +537,7 @@ end
 
 
 % Set alpha_t for non-existent/unhealthy SVs to pi rad
-alpha_t(~health) = pi;
+TX_link.alpha(~health) = pi;
 
 % Compute angle subtended by Earth and Earth mask angles for each SV
 denom=rgps_mag;
@@ -543,9 +545,9 @@ denom(denom==0)=NaN;
 gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
 gamma_mask = asin(r_mask./denom);    % Angle subtended by Earth plus altitude mask (nn,GPS_SIZE)
 %  Set prns visible if not blocked by Earth
-vis_earth = (alpha_t > gamma) | (Hrange' <= rgps_mag.*cos(gamma));   % (nn,GPS_SIZE)
+vis_earth = (TX_link.alpha > gamma) | (Hrange' <= rgps_mag.*cos(gamma));   % (nn,GPS_SIZE)
 %  Set prns visible if not subject to atmosphere mask
-vis_atm = (alpha_t > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask)); % (nn,GPS_SIZE)
+vis_atm = (TX_link.alpha > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask)); % (nn,GPS_SIZE)
 
 Hvis_earth = vis_earth';
 Hvis_atm = vis_atm';
@@ -562,8 +564,8 @@ RX_link.Ae = Ae;
 TX_link.P_sv = P_sv;
 
 % Transmitter and receiver antenna masks
-beta_t = xmit_ant_mask;  % User input from options
-beta_r = rcv_ant_mask;   % User input from options
+TX_link.beta = xmit_ant_mask;  % User input from options
+RX_link.beta = rcv_ant_mask;   % User input from options
 
 % ----------------------------------------
 %  Antenna calculation loop
@@ -587,10 +589,10 @@ for ANT=1:loop
     RP = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
     
     % The receiver elevation angle (rad)
-    alpha_r = out.RX_el(:,:,ANT)*d2r;
+%     alpha_r = out.RX_el(:,:,ANT)*d2r;
     
     % Set alpha_r for non-existent/unhealthy SVs to 180 deg
-    alpha_r(~health) = pi;
+    RX_link.alpha(~health) = pi;
     
    
     % Determine if the pattern is elevation only (1-D) or azimuth and
@@ -599,9 +601,9 @@ for ANT=1:loop
         % Encapsulate RX and TX data
         % Originally set to be 1D receive, 1D transmit patterns
         RX_antenna = struct('pattern', RXpattern{ANT}, ...
-            'el', alpha_r(:,j));
+            'el', RX_link.alpha(:,j));
         TX_antenna = struct('pattern', TXpattern, ...
-            'el', alpha_t(:,j));
+            'el', TX_link.alpha(:,j));
         
         % Change dimensions on transmit patterns from 1D to 2D, if required
         if rec_pattern_dim == 2
@@ -620,24 +622,24 @@ for ANT=1:loop
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle
-    AntLB_raw = gainpenalty_mask(RX_antenna, AntLB_raw, alpha_r, beta_r);
+    AntLB_raw = gainpenalty_mask(RX_antenna, AntLB_raw, RX_link.alpha, RX_link.beta);
     
     % Apply the transmit gain penalty for the user-defined mask angle
-    AntLB_raw = gainpenalty_mask(TX_antenna, AntLB_raw, alpha_t, beta_t);
+    AntLB_raw = gainpenalty_mask(TX_antenna, AntLB_raw, TX_link.alpha, TX_link.beta);
     
     %------------------------------------------------------------------------------
     % EVALUATION OF GEOMETRIC CONSTRAINTS
 
     %  Set prns visible if los within antenna mask angles
     %  So far, alpha_t was computed assuming GPS antenna is nadir pointing
-    vis_beta_t = (alpha_t <= beta_t);
-    vis_beta = vis_beta_t & (alpha_r <= beta_r);    % (nn,GPS_SIZE)
+    vis_beta_t = (TX_link.alpha <= TX_link.beta);
+    vis_beta = vis_beta_t & (RX_link.alpha <= RX_link.beta);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
     vis_CN0 = AntLB_raw.CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
-    AntLB{ANT}.Halpha_r = alpha_r';             % [GPS_SIZE,nn]
+    AntLB{ANT}.Halpha_r = RX_link.alpha';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
     AntLB{ANT}.HCN0 = AntLB_raw.CN0';             % [GPS_SIZE,nn]

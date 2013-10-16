@@ -250,6 +250,7 @@ function [y,H,R,AntLB,dtsv] = gpsmeas(t,x,options,qatt,sv)
 %   Kevin Berry         03/08/2011      Modified doppler and added range
 %                                       rate for consistency with other 
 %                                       ODTBX measurement models
+%   Phillip Anderson    10/16/2013      Abstracted out link budget code
 
 d2r             = pi/180;
 
@@ -494,8 +495,7 @@ for ANT = 1:loop
     end
 end
 
-%% Compute the gps physical relationships between the transmitters and
-%  receivers
+%% Compute the gps physical relationships between the transmitters and receivers
 params.xmit_pattern_dim = xmit_pattern_dim;
 params.rec_pattern_dim = rec_pattern_dim;
 params.GPS_SIZE = GPS_SIZE;
@@ -512,6 +512,30 @@ end
 
 % Calculate the physical parameters
 out = getgpsmeas(t,x,options,qatt,params);
+
+%% Generate link budget structures
+
+% set link budget params in structs
+RX_link.Nf = Nf;
+RX_link.L = L;
+RX_link.freq = freq;
+RX_link.Ts = Ts;
+RX_link.As = As;
+RX_link.Ae = Ae;
+TX_link.P_sv = P_sv;
+
+% Transmitter and Receiver antenna patterns
+RX_link.pattern = RXpattern;
+TX_link.pattern = TXpattern;
+
+% Transmitter and receiver antenna masks
+TX_link.beta = xmit_ant_mask;  % User input from options
+RX_link.beta = rcv_ant_mask;   % User input from options
+
+%% Calculate Link Budget
+[AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link);
+
+%% Pull information from measurements helpful in calculating outputs
 
 % the physical parameter results:
 epoch = out.epoch;       % epoch of first time [1x1]
@@ -534,150 +558,6 @@ if params.doH == 1
     sat_vel_tot = out.sat_vel_tot;
     Rotation2ECI = out.Rotation2ECI;
 end
-
-% % Set alpha_t for non-existent/unhealthy SVs to pi rad
-% TX_link.alpha(~health) = pi;
-% 
-% % Set alpha_r for non-existent/unhealthy SVs to 180 deg
-% RX_link.alpha(~health) = pi;
-% 
-% % Compute angle subtended by Earth and Earth mask angles for each SV
-% denom=rgps_mag;
-% denom(denom==0)=NaN;
-% gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
-% gamma_mask = asin(r_mask./denom);    % Angle subtended by Earth plus altitude mask (nn,GPS_SIZE)
-% %  Set prns visible if not blocked by Earth
-% vis_earth = (TX_link.alpha > gamma) | (Hrange' <= rgps_mag.*cos(gamma));   % (nn,GPS_SIZE)
-% %  Set prns visible if not subject to atmosphere mask
-% vis_atm = (TX_link.alpha > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask)); % (nn,GPS_SIZE)
-% 
-% Hvis_earth = vis_earth';
-% Hvis_atm = vis_atm';
-% 
-% %% Compute antenna specific data
-% 
-% set link budget params in structs
-RX_link.Nf = Nf;
-RX_link.L = L;
-RX_link.freq = freq;
-RX_link.Ts = Ts;
-RX_link.As = As;
-RX_link.Ae = Ae;
-TX_link.P_sv = P_sv;
-
-% Transmitter and Receiver antenna patterns
-RX_link.pattern = RXpattern;
-TX_link.pattern = TXpattern;
-
-% Transmitter and receiver antenna masks
-TX_link.beta = xmit_ant_mask;  % User input from options
-RX_link.beta = rcv_ant_mask;   % User input from options
-
-
-% 
-% % ----------------------------------------
-% %  Antenna calculation loop
-% % ----------------------------------------
-% AntLB = cell(loop,1); % cell array of structs to hold link budget data
-%                       % for each antenna
-% 
-% 
-% for ANT=1:loop
-%     
-%     AntLB{ANT} = struct('Halpha_r',[],'Hvis_beta',[],'Hvis_CN0',[],...
-%         'HCN0',[],'HAd',[],'HAr',[],'HAP',[],'HRP',[],'HAt',[]);
-%     
-%     AntLB_raw = struct('CN0',[],'Ad',[],'Ar',[],'AP',[],'RP',[],'At',[]);
-%     
-%     CN0 = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     Ar = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     At = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     Ad = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     AP = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     RP = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     
-% %     % The receiver elevation angle (rad)
-% %     alpha_r = out.RX_el(:,:,ANT)*d2r;
-%     
-% %     % Set alpha_r for non-existent/unhealthy SVs to 180 deg
-% %     RX_link.alpha(~health) = pi;
-%     
-%    
-%     % Determine if the pattern is elevation only (1-D) or azimuth and
-%     % elevation (2-D) and compute the receiver gain
-%     for j = 1:GPS_SIZE
-%         % Encapsulate RX and TX data
-%         % Originally set to be 1D receive, 1D transmit patterns
-%         RX_antenna = struct('pattern', RXpattern{ANT}, ...
-%             'el', RX_link.alpha(:,j));
-%         TX_antenna = struct('pattern', TXpattern, ...
-%             'el', TX_link.alpha(:,j));
-%         
-%         % Change dimensions on transmit patterns from 1D to 2D, if required
-%         if rec_pattern_dim == 2
-%             % 1D receive antenna
-%             RX_antenna.az = out.RX_az(:,j)*d2r;
-%         end
-%         if xmit_pattern_dim == 2
-%             % 1D transmit antenna
-%             TX_antenna.az = TX_az(:,j);
-%         end
-%         
-%          % Compute gain/attenuation of receiving antenna pattern
-%         [AntLB_raw.CN0(:,j), AntLB_raw.Ar(:,j), AntLB_raw.At(:,j), ...
-%             AntLB_raw.Ad(:,j), AntLB_raw.AP(:,j), AntLB_raw.RP(:,j)] = ...
-%             linkbudget(Hrange(j,:)', RX_link, TX_link, RX_antenna, TX_antenna);
-%     end
-% 
-%     % Apply the receiver gain penalty for the user-defined mask angle
-%     AntLB_raw = gainpenalty_mask(RX_antenna, AntLB_raw, RX_link.alpha, RX_link.beta);
-%     
-%     % Apply the transmit gain penalty for the user-defined mask angle
-%     AntLB_raw = gainpenalty_mask(TX_antenna, AntLB_raw, TX_link.alpha, TX_link.beta);
-%     
-%     %------------------------------------------------------------------------------
-%     % EVALUATION OF GEOMETRIC CONSTRAINTS
-% 
-%     %  Set prns visible if los within antenna mask angles
-%     %  So far, alpha_t was computed assuming GPS antenna is nadir pointing
-%     vis_beta_t = (TX_link.alpha <= TX_link.beta);
-%     vis_beta = vis_beta_t & (RX_link.alpha <= RX_link.beta);    % (nn,GPS_SIZE)
-% 
-%     %  Set prns visible if CN0 is above acquisition/tracking threshold
-%     vis_CN0 = AntLB_raw.CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
-% 
-%     %  OUTPUT PARAMETERS
-%     AntLB{ANT}.Halpha_r = RX_link.alpha';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HCN0 = AntLB_raw.CN0';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HAd = AntLB_raw.Ad';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HAr = AntLB_raw.Ar';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HAP = AntLB_raw.AP';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HRP = AntLB_raw.RP';             % [GPS_SIZE,nn]
-%     % Note: this variable can be used to pass out other values as well
-%     AntLB{ANT}.HAt = AntLB_raw.At';             % [GPS_SIZE,nn]
-% 
-%     % Mask undefined values for SV dependent parameters using (Health,
-%     %  Earth blockage, and xmit antennna masks)
-%     VIS_sv = vis_beta_t' & Hvis_earth & health';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HAd(~VIS_sv) = -300;             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HRP(~VIS_sv) = -300;             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HAP(~VIS_sv) = -300;             % [GPS_SIZE,nn]
-% 
-%     % Mask undefined values for Antenna dependent parameters using
-%     % (Health, Earth blockage, and both antennna masks)
-%     VIS_ant = vis_beta' & Hvis_earth & health';             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HCN0(~VIS_ant) = -300;             % [GPS_SIZE,nn]
-%     AntLB{ANT}.HAt(~VIS_ant) = -300;             % [GPS_SIZE,nn]
-%     
-% end % ANT loop
-% 
-% 
-% %% Combine results across multiple antennas
-% HVIS = visibility_constraints(AntLB, options, health, Hvis_earth, Hvis_atm);
-
-[AntLB, HVIS] = getlinkbudget(out,options, RX_link, TX_link);
 
 %% Create Outputs
 y = NaN(size(Hrange,1)*(nMTypes),size(Hrange,2));

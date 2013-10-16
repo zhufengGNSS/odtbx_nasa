@@ -1,5 +1,111 @@
 function [AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link)
+
+% GETLINKBUDGET  Calculates link budget and visibility of satellite targets
+%
+% [AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link) calculates
+% link budget based on information in OPTIONS given information about
+% transmitter and receivers and their locations.
+%
+% OPTIONS is an OD Toolbox Measurement Options data structure. See
+% ODTBXOPTIONS for all available options settings.  The options parameters
+% that are valid for this function are:
+%
+
+
+%   INPUTS
+%   VARIABLE        SIZE    DESCRIPTION (Optional/Default)
+%      out           (1x1)  Output structure containing the following
+%                           fields:
+%                              out.epoch      (1 x 1) 
+%                                  epoch in Matlab datenum
+%                              out.TX_az      (N x GPS_SIZE) 
+%                                  transmitter azimuth [deg]
+%                              out.TX_el      (N x GPS_SIZE) 
+%                                  transmitter elevation [deg]
+%                              out.RX_az      (N x GPS_SIZExnum_ant) 
+%                                  receiver azimuth [deg]
+%                              out.RX_el      (N x GPS_SIZExnum_ant) 
+%                                  receiver elevation [deg]
+%                              out.range      (GPS_SIZE x N) 
+%                                  range [km]
+%                              out.rrate      (GPS_SIZE x N) 
+%                                  range rate [km/sec]
+%                              out.GPS_yaw    (N x GPS_SIZE) 
+%                                  GPS SV yaw angle
+%                              out.rgps_mag   (N x GPS_SIZE) 
+%                                  magnitude of the GPS SV position [km]
+%                              out.health     (N x GPS_SIZE) 
+%                                  health flag of each GPS SV
+%                              out.prn        (1 x H) 
+%                                  PRN ID of each healthy GPS SV in this out struct
+%
+%                              If the params.doH == 1, then the following 
+%                              fields are also set:
+%                                  out.eciRotation   (9 x 9 x N) 
+%                                     rotation matrix from ECI to ECEF
+%                                  out.los_3d        (3 x N x GPS_SIZE) 
+%                                     LOS 3D vector
+%                                  out.gps_vel_tot   (3 x N x GPS_SIZE) 
+%                                     total velocity of GPS SVs in ECEF
+%                                     frame [km/s]
+%                                  out.sat_vel_tot   (3 x N) 
+%                                     total velocity of the satellite in
+%                                     ECEF frame [km/s]
+%                                  out.Rotation2ECI  (1 x 1) 
+%                                     name of function that computes 
+%                                     rotation from input frame to ECI
+%      options      (1x1)   data structure (see above description)
+%      RX_link      (1x1)
+%      TX_link      (1x1)
+%
+%   OUTPUTS
+%      AntLB        {num_antx1}  Cell array containing link budget for each
+%                           antenna.  Note that "masked" refers to an applied
+%                           bias due to visibility or blockage.  The fields
+%                           are:
+%           Halpha_r    (MxN)   The receiver elevation angle (rad)
+%           Hvis_beta   (MxN)   Logical array where both transmit and
+%                               receive antenna elevation angles are
+%                               within antenna mask angle limits
+%           Hvis_CN0    (MxN)   Logical array where CN0 is above the
+%                               acquisition/tracking threshold
+%           HCN0        (MxN)   Masked Signal carrier to noise ratio
+%           HAd         (MxN)   Masked attenuation from R^2 losses (dB)
+%           HAr         (MxN)   Receive antenna gain (dB)
+%           HAP         (MxN)   Masked budget gain before receiver antenna (dB)
+%           HRP         (MxN)   Masked budget gain before receiver amplifiers
+%                               and conversion (dB)
+%           HAt         (MxN)   Masked transmit antenna gain (dB)
+%       HVIS
+%
+%   keyword: measurement
+%   See also gpsmeas, odtbxOptions, getgpsmeas, gpslinkbudget
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+%  REVISION HISTORY
+%   Author      		Date         	Comment
+%   Phillip Anderson    10/16/2013      Abstracted out of gpsmeas.m
+
 %% Process incoming data
+
+% Generic constant
 d2r             = pi/180;
 
 % Get Some Constants from JAT
@@ -15,32 +121,14 @@ rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.tx
                 %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
                 %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
 num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
-% Ts              = getOdtbxOptions(options, 'NoiseTemp', 300 ); % K
 AtmMask         = getOdtbxOptions(options, 'AtmosphereMask', 50 ); % km 
                 %  Troposphere mask radius ~50 km
                 %  Ionosphere mask radius ~(500-1000 km)
-
-                % System noise temp [K], space pointing antenna = 290
-                % System noise temp [K], earth pointing antenna = 300
-% Ae              = getOdtbxOptions(options, 'AtmAttenuation', 0.0 ); % dB
-%                 % attenuation due to atmosphere (should be negative) [dB]      
-% xmit_ant_mask   = getOdtbxOptions(options, 'TransAntMask', pi );  % in rad
-%                 %  The actual mask used is the lesser of this mask and the limit of the defined pattern
-%                 %  Note:  mask = 70 deg includes entire defined pattern
-%                 %         mask = 42 deg includes only main and first side lobes
-%                 %         mask = 26 deg includes only main lobe
-% Nf              = getOdtbxOptions(options, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
-% L               = getOdtbxOptions(options, 'RecConversionLoss', -1.5 );  % dB
-% 				% Receiver implementation, A/D conversion losses [dB]
-% 				%   Novatel: L = -4.0 	
-% 				%   Plessey: L = -1.5		
-% As              = getOdtbxOptions(options, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
 CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
 CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
 
 
-% the physical parameter results:
-% epoch = out.epoch;       % epoch of first time [1x1]
+% Measurement physical parameter results:
 TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
 TX_link.alpha = out.TX_el*d2r; % The transmitter elevation angle (rad) [nn x GPS_SIZE]
 RX_link.alpha = out.RX_el*d2r; % The receiver elevation angle (rad)
@@ -50,8 +138,8 @@ Hrange = out.range;      % [GPS_SIZE x nn]
 % Hrrate = out.rrate;      % [GPS_SIZE x nn]
 rgps_mag = out.rgps_mag; % [nn x GPS_SIZE]
 health = out.health;     % the health indicator, [nn x GPS_SIZE]
-% dtsv = out.dtsv;          %individual satellite clock bias which is added to the epoch time to reflect the GPS time of measurement (using AFO and AF1)
 
+%% Calculate link constraint and mask information
 % Set alpha_t for non-existent/unhealthy SVs to pi rad
 TX_link.alpha(~health) = pi;
 
@@ -72,24 +160,11 @@ vis_atm = (TX_link.alpha > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask));
 Hvis_earth = vis_earth';
 Hvis_atm = vis_atm';
 
+%% Compute antenna specific data
+
 % Set receiver antenna loop number
 loop = max([1,num_ant]);
 GPS_SIZE = size(out.range,1);
-
-%% Compute antenna specific data
-
-% % set link budget params in structs
-% RX_link.Nf = Nf;
-% RX_link.L = L;
-% % RX_link.freq = freq;
-% RX_link.Ts = Ts;
-% RX_link.As = As;
-% RX_link.Ae = Ae;
-% TX_link.P_sv = P_sv;
-% 
-% % Transmitter and receiver antenna masks
-% TX_link.beta = xmit_ant_mask;  % User input from options
-% RX_link.beta = rcv_ant_mask;   % User input from options
 
 % ----------------------------------------
 %  Antenna calculation loop
@@ -97,27 +172,12 @@ GPS_SIZE = size(out.range,1);
 AntLB = cell(loop,1); % cell array of structs to hold link budget data
                       % for each antenna
 
-
 for ANT=1:loop
     
     AntLB{ANT} = struct('Halpha_r',[],'Hvis_beta',[],'Hvis_CN0',[],...
         'HCN0',[],'HAd',[],'HAr',[],'HAP',[],'HRP',[],'HAt',[]);
     
     AntLB_raw = struct('CN0',[],'Ad',[],'Ar',[],'AP',[],'RP',[],'At',[]);
-    
-%     CN0 = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     Ar = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     At = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     Ad = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     AP = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-%     RP = zeros(nn,GPS_SIZE);   % [nn,GPS_SIZE]
-    
-%     % The receiver elevation angle (rad)
-%     alpha_r = out.RX_el(:,:,ANT)*d2r;
-    
-%     % Set alpha_r for non-existent/unhealthy SVs to 180 deg
-%     RX_link.alpha(~health) = pi;
-    
    
     % Determine if the pattern is elevation only (1-D) or azimuth and
     % elevation (2-D) and compute the receiver gain

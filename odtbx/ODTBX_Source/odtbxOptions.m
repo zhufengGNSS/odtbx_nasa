@@ -539,6 +539,7 @@ measurementOptions = {
     'solvefor'
     'dynamicConsider'
     'localConsider'
+    'linkbudget'
     };
 
 allOptions = {

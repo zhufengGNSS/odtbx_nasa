@@ -312,9 +312,6 @@ linkbudget = linkbudget_default(linkbudget, 'DynamicTrackRange', 15 ); % dB
     % in snrs between two satellites is more that linkbudget.DynamicTrackRange,
     % the weaker of the two will not be considered visible. 
 
-% Reassign the options structure with any changed/default link budget values
-options = setOdtbxOption(options, 'linkbudget', linkbudget);
-
 % Error messages associated with user inputs
 if( useDoppler && useRangeRate)
     error('gpsmeas is not designed to handle both RangeRate and Doppler at the same time')
@@ -328,18 +325,14 @@ end
 % Count number of measurement types
 nMTypes         = sum([useRange useRangeRate useDoppler]);
 
-% %% Get Some Constants from JAT
-% EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of Earth
-% c            = JATConstant('c') / 1000;               % km/sec speed of light
-
-%% Set Some Values
 
 %  Select L-band carrier for simulation
 %  Models civil signal power on selected carrier (C/A on L1, L2C on L2)
 GPSFreq.L1      = 1575.42e6;    % Hz
 GPSFreq.L2      = 1227.6e6;     % Hz
 GPSFreq.L5      = 1176.45e6;    % Hz
-freq            = GPSFreq.(GPSBand);
+freq            = GPSFreq.(linkbudget.GPSBand);
+linkbudget_default(linkbudget, 'Frequency', freq);
 % r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
  
 
@@ -351,10 +344,11 @@ if nargin < 5
 else
     params.PRN = sv;
     GPS_SIZE = 1;
-    sv_block = block(sv);
+    linkbudget.GPSBlock = block(sv);
 end
  
-
+% Reassign the options structure with any changed/default link budget values
+options = setOdtbxOption(options, 'linkbudget', linkbudget);
                     
 %% Input Evaluation
 % This Section includes GPS satellite gain pattern file names, reference transmitter
@@ -497,7 +491,7 @@ end
 rec_pattern_dim = ones(loop,1);
 RXpattern = cell(loop,1);
 for ANT = 1:loop
-    RXpattern{ANT} = load(rec_pattern{ANT});  % [x,2]
+    RXpattern{ANT} = load(linkbudget.AntennaPattern{ANT});  % [x,2]
     if size(RXpattern{ANT},2) > 2
         rec_pattern_dim(ANT) = 2;
     end
@@ -526,10 +520,10 @@ out = getgpsmeas(t,x,options,qatt,params);
 % set link budget params in structs
 RX_link.Nf = linkbudget.ReceiverNoise;
 RX_link.L = linkbudget.RecConversionLoss;
-RX_link.freq = freq;
-RX_link.Ts = Ts;
+RX_link.freq = linkbudget.Frequency;
+RX_link.Ts = linkbudget.NoiseTemp;
 RX_link.As = linkbudget.SystemLoss;
-RX_link.Ae = Ae;
+RX_link.Ae = linkbudget.AtmAttenuation;
 TX_link.P_sv = P_sv;
 
 % Transmitter and Receiver antenna patterns

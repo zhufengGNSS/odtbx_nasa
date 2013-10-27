@@ -671,5 +671,6 @@ fprintf('          PrecnNutnExpire: [ days {1} ]\n');
 fprintf('             OpticalSigma: [ scalar>=0 {6e-10} ]\n');
 fprintf('                   Camera: [ Camera Object ]\n');
 fprintf('                 Attitude: [ Attitude Object ]\n');
+fprintf('               linkbudget: [ structure for gpsmeas.m ]\n');
 fprintf('\n');
 end

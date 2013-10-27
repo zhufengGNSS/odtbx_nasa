@@ -349,7 +349,7 @@ block=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
 if nargin < 5
     GPS_SIZE = 32;
 else
-    params.PRN=sv;
+    params.PRN = sv;
     GPS_SIZE = 1;
     sv_block = block(sv);
 end

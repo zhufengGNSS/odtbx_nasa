@@ -17,5 +17,6 @@ function [linkbudget] = linkbudget_default(linkbudget, fieldname, default_val)
     
     if ~isfield(linkbudget, fieldname) || isempty(linkbudget.(fieldname))
         linkbudget.(fieldname) = default_val;
+        warning('%s not set, setting default value of %s.', fieldname, num2str(default_val));
     end
 end

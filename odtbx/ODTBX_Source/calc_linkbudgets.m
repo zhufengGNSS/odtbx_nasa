@@ -113,56 +113,58 @@ EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of 
 % c            = JATConstant('c') / 1000;               % km/sec speed of light
 
 % Get link budget information
-linkbudget = getOdtbxOptions(options, 'linkbudget', []);
+link_budget = getOdtbxOptions(options, 'linkbudget', []);
 
+%% Error check incoming data
 % Generate an error if there isn't link budget information
-if isempty(linkbudget)
-    error('linkbudget variable undefined in odtbxOptions structure')
+if isempty(link_budget)
+    warning('linkbudget variable was undefined in odtbxOptions structure')
 end
 
-num_ant = length(linkbudget.AntennaPattern); %hasn't been tested for >4 antennas
+num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
 
 % Check that we have the necessary information for a link budget
 % calculation.
-if isempty(linkbudget.ReceiverNoise)
-    linkbudget = linkbudget_default(linkbudget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
-    warning('ReceiverNoise not set, setting default value of -3 dB.');
+if ~isfield(link_budget, 'ReceiverNoise') || isempty(link_budget.ReceiverNoise)
+    link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
 end
-if isempty(linkbudget.RecConversionLoss)
-    linkbudget = linkbudget_default(linkbudget, 'RecConversionLoss', -1.5 );  % dB
-    warning('RecConversionLoss not set, setting default value of -1.5 dB.');
+if ~isfield(link_budget, 'RecConversionLoss') || isempty(link_budget.RecConversionLoss)
+    link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
 end
-if isempty(linkbudget.Frequency)
-    linkbudget = linkbudget_default(linkbudget, 'Frequency', 1575.42e6 );  % Hz
-    warning('Frequency not set, setting default value of 1575.42e6 Hz.');
+if ~isfield(link_budget, 'Frequency') || isempty(link_budget.Frequency)
+    link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
 end
-if isempty(linkbudget.NoiseTemp)
-    linkbudget = linkbudget_default(linkbudget, 'NoiseTemp', 300); % K
-    warning('NoiseTemp not set, setting default value of 300 K.');
+if ~isfield(link_budget, 'NoiseTemp') || isempty(link_budget.NoiseTemp)
+    link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
 end
-if isempty(linkbudget.SystemLoss)
-    linkbudget = linkbudget_default(linkbudget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
-    warning('NoiseTemp not set, setting default value of 300 K.');
+if ~isfield(link_budget, 'SystemLoss') || isempty(link_budget.SystemLoss)
+    link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
 end
-if isempty(linkbudget.AtmAttenuation)
-    linkbudget = linkbudget_default(linkbudget, 'AtmAttenuation', 0.0); % dB
-    warning('AtmAttenuation not set, setting default value of 300 K.');
+if ~isfield(link_budget, 'AtmAttenuation') || isempty(link_budget.AtmAttenuation)
+    link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
+end
+if ~isfield(link_budget, 'TXAntennaMask') || isempty(link_budget.TXAntennaMask)
+    link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi/2); % rad
+end
+if ~isfield(link_budget, 'RXAntennaMask') || isempty(link_budget.RXAntennaMask)
+    link_budget = linkbudget_default(link_budget, 'RXAntennaMask', pi); % rad
 end
 
 % Reassign the options structure with any changed/default link budget values
-options = setOdtbxOption(options, 'linkbudget', linkbudget);
+options = setOdtbxOptions(options, 'linkbudget', link_budget);
 
+%% Assign variables to link structures
 % Set receiver and transmitter structure data from link budget information
-RX_link.Nf = linkbudget.ReceiverNoise;
-RX_link.L = linkbudget.RecConversionLoss;
-RX_link.freq = linkbudget.Frequency;
-RX_link.Ts = linkbudget.NoiseTemp;
-RX_link.As = linkbudget.SystemLoss;
-RX_link.Ae = linkbudget.AtmAttenuation;
+RX_link.Nf = link_budget.ReceiverNoise;
+RX_link.L = link_budget.RecConversionLoss;
+RX_link.freq = link_budget.Frequency;
+RX_link.Ts = link_budget.NoiseTemp;
+RX_link.As = link_budget.SystemLoss;
+RX_link.Ae = link_budget.AtmAttenuation;
 
 % Transmitter and receiver antenna masks
-TX_link.beta = linkbudget.TXAntennaMask;  % User input from options
-RX_link.beta = linkbudget.RXAntennaMask;   % User input from options
+TX_link.beta = link_budget.TXAntennaMask;  % User input from options
+RX_link.beta = link_budget.RXAntennaMask;   % User input from options
 
 % Measurement physical parameter results:
 TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
@@ -183,7 +185,7 @@ TX_link.alpha(~health) = pi;
 RX_link.alpha(~health) = pi;
 
 % Compute angle subtended by Earth and Earth mask angles for each SV
-r_mask          = EARTH_RADIUS + linkbudget.AtmMask;	% Atmosphere mask radius (km)
+r_mask          = EARTH_RADIUS + link_budget.AtmosphereMask;	% Atmosphere mask radius (km)
 denom=rgps_mag;
 denom(denom==0)=NaN;
 gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
@@ -256,7 +258,7 @@ for ANT=1:loop
     vis_beta = vis_beta_t & (RX_link.alpha <= RX_link.beta);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
-    vis_CN0 = AntLB_raw.CN0 >= linkbudget.RecTrackThresh;                               % [nn,GPS_SIZE]
+    vis_CN0 = AntLB_raw.CN0 >= link_budget.RecTrackThresh;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
     AntLB{ANT}.Halpha_r = RX_link.alpha';             % [GPS_SIZE,nn]

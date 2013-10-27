@@ -103,32 +103,33 @@ measOptions = setOdtbxOptions(measOptions, 'useLightTime', true);               
 % The rSigma parameter is not demonstrated in this example, this parameter
 % is only required when calculating the measurement covariance, R, as in:
 % [y, H, R] = gpsmeas(t, x, measOptions);
-linkbudget.GPSBand           = 'L1';                   % See truth.freq
-linkbudget.YumaFile          = yuma_file;              % Input YUMA file
+link_budget.GPSBand           = 'L1';                   % See truth.freq
+link_budget.YumaFile          = yuma_file;              % Input YUMA file
 % The Rotation2ECI parameter is not demonstrated in this example, this
 % parameter is only required when providing satellite state in another
 % coordinate system other than ECI.
-linkbudget.AntennaPointing   = ant_point;              % Specify attitude profile for each antenna
-linkbudget.AntennaPattern    = ant_pat;                % Specify receive antenna pattern for each antenna
-linkbudget.RXAntennaMask     = truth.rcv_ant_mask;     % Cut off angle for the receive antenna
-linkbudget.AtmosphereMask    = truth.r_mask/1000 - EARTH_RADIUS; % Mask altitude, km
-linkbudget.NoiseTemp         = truth.Ts;               % System noise temp of receive antenna (K)
-linkbudget.AtmAttenuation    = truth.Ae;               % Attenuation due to atmosphere, should be negative (dB)
-linkbudget.TransPowerLevel   = truth.sv_power;         % Transmitter power level (1=min, 2=typical, 3=max)
-linkbudget.TransPowerOffset  = truth.xmit_power_offset;% Global transmitter power offset (dB)
-linkbudget.GPSBlock          = truth.sv_block;         % GPS Satellite Block  (1-II/IIA, 2-IIR, 3-IIR-M, 4-IIF)
-linkbudget.TXAntennaMask     = truth.xmit_ant_mask;    % Cut off angle for the transmit antenna (rad)
-linkbudget.ReceiverNoise     = truth.Nf;               % Noise figure of receiver/LNA (dB)
-linkbudget.RecConversionLoss = truth.L;                % Receiver implementation, A/D conversion losses (dB)
-linkbudget.SystemLoss        = truth.As;               % System losses, in front of LNA (dB)
-linkbudget.LNAGain           = truth.Ga;               % Gain provided by the LNA (dB)
-linkbudget.CableLoss         = truth.Ac;               % Cable losses after LNA (dB)
-linkbudget.RecAcqThresh      = truth.CN0_lim;          % Receiver acquisition threshold (dB-Hz)
-linkbudget.RecTrackThresh    = truth.CN0_lim;          % Receiver tracking threshold (dB-Hz)
-linkbudget.DynamicTrackRange = truth.dyn_range;        % Receiver dynamic range (dB)
-linkbudget.PrecnNutnExpire   = 0.1;                    % Length of time an Earth rotation parameter set is valid (days)
 
-measOptions = setOdtbxOptions(measOptions, 'linkbudget', linkbudget);
+link_budget.AntennaPointing   = ant_point;              % Specify attitude profile for each antenna
+link_budget.AntennaPattern    = ant_pat;                % Specify receive antenna pattern for each antenna
+link_budget.RXAntennaMask     = truth.rcv_ant_mask;     % Cut off angle for the receive antenna
+link_budget.AtmosphereMask    = truth.r_mask/1000 - EARTH_RADIUS; % Mask altitude, km
+link_budget.NoiseTemp         = truth.Ts;               % System noise temp of receive antenna (K)
+link_budget.AtmAttenuation    = truth.Ae;               % Attenuation due to atmosphere, should be negative (dB)
+link_budget.TransPowerLevel   = truth.sv_power;         % Transmitter power level (1=min, 2=typical, 3=max)
+link_budget.TransPowerOffset  = truth.xmit_power_offset;% Global transmitter power offset (dB)
+link_budget.GPSBlock          = truth.sv_block;         % GPS Satellite Block  (1-II/IIA, 2-IIR, 3-IIR-M, 4-IIF)
+link_budget.TXAntennaMask     = truth.xmit_ant_mask;    % Cut off angle for the transmit antenna (rad)
+link_budget.ReceiverNoise     = truth.Nf;               % Noise figure of receiver/LNA (dB)
+link_budget.RecConversionLoss = truth.L;                % Receiver implementation, A/D conversion losses (dB)
+link_budget.SystemLoss        = truth.As;               % System losses, in front of LNA (dB)
+link_budget.LNAGain           = truth.Ga;               % Gain provided by the LNA (dB)
+link_budget.CableLoss         = truth.Ac;               % Cable losses after LNA (dB)
+link_budget.RecAcqThresh      = truth.CN0_lim;          % Receiver acquisition threshold (dB-Hz)
+link_budget.RecTrackThresh    = truth.CN0_lim;          % Receiver tracking threshold (dB-Hz)
+link_budget.DynamicTrackRange = truth.dyn_range;        % Receiver dynamic range (dB)
+link_budget.PrecnNutnExpire   = 0.1;                    % Length of time an Earth rotation parameter set is valid (days)
+
+measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
 
 
 
@@ -141,7 +142,7 @@ measOptions = setOdtbxOptions(measOptions, 'linkbudget', linkbudget);
 y=[];
 qatt=[];
 for sv=1:32
-    GeneratingPRN=sv
+    GeneratingPRN = sv
     [ym,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions,qatt,sv);
     y=[y;ym];
 end

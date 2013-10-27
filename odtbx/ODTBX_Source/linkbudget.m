@@ -1,6 +1,11 @@
 function [CN0, Ar, At, Ad, AP, RP] = linkbudget(los_mag, RX_link, TX_link, RX_antenna, TX_antenna, CN0) 
 %
-% Calculates the GPS transmitter-receiver link budget.
+% LINKBUDGET Calculates the transmitter-receiver link budget.
+%
+% This function was originally called gpslinkbudget, but there wasn't
+% anything specific to GPS satellites in its coding, so the name was
+% changed to better describe what it does. That being said, there may be
+% lingering traces of GPS-related terminology (variable names, etc.).
 %
 % This calculates the full link budget between a GPS SV transmitter and a
 % receiver system.  It includes the GPS SV transmitter power, the GPS

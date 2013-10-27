@@ -258,11 +258,10 @@ d2r             = pi/180;
 useRange        = getOdtbxOptions(options, 'useRange', true );
 useRangeRate    = getOdtbxOptions(options, 'useRangeRate', false );
 useDoppler      = getOdtbxOptions(options, 'useDoppler', false );
-
-% Link Budget defaults required for gpsmeas (set them if something isn't
-% already there)
 linkbudget      = getOdtbxOptions(options, 'linkbudget', []);
 
+%% Link Budget values required from gpsmeas 
+% (set them if something isn't already there)
 linkbudget = linkbudget_default(linkbudget, 'GPSBand', 'L1');
 linkbudget = linkbudget_default(linkbudget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
     %  Specify antenna pattern for each antenna, existing antennas are:
@@ -515,30 +514,19 @@ end
 % Calculate the physical parameters
 out = getgpsmeas(t,x,options,qatt,params);
 
-%% Generate link budget structures
+%% Generate link budget structures from calculated data
 
 % set link budget params in structs
-RX_link.Nf = linkbudget.ReceiverNoise;
-RX_link.L = linkbudget.RecConversionLoss;
-RX_link.freq = linkbudget.Frequency;
-RX_link.Ts = linkbudget.NoiseTemp;
-RX_link.As = linkbudget.SystemLoss;
-RX_link.Ae = linkbudget.AtmAttenuation;
 TX_link.P_sv = P_sv;
 
 % Transmitter and Receiver antenna patterns
 RX_link.pattern = RXpattern;
 TX_link.pattern = TXpattern;
 
-% Transmitter and receiver antenna masks
-TX_link.beta = linkbudget.TXAntennaMask;  % User input from options
-RX_link.beta = linkbudget.RXAntennaMask;   % User input from options
-
 %% Calculate Link Budget
 [AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link);
 
 %% Pull information from measurements helpful in calculating outputs
-
 % the physical parameter results:
 epoch = out.epoch;       % epoch of first time [1x1]
 % TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]

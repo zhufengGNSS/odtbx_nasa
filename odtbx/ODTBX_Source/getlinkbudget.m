@@ -112,21 +112,47 @@ d2r             = pi/180;
 EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of Earth
 % c            = JATConstant('c') / 1000;               % km/sec speed of light
 
-% Data from odtbxOptions structure
-rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
-                %  Specify antenna pattern for each antenna, existing antennas are:
-                %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
-                %     omni.txt                  - zero dB gain,  180 degree half beamwidth
-                %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
-                %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
-                %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
-num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
-AtmMask         = getOdtbxOptions(options, 'AtmosphereMask', 50 ); % km 
-                %  Troposphere mask radius ~50 km
-                %  Ionosphere mask radius ~(500-1000 km)
-CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
-CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
+% Get link budget information
+linkbudget = getOdtbxOptions(options, 'linkbudget', []);
 
+% Generate an error if there isn't link budget information
+if isempty(linkbudget)
+    error('linkbudget variable undefined in odtbxOptions structure')
+end
+
+num_ant = length(linkbudget.AntennaPattern); %hasn't been tested for >4 antennas
+
+% % Data from odtbxOptions structure
+% rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
+%                 %  Specify antenna pattern for each antenna, existing antennas are:
+%                 %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+%                 %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+%                 %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+%                 %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+%                 %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+% num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
+% AtmMask         = getOdtbxOptions(options, 'AtmosphereMask', 50 ); % km 
+%                 %  Troposphere mask radius ~50 km
+%                 %  Ionosphere mask radius ~(500-1000 km)
+% CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
+% CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
+% % dyn_range       = getOdtbxOptions(options, 'DynamicTrackRange', 15 ); % dB
+% %        			% Dynamic tracking range of receiver, or maximum difference  
+% %                 % in power levels tracked simultaneously. If the difference
+% %                 % in snrs between two satellites is more that dyn_range,
+% %                 % the weaker of the two will not be considered visible. 
+
+% Set receiver and transmitter structure data from link budget information
+RX_link.Nf = linkbudget.ReceiverNoise;
+RX_link.L = linkbudget.RecConversionLoss;
+RX_link.freq = linkbudget.Frequency;
+RX_link.Ts = linkbudget.NoiseTemp;
+RX_link.As = linkbudget.SystemLoss;
+RX_link.Ae = linkbudget.AtmAttenuation;
+
+% Transmitter and receiver antenna masks
+TX_link.beta = linkbudget.TXAntennaMask;  % User input from options
+RX_link.beta = linkbudget.RXAntennaMask;   % User input from options
 
 % Measurement physical parameter results:
 TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
@@ -147,7 +173,7 @@ TX_link.alpha(~health) = pi;
 RX_link.alpha(~health) = pi;
 
 % Compute angle subtended by Earth and Earth mask angles for each SV
-r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
+r_mask          = EARTH_RADIUS + linkbudget.AtmMask;	% Atmosphere mask radius (km)
 denom=rgps_mag;
 denom(denom==0)=NaN;
 gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
@@ -220,7 +246,7 @@ for ANT=1:loop
     vis_beta = vis_beta_t & (RX_link.alpha <= RX_link.beta);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
-    vis_CN0 = AntLB_raw.CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
+    vis_CN0 = AntLB_raw.CN0 >= linkbudget.RecTrackThresh;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
     AntLB{ANT}.Halpha_r = RX_link.alpha';             % [GPS_SIZE,nn]

@@ -110,14 +110,14 @@ linkbudget.YumaFile          = yuma_file;              % Input YUMA file
 % coordinate system other than ECI.
 linkbudget.AntennaPointing   = ant_point;              % Specify attitude profile for each antenna
 linkbudget.AntennaPattern    = ant_pat;                % Specify receive antenna pattern for each antenna
-linkbudget.AntennaMask       = truth.rcv_ant_mask;     % Cut off angle for the receive antenna
+linkbudget.RXAntennaMask     = truth.rcv_ant_mask;     % Cut off angle for the receive antenna
 linkbudget.AtmosphereMask    = truth.r_mask/1000 - EARTH_RADIUS; % Mask altitude, km
 linkbudget.NoiseTemp         = truth.Ts;               % System noise temp of receive antenna (K)
 linkbudget.AtmAttenuation    = truth.Ae;               % Attenuation due to atmosphere, should be negative (dB)
 linkbudget.TransPowerLevel   = truth.sv_power;         % Transmitter power level (1=min, 2=typical, 3=max)
 linkbudget.TransPowerOffset  = truth.xmit_power_offset;% Global transmitter power offset (dB)
 linkbudget.GPSBlock          = truth.sv_block;         % GPS Satellite Block  (1-II/IIA, 2-IIR, 3-IIR-M, 4-IIF)
-linkbudget.TransAntMask      = truth.xmit_ant_mask;    % Cut off angle for the transmit antenna (rad)
+linkbudget.TXAntennaMask     = truth.xmit_ant_mask;    % Cut off angle for the transmit antenna (rad)
 linkbudget.ReceiverNoise     = truth.Nf;               % Noise figure of receiver/LNA (dB)
 linkbudget.RecConversionLoss = truth.L;                % Receiver implementation, A/D conversion losses (dB)
 linkbudget.SystemLoss        = truth.As;               % System losses, in front of LNA (dB)

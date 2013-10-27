@@ -121,37 +121,28 @@ if isempty(link_budget)
     warning('linkbudget variable was undefined in odtbxOptions structure')
 end
 
-num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
-
 % Check that we have the necessary information for a link budget
-% calculation.
-if ~isfield(link_budget, 'ReceiverNoise') || isempty(link_budget.ReceiverNoise)
-    link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
-end
-if ~isfield(link_budget, 'RecConversionLoss') || isempty(link_budget.RecConversionLoss)
-    link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
-end
-if ~isfield(link_budget, 'Frequency') || isempty(link_budget.Frequency)
-    link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
-end
-if ~isfield(link_budget, 'NoiseTemp') || isempty(link_budget.NoiseTemp)
-    link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
-end
-if ~isfield(link_budget, 'SystemLoss') || isempty(link_budget.SystemLoss)
-    link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
-end
-if ~isfield(link_budget, 'AtmAttenuation') || isempty(link_budget.AtmAttenuation)
-    link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
-end
-if ~isfield(link_budget, 'TXAntennaMask') || isempty(link_budget.TXAntennaMask)
-    link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi/2); % rad
-end
-if ~isfield(link_budget, 'RXAntennaMask') || isempty(link_budget.RXAntennaMask)
-    link_budget = linkbudget_default(link_budget, 'RXAntennaMask', pi); % rad
-end
-
+% calculation. If not, assume a value and warn user.
+link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
+link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
+link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
+link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
+link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
+link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
+link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi/2); % rad
+link_budget = linkbudget_default(link_budget, 'RXAntennaMask', pi); % rad
+link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
+    %  Specify antenna pattern for each antenna, existing antennas are:
+    %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+    %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+    %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+    %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+    %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+    
 % Reassign the options structure with any changed/default link budget values
 options = setOdtbxOptions(options, 'linkbudget', link_budget);
+
+num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
 
 %% Assign variables to link structures
 % Set receiver and transmitter structure data from link budget information
@@ -202,7 +193,7 @@ Hvis_atm = vis_atm';
 
 % Set receiver antenna loop number
 loop = max([1,num_ant]);
-GPS_SIZE = size(out.range,1);
+TARGET_SIZE = size(out.range,1);
 
 % ----------------------------------------
 %  Antenna calculation loop
@@ -219,7 +210,7 @@ for ANT=1:loop
    
     % Determine if the pattern is elevation only (1-D) or azimuth and
     % elevation (2-D) and compute the receiver gain
-    for j = 1:GPS_SIZE
+    for j = 1:TARGET_SIZE
         % Encapsulate RX and TX data
         % Originally set to be 1D receive, 1D transmit patterns
         RX_antenna = struct('pattern', RX_link.pattern{ANT}, ...

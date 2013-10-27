@@ -19,6 +19,8 @@ link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant
     %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
 num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
 
+% Reassign the options structure with any changed/default link budget values
+options = setOdtbxOptions(options, 'linkbudget', link_budget);
 
 TARGET_SIZE = size(AntLB{1}.Halpha_r,1);
                 

@@ -330,7 +330,7 @@ GPSFreq.L1      = 1575.42e6;    % Hz
 GPSFreq.L2      = 1227.6e6;     % Hz
 GPSFreq.L5      = 1176.45e6;    % Hz
 freq            = GPSFreq.(link_budget.GPSBand);
-link_budget = linkbudget_default(link_budget, 'Frequency', freq);
+link_budget.Frequency = freq;
 % r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
  
 

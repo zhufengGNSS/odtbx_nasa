@@ -1,7 +1,7 @@
 function [linkbudget] = linkbudget_default(linkbudget, fieldname, default_val)
     % LINKBUDGET_DEFAULT Sets a required linkbudget value to a given
     % default if the value doesn't already exist in the link budget
-    % structure
+    % structure. Warns user when a value is set as a default.
     
     if nargin < 2
         error('MATLAB:linkbudget_default:NotEnoughInputs','Not enough input arguments.');

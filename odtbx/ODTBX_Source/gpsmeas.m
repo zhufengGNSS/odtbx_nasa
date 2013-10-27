@@ -524,7 +524,7 @@ RX_link.pattern = RXpattern;
 TX_link.pattern = TXpattern;
 
 %% Calculate Link Budget
-[AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link);
+[AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link);
 
 %% Pull information from measurements helpful in calculating outputs
 % the physical parameter results:

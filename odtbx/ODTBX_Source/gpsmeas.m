@@ -263,8 +263,8 @@ useDoppler      = getOdtbxOptions(options, 'useDoppler', false );
 % already there)
 linkbudget      = getOdtbxOptions(options, 'linkbudget', []);
 
-linkbudget_default(linkbudget, 'GPSBand', 'L1');
-linkbudget_default(linkbudget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
+linkbudget = linkbudget_default(linkbudget, 'GPSBand', 'L1');
+linkbudget = linkbudget_default(linkbudget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
     %  Specify antenna pattern for each antenna, existing antennas are:
     %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
     %     omni.txt                  - zero dB gain,  180 degree half beamwidth
@@ -272,47 +272,47 @@ linkbudget_default(linkbudget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysme
     %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
     %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
 num_ant = length(linkbudget.AntennaPattern); %hasn't been tested for >4 antennas
-linkbudget_default(linkbudget, 'RXAntennaMask', 180*d2r);
-linkbudget_default(linkbudget, 'AtmosphereMask', 50); % km
+linkbudget = linkbudget_default(linkbudget, 'RXAntennaMask', 180*d2r);
+linkbudget = linkbudget_default(linkbudget, 'AtmosphereMask', 50); % km
     %  Troposphere mask radius ~50 km
     %  Ionosphere mask radius ~(500-1000 km)
-linkbudget_default(linkbudget, 'RXAntennaMask', 180*d2r);
-linkbudget_default(linkbudget, 'NoiseTemp', 300); % K
+linkbudget = linkbudget_default(linkbudget, 'RXAntennaMask', 180*d2r);
+linkbudget = linkbudget_default(linkbudget, 'NoiseTemp', 300); % K
     % System noise temp [K], space pointing antenna = 290
     % System noise temp [K], earth pointing antenna = 300
-linkbudget_default(linkbudget, 'AtmAttenuation', 0.0); % dB
+linkbudget = linkbudget_default(linkbudget, 'AtmAttenuation', 0.0); % dB
     % attenuation due to atmosphere (should be negative) [dB]
-linkbudget_default(linkbudget, 'TransPowerLevel', 2); % 1-minimum, 2-typical, 3-max
-linkbudget_default(linkbudget, 'TransPowerOffset', 0.0); % dB, global offset
-linkbudget_default(linkbudget, 'GPSBlock', 1 ); 
+linkbudget = linkbudget_default(linkbudget, 'TransPowerLevel', 2); % 1-minimum, 2-typical, 3-max
+linkbudget = linkbudget_default(linkbudget, 'TransPowerOffset', 0.0); % dB, global offset
+linkbudget = linkbudget_default(linkbudget, 'GPSBlock', 1 ); 
     % 1 - II/IIA
     % 2 - IIR
     % 3 - IIR-M
     % 4 - IIF
     % 5 - III  - currently use IIR-M gain pattern and -158.5 min power
     % 6 - Fictitious 3D antenna pattern based on IIA
-linkbudget_default(linkbudget, 'TransAntMask', pi );  % in rad
+linkbudget = linkbudget_default(linkbudget, 'TransAntMask', pi );  % in rad
     %  The actual mask used is the lesser of this mask and the limit of the defined pattern
     %  Note:  mask = 70 deg includes entire defined pattern
     %         mask = 42 deg includes only main and first side lobes
     %         mask = 26 deg includes only main lobe
-linkbudget_default(linkbudget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
-linkbudget_default(linkbudget, 'RecConversionLoss', -1.5 );  % dB
+linkbudget = linkbudget_default(linkbudget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
+linkbudget = linkbudget_default(linkbudget, 'RecConversionLoss', -1.5 );  % dB
     % Receiver implementation, A/D conversion losses [dB]
     %   Novatel: L = -4.0 	
     %   Plessey: L = -1.5		
-linkbudget_default(linkbudget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
-linkbudget_default(linkbudget, 'LNAGain', 40 ); % dB, LNA gain (trimble pre-amp spec = 42-48)
-linkbudget_default(linkbudget, 'CableLoss', -2 ); % dB, Cable losses (after LNA)
-linkbudget_default(linkbudget, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
-linkbudget_default(linkbudget, 'RecTrackThresh', linkbudget.RecAcqThresh ); % dB-Hz, Receiver tracking threshold
-linkbudget_default(linkbudget, 'DynamicTrackRange', 15 ); % dB
+linkbudget = linkbudget_default(linkbudget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
+linkbudget = linkbudget_default(linkbudget, 'LNAGain', 40 ); % dB, LNA gain (trimble pre-amp spec = 42-48)
+linkbudget = linkbudget_default(linkbudget, 'CableLoss', -2 ); % dB, Cable losses (after LNA)
+linkbudget = linkbudget_default(linkbudget, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
+linkbudget = linkbudget_default(linkbudget, 'RecTrackThresh', linkbudget.RecAcqThresh ); % dB-Hz, Receiver tracking threshold
+linkbudget = linkbudget_default(linkbudget, 'DynamicTrackRange', 15 ); % dB
     % Dynamic tracking range of receiver, or maximum difference  
     % in power levels tracked simultaneously. If the difference
     % in snrs between two satellites is more that linkbudget.DynamicTrackRange,
     % the weaker of the two will not be considered visible. 
 
-% Reassign the options structure with any changed/default link budgetvalues
+% Reassign the options structure with any changed/default link budget values
 options = setOdtbxOption(options, 'linkbudget', linkbudget);
 
 % Error messages associated with user inputs

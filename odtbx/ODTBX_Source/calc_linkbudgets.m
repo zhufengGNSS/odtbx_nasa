@@ -122,25 +122,35 @@ end
 
 num_ant = length(linkbudget.AntennaPattern); %hasn't been tested for >4 antennas
 
-% % Data from odtbxOptions structure
-% rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
-%                 %  Specify antenna pattern for each antenna, existing antennas are:
-%                 %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
-%                 %     omni.txt                  - zero dB gain,  180 degree half beamwidth
-%                 %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
-%                 %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
-%                 %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
-% num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
-% AtmMask         = getOdtbxOptions(options, 'AtmosphereMask', 50 ); % km 
-%                 %  Troposphere mask radius ~50 km
-%                 %  Ionosphere mask radius ~(500-1000 km)
-% CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
-% CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
-% % dyn_range       = getOdtbxOptions(options, 'DynamicTrackRange', 15 ); % dB
-% %        			% Dynamic tracking range of receiver, or maximum difference  
-% %                 % in power levels tracked simultaneously. If the difference
-% %                 % in snrs between two satellites is more that dyn_range,
-% %                 % the weaker of the two will not be considered visible. 
+% Check that we have the necessary information for a link budget
+% calculation.
+if isempty(linkbudget.ReceiverNoise)
+    linkbudget = linkbudget_default(linkbudget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
+    warning('ReceiverNoise not set, setting default value of -3 dB.');
+end
+if isempty(linkbudget.RecConversionLoss)
+    linkbudget = linkbudget_default(linkbudget, 'RecConversionLoss', -1.5 );  % dB
+    warning('RecConversionLoss not set, setting default value of -1.5 dB.');
+end
+if isempty(linkbudget.Frequency)
+    linkbudget = linkbudget_default(linkbudget, 'Frequency', 1575.42e6 );  % Hz
+    warning('Frequency not set, setting default value of 1575.42e6 Hz.');
+end
+if isempty(linkbudget.NoiseTemp)
+    linkbudget = linkbudget_default(linkbudget, 'NoiseTemp', 300); % K
+    warning('NoiseTemp not set, setting default value of 300 K.');
+end
+if isempty(linkbudget.SystemLoss)
+    linkbudget = linkbudget_default(linkbudget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
+    warning('NoiseTemp not set, setting default value of 300 K.');
+end
+if isempty(linkbudget.AtmAttenuation)
+    linkbudget = linkbudget_default(linkbudget, 'AtmAttenuation', 0.0); % dB
+    warning('AtmAttenuation not set, setting default value of 300 K.');
+end
+
+% Reassign the options structure with any changed/default link budget values
+options = setOdtbxOption(options, 'linkbudget', linkbudget);
 
 % Set receiver and transmitter structure data from link budget information
 RX_link.Nf = linkbudget.ReceiverNoise;

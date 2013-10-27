@@ -1,6 +1,6 @@
 function [AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link)
 
-% GETLINKBUDGET  Calculates link budget and visibility of satellite targets
+% CALC_LINKBUDGETS  Calculates link budget and visibility between satellite targets
 %
 % [AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link) calculates
 % link budget based on information in OPTIONS given information about

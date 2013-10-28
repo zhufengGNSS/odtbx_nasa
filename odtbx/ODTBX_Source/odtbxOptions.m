@@ -540,6 +540,10 @@ measurementOptions = {
     'dynamicConsider'
     'localConsider'
     'linkbudget'
+    'YumaFile'
+    'Rotation2ECI'
+    'AntennaPointing'
+    'AntennaOrientation'
     };
 
 allOptions = {

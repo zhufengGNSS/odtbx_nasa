@@ -129,7 +129,7 @@ link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
 link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
 link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
 link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
-link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi/2); % rad
+link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi); % rad
 link_budget = linkbudget_default(link_budget, 'RXAntennaMask', pi); % rad
 link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
     %  Specify antenna pattern for each antenna, existing antennas are:

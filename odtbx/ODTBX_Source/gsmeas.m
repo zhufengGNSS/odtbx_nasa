@@ -157,6 +157,12 @@ if size(t,1)==N, t=t'; end
 
 if isnan(epoch); error('An epoch must be set in the options structure.'); end
 
+if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
+    dolinkbudget = true;
+else
+    dolinkbudget = false;
+end
+
 
 %% call rrdot with all the options passing straight through
 y    = nan(M,N);
@@ -270,6 +276,14 @@ if nargout > 2,
     R = repmat(sigma.^2,[1,1,N]);
 end
 
+if dolinkbudget
+    
+else
+    
+end
+
+end
+
 
 %% Subfunction for getting ECI states of ground stations at times t
 function gx = getGSstates(gsECEF,epoch,t)
@@ -281,4 +295,5 @@ gx = zeros(6,length(t),size(gsECEF,2));
 for nt = 1:length(t);
     M          = rotransf(-D(:,:,nt)*w,D(:,:,nt));
     gx(:,nt,:) = M(1:6,1:6)*[gsECEF;zeros(size(gsECEF))];
+end
 end

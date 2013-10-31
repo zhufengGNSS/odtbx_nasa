@@ -161,6 +161,8 @@ if isnan(epoch); error('An epoch must be set in the options structure.'); end
 
 if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
     dolinkbudget = true;
+    link_budget = getOdtbxOptions(options, 'linkbudget',[]);
+    
     % Set some default values
     link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'omni.txt'});
         %  Specify antenna pattern for each antenna, existing antennas are:
@@ -201,6 +203,7 @@ if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
         % in power levels tracked simultaneously. If the difference
         % in snrs between two satellites is more that link_budget.DynamicTrackRange,
         % the weaker of the two will not be considered visible. 
+    link_budget = linkbudget_default(link_budget, 'Frequency', 146.520e6);
     
     % Reassign the options structure with any changed/default link budget values
     options = setOdtbxOptions(options, 'linkbudget', link_budget);
@@ -323,9 +326,19 @@ end
 
 %% Perform link budget analysis
 if dolinkbudget
+    % Generate link budget structures from calculated data
+
+    % set link budget params in structs
+    TX_link.P_sv = link_budget.TransPowerOffset;
+
+    % Transmitter and Receiver antenna patterns
+    RX_link.pattern = load(link_budget.RXpattern);
+    TX_link.pattern = load(link_budget.TXpattern);
     
-else
-    
+    out.range = y;
+
+    % Calculate Link Budget
+    [AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link);    
 end
 
 end

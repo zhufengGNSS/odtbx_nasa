@@ -20,6 +20,8 @@
 
 close all
 
+d2r             = pi/180;
+
 t = [0 60 120 180];
 %x = [18000 10000 10000 0 0 0]';
 
@@ -29,8 +31,7 @@ x = [5158.712338     -1514.921648      3777.724544       2.754779       9.375862
 5436.235143      -378.334492      3739.451984       1.865419       9.535073      -0.633026;
 5534.648919       194.234583      3692.270615       1.415291       9.542710      -0.937961]';
 
-% Set up Ground Station information
-%----------------------------------
+%% Set up Ground Station information
 epoch  = datenum('Jan 1 2006');
 gsList = createGroundStationList();
 gsID   = {  'DS12'
@@ -43,6 +44,7 @@ for n=1:nGS
     gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
 end
 
+%% Set up normal ODTBX options
 measOptions = odtbxOptions('measurement');
 measOptions = setOdtbxOptions(measOptions,'epoch',epoch);
 measOptions = setOdtbxOptions(measOptions,'useRange', true);
@@ -54,6 +56,40 @@ measOptions = setOdtbxOptions(measOptions,'gsElevationConstraint',0);
 measOptions = setOdtbxOptions(measOptions,'gsECEF',gsECEF);
 measOptions = setOdtbxOptions(measOptions,'gsID', gsID);
 
+%% Link budget information
+% Parameters specific to link budget
+link_budget.AntennaPattern    = {'omni.txt'};           % Specify receive antenna pattern for each antenna
+    %  Specify antenna pattern for each antenna, existing antennas are:
+    %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+    %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+    %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+    %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+    %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+link_budget.RXAntennaMask     = 180*d2r;     % Cut off angle for the receive antenna
+link_budget.AtmosphereMask    = 0;                      % Mask altitude, km
+link_budget.NoiseTemp         = 300;                    % System noise temp of receive antenna (K)
+    % System noise temp [K], space pointing antenna = 290
+    % System noise temp [K], earth pointing antenna = 300
+link_budget.AtmAttenuation    = 0.0;                    % Attenuation due to atmosphere, should be negative (dB)
+link_budget.TransPowerLevel   = 2;                      % Transmitter power level (1=min, 2=typical, 3=max)
+link_budget.TransPowerOffset  = 0;                      % Global transmitter power offset (dB)
+link_budget.TXAntennaMask     = 70 * d2r;               % Cut off angle for the transmit antenna (rad)
+    %  The actual mask used is the lesser of this mask and the limit of the defined pattern
+    %  Note:  mask = 70 deg includes entire defined pattern
+    %         mask = 42 deg includes only main and first side lobes
+    %         mask = 26 deg includes only main lobe
+link_budget.ReceiverNoise     = -3;                     % Noise figure of receiver/LNA (dB)
+link_budget.RecConversionLoss = 0;                      % Receiver implementation, A/D conversion losses (dB)
+link_budget.SystemLoss        = 0;                      % System losses, in front of LNA (dB)
+link_budget.LNAGain           = 40;                     % Gain provided by the LNA (dB)
+link_budget.CableLoss         = -2;                     % Cable losses after LNA (dB)
+link_budget.RecAcqThresh      = 32;                     % Receiver acquisition threshold (dB-Hz)
+link_budget.RecTrackThresh    = 32;                     % Receiver tracking threshold (dB-Hz)
+link_budget.DynamicTrackRange = 15;                     % Receiver dynamic range (dB)
+
+measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
+
+%% Set variations and run gsmeas
 measOptions = setOdtbxOptions(measOptions,'useLightTime',true);
 measOptions = setOdtbxOptions(measOptions,'useIonosphere',false);
 measOptions = setOdtbxOptions(measOptions,'useTroposphere',false);
@@ -72,6 +108,7 @@ measOptions = setOdtbxOptions(measOptions,'useIonosphere',true);
 measOptions = setOdtbxOptions(measOptions,'useTroposphere',true);
 [y4,H4,R4] = gsmeas(t, x, measOptions);
 
+%% Display outputs
 disp(' ')
 disp(' ')
 disp([y1, y2, y3, y4])

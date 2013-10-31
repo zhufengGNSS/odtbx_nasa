@@ -1,6 +1,6 @@
-function [AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link)
+function [AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link)
 
-% GETLINKBUDGET  Calculates link budget and visibility of satellite targets
+% CALC_LINKBUDGETS  Calculates link budget and visibility between satellite targets
 %
 % [AntLB, HVIS] = getlinkbudget(out, options, RX_link, TX_link) calculates
 % link budget based on information in OPTIONS given information about
@@ -112,21 +112,50 @@ d2r             = pi/180;
 EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of Earth
 % c            = JATConstant('c') / 1000;               % km/sec speed of light
 
-% Data from odtbxOptions structure
-rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
-                %  Specify antenna pattern for each antenna, existing antennas are:
-                %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
-                %     omni.txt                  - zero dB gain,  180 degree half beamwidth
-                %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
-                %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
-                %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
-num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
-AtmMask         = getOdtbxOptions(options, 'AtmosphereMask', 50 ); % km 
-                %  Troposphere mask radius ~50 km
-                %  Ionosphere mask radius ~(500-1000 km)
-CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
-CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
+% Get link budget information
+link_budget = getOdtbxOptions(options, 'linkbudget', []);
 
+%% Error check incoming data
+% Generate an error if there isn't link budget information
+if isempty(link_budget)
+    warning('linkbudget variable was undefined in odtbxOptions structure')
+end
+
+% Check that we have the necessary information for a link budget
+% calculation. If not, assume a value and warn user.
+link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
+link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
+link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
+link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
+link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
+link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
+link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi); % rad
+link_budget = linkbudget_default(link_budget, 'RXAntennaMask', pi); % rad
+link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
+    %  Specify antenna pattern for each antenna, existing antennas are:
+    %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+    %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+    %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+    %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+    %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+    
+% Reassign the options structure with any changed/default link budget values
+options = setOdtbxOptions(options, 'linkbudget', link_budget);
+
+num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
+
+%% Assign variables to link structures
+% Set receiver and transmitter structure data from link budget information
+RX_link.Nf = link_budget.ReceiverNoise;
+RX_link.L = link_budget.RecConversionLoss;
+RX_link.freq = link_budget.Frequency;
+RX_link.Ts = link_budget.NoiseTemp;
+RX_link.As = link_budget.SystemLoss;
+RX_link.Ae = link_budget.AtmAttenuation;
+
+% Transmitter and receiver antenna masks
+TX_link.beta = link_budget.TXAntennaMask;  % User input from options
+RX_link.beta = link_budget.RXAntennaMask;   % User input from options
 
 % Measurement physical parameter results:
 TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
@@ -147,7 +176,7 @@ TX_link.alpha(~health) = pi;
 RX_link.alpha(~health) = pi;
 
 % Compute angle subtended by Earth and Earth mask angles for each SV
-r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
+r_mask          = EARTH_RADIUS + link_budget.AtmosphereMask;	% Atmosphere mask radius (km)
 denom=rgps_mag;
 denom(denom==0)=NaN;
 gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
@@ -164,7 +193,7 @@ Hvis_atm = vis_atm';
 
 % Set receiver antenna loop number
 loop = max([1,num_ant]);
-GPS_SIZE = size(out.range,1);
+TARGET_SIZE = size(out.range,1);
 
 % ----------------------------------------
 %  Antenna calculation loop
@@ -181,7 +210,7 @@ for ANT=1:loop
    
     % Determine if the pattern is elevation only (1-D) or azimuth and
     % elevation (2-D) and compute the receiver gain
-    for j = 1:GPS_SIZE
+    for j = 1:TARGET_SIZE
         % Encapsulate RX and TX data
         % Originally set to be 1D receive, 1D transmit patterns
         RX_antenna = struct('pattern', RX_link.pattern{ANT}, ...
@@ -220,7 +249,7 @@ for ANT=1:loop
     vis_beta = vis_beta_t & (RX_link.alpha <= RX_link.beta);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
-    vis_CN0 = AntLB_raw.CN0 >= CN0_lim;                               % [nn,GPS_SIZE]
+    vis_CN0 = AntLB_raw.CN0 >= link_budget.RecTrackThresh;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
     AntLB{ANT}.Halpha_r = RX_link.alpha';             % [GPS_SIZE,nn]

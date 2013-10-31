@@ -1,21 +1,28 @@
-function [HVIS] = visibility_constraints(link_budget, options, health, Hvis_earth, Hvis_atm)
-CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
-CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
-rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
-                %  Specify antenna pattern for each antenna, existing antennas are:
-                %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
-                %     omni.txt                  - zero dB gain,  180 degree half beamwidth
-                %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
-                %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
-                %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
-num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
-dyn_range       = getOdtbxOptions(options, 'DynamicTrackRange', 15 ); % dB
-       			% Dynamic tracking range of receiver, or maximum difference  
-                % in power levels tracked simultaneously. If the difference
-                % in snrs between two satellites is more that dyn_range,
-                % the weaker of the two will not be considered visible. 
+function [HVIS] = visibility_constraints(AntLB, options, health, Hvis_earth, Hvis_atm)
 
-GPS_SIZE = size(link_budget{1}.Halpha_r,1);
+link_budget = getOdtbxOptions(options, 'linkbudget', []);
+
+% Error check inputs
+link_budget = linkbudget_default(link_budget, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
+link_budget = linkbudget_default(link_budget, 'RecTrackThresh', link_budget.RecAcqThresh ); % dB-Hz, Receiver tracking threshold
+link_budget = linkbudget_default(link_budget, 'DynamicTrackRange', 15 ); % dB
+    % Dynamic tracking range of receiver, or maximum difference  
+    % in power levels tracked simultaneously. If the difference
+    % in snrs between two satellites is more that link_budget.DynamicTrackRange,
+    % the weaker of the two will not be considered visible. 
+link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
+    %  Specify antenna pattern for each antenna, existing antennas are:
+    %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+    %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+    %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+    %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+    %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
+
+% Reassign the options structure with any changed/default link budget values
+options = setOdtbxOptions(options, 'linkbudget', link_budget);
+
+TARGET_SIZE = size(AntLB{1}.Halpha_r,1);
                 
 % Set receiver antenna loop number
 loop = max([1,num_ant]);
@@ -52,12 +59,12 @@ for ANT=1:loop
     % Visibility for the GSS simulator, takes the form:
     % HXvis_gss = Health & Hvis_earth & (HXalpha_r <= betar_gss);
 %    eval(sprintf('H%dvis_gss = health'' & Hvis_earth & (H%dalpha_r <= betar_gss);',ANT*ones(1,2)));
-    AntVis{ANT}.Hvis_gss = health' & Hvis_earth & (link_budget{ANT}.Halpha_r <= betar_gss);
+    AntVis{ANT}.Hvis_gss = health' & Hvis_earth & (AntLB{ANT}.Halpha_r <= betar_gss);
 
     % User elevation angle with respect to antenna boresite
     % Set non-existent/unhealthy SVs to -90 deg
 %    eval(sprintf('H%del = (pi/2) - H%dalpha_r;',ANT*ones(1,2)));    % (nn,GPS_SIZE)
-    AntVis{ANT}.Hel = (pi/2) - link_budget{ANT}.Halpha_r;    % (nn,GPS_SIZE)
+    AntVis{ANT}.Hel = (pi/2) - AntLB{ANT}.Halpha_r;    % (nn,GPS_SIZE)
 %    eval(sprintf('H%del(~health'') = -pi/2;',ANT));
     AntVis{ANT}.Hel(~health'') = -pi/2;
     
@@ -72,23 +79,23 @@ for ANT=1:loop
     %finalstring = sprintf('H%dvis = health''.*Hvis_earth.*H%dvis_beta.*Hvis_atm.*H%dvis_CN0',ANT*ones(1,3));
     %   H1vis = Health.*Hvis_earth.*H1vis_beta.*Hvis_atm.*H1vis_CN0;   % (GPS_SIZE,mm)
     %eval([finalstring,';']);
-    AntVis{ANT}.Hvis = health' .* Hvis_earth .* link_budget{ANT}.Hvis_beta .* ...
-        Hvis_atm .* link_budget{ANT}.Hvis_CN0;   % (GPS_SIZE,mm)
+    AntVis{ANT}.Hvis = health' .* Hvis_earth .* AntLB{ANT}.Hvis_beta .* ...
+        Hvis_atm .* AntLB{ANT}.Hvis_CN0;   % (GPS_SIZE,mm)
 
 %    eval(sprintf('maxCN0 = max(H%dvis.*H%dCN0);',ANT*ones(1,2)));
-    maxCN0 = max(AntVis{ANT}.Hvis .* link_budget{ANT}.HCN0);
+    maxCN0 = max(AntVis{ANT}.Hvis .* AntLB{ANT}.HCN0);
     
     % Compute the visibility based on the dynamic CN0 limit at each time step
-    CN0_lim_dyn = ones(GPS_SIZE,1)*max(CN0_lim,(maxCN0 - dyn_range));
+    CN0_lim_dyn = ones(TARGET_SIZE,1)*max(link_budget.RecTrackThresh,(maxCN0 - link_budget.DynamicTrackRange));
     %eval(sprintf('H%dvis_CN0dyn = H%dCN0 >= CN0_lim_dyn;',ANT*ones(1,2)));
-    AntVis{ANT}.Hvis_CN0dyn = link_budget{ANT}.HCN0 >= CN0_lim_dyn;
+    AntVis{ANT}.Hvis_CN0dyn = AntLB{ANT}.HCN0 >= CN0_lim_dyn;
     %clear maxCN0 CN0_lim_dyn
 
     % Compute visibility for each antenna using dynamic tracking threshold
     %finalstring = sprintf('H%dvisdyn = health''.*Hvis_earth.*H%dvis_beta.*Hvis_atm.*H%dvis_CN0dyn',ANT*ones(1,3));
     %   H1visdyn = Health.*Hvis_earth.*H1vis_beta.*Hvis_atm.*H1vis_CN0dyn;   % (GPS_SIZE,mm)
     %eval([finalstring,';']);
-    AntVis{ANT}.Hvisdyn = health' .* Hvis_earth .* link_budget{ANT}.Hvis_beta...
+    AntVis{ANT}.Hvisdyn = health' .* Hvis_earth .* AntLB{ANT}.Hvis_beta...
         .* Hvis_atm .* AntVis{ANT}.Hvis_CN0dyn;   % (GPS_SIZE,mm)
 
     %eval(sprintf('HVIS = HVIS | H%dvis;',ANT));
@@ -109,10 +116,10 @@ for ANT=1:loop
 
     % Compute composite RP, C/No across all simulated antennas (take the max C/No)
     %eval(sprintf('HRP = max(HRP,H%dRP);',ANT));
-    HRP = max(HRP, link_budget{ANT}.HRP);
+    HRP = max(HRP, AntLB{ANT}.HRP);
     
     % eval(sprintf('HCN0 = max(HCN0,H%dCN0);',ANT));
-    HCN0 = max(HCN0, link_budget{ANT}.HCN0);
+    HCN0 = max(HCN0, AntLB{ANT}.HCN0);
 
 end
 HVIScases{2*loop+1} = HVIS;
@@ -124,7 +131,7 @@ for HVc=1:length(HVIScases)
     VISCN0=HCN0.*HVIScases{HVc};
     VISCN0acq=zeros(size(VISCN0));
     for n=1:size(VISCN0,1)
-        Vacq=find(VISCN0(n,:)>=CN0_acq);
+        Vacq=find(VISCN0(n,:)>=link_budget.RecAcqThresh);
         Vzero=union(find(VISCN0(n,:)==0),size(VISCN0,2)+1);
         if isempty(Vacq)
             VStartIndex=[];

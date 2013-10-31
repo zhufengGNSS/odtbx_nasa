@@ -385,6 +385,35 @@ function options = odtbxOptions(type)
 %
 % CalibrationFlag- Flag to indicate if camera calibration parameter partial
 %   derivatives should be returned in OPNAVMEAS
+% 
+% solvefor - Enables solve-for parameters in estbat and other estimators
+%
+% dynamicConsider - Enables consider parameters in estbat and other
+%   estimators
+%
+% localConsider - Enables consider parameters in estbat and other
+%   estimators
+%
+% linkbudget - Structure that contains all link budget information
+%
+% YumaFile - Used in gpsmeas
+%
+% Rotation2ECI - For coordinate frames other than ECI. This value allows
+%   the user to have x in any coordinate frame as long as the
+%   rotation to ECI goes with it. Input must be a pointer to a
+%   rotation function with time as the input.
+%
+% AntennaPointing- Specify attitude profile for each antenna
+%   (1) zenith pointing or (-1) nadir pointing wrt geocentric LVLH
+%   (2) parallel or (-2) antiparallel to the Earth-Sun vector
+%   (3) ecliptic north or south (-3)
+%   (4) fixed with respect to apogee zenith, or (-4) nadir
+%   vector apogee 
+%       selected as the point of highest altitude (ephemeris must include apogee)
+%   (5) body fore and (-5) aft directions relative to geocentric LVLH
+%   (6) body port and (-6) starboard directions relative to geocentric LVLH
+%
+% AntennaOrientation
 %
 %   keyword: options
 %   See also GETODTBXOPTIONS, SETODTBXOPTIONS, VALIDATEODTBXOPTIONS, 
@@ -445,6 +474,9 @@ function options = odtbxOptions(type)
 %   Benjamin Asher      05/10/2011      Added: CentralBody, PointMasses,
 %                                       SpiceFiles, GM, GM_CB, GM_PM
 %   K. Getzandanner     08/15/2011      Added: CalibrationFlag
+%   Phillip Anderson    10/30/2013      Added: linkbudget, YumaFile, 
+%                                       Rotation2ECI, AntennaPointing
+%                                       AntennaOrientation
 
 types = {
     'estimator'
@@ -539,6 +571,11 @@ measurementOptions = {
     'solvefor'
     'dynamicConsider'
     'localConsider'
+    'linkbudget'
+    'YumaFile'
+    'Rotation2ECI'
+    'AntennaPointing'
+    'AntennaOrientation'
     };
 
 allOptions = {
@@ -670,5 +707,10 @@ fprintf('          PrecnNutnExpire: [ days {1} ]\n');
 fprintf('             OpticalSigma: [ scalar>=0 {6e-10} ]\n');
 fprintf('                   Camera: [ Camera Object ]\n');
 fprintf('                 Attitude: [ Attitude Object ]\n');
+fprintf('               linkbudget: [ structure for gpsmeas.m ]\n');
+fprintf('                 YumaFile: [ file containing Yuma information]\n');
+fprintf('             Rotation2ECI: [ function handle for non ECI rotations]\n');
+fprintf('          AntennaPointing: [ described in getgpsmeas.m ]\n');
+fprintf('       AntennaOrientation: [ described in getgpsmeas.m ]\n');
 fprintf('\n');
 end

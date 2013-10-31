@@ -129,6 +129,8 @@ function [y,H,R] = gsmeas(t,x,options)
 %                                         time step
 %   Russell Carpenter   02/11/2011      Added useAngles option
 
+d2r             = pi/180;
+
 %% Get values from options
 gsID         = getOdtbxOptions(options, 'gsID', [] );
 gsList       = getOdtbxOptions(options, 'gsList', []);
@@ -159,10 +161,51 @@ if isnan(epoch); error('An epoch must be set in the options structure.'); end
 
 if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
     dolinkbudget = true;
-    fprintf('Will perform link budget.\n');
+    % Set some default values
+    link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'omni.txt'});
+        %  Specify antenna pattern for each antenna, existing antennas are:
+        %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+        %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+        %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+        %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+        %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+    num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
+    link_budget = linkbudget_default(link_budget, 'RXAntennaMask', 180*d2r);
+    link_budget = linkbudget_default(link_budget, 'AtmosphereMask', 0); % km
+        %  Troposphere mask radius ~50 km
+        %  Ionosphere mask radius ~(500-1000 km)
+    link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
+        % System noise temp [K], space pointing antenna = 290
+        % System noise temp [K], earth pointing antenna = 300
+    link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
+        % attenuation due to atmosphere (should be negative) [dB]
+    link_budget = linkbudget_default(link_budget, 'TransPowerLevel', 2); % 1-minimum, 2-typical, 3-max
+    link_budget = linkbudget_default(link_budget, 'TransPowerOffset', 0.0); % dB, global offset
+    link_budget = linkbudget_default(link_budget, 'TXAntennaMask', 70*d2r );  % in rad
+        %  The actual mask used is the lesser of this mask and the limit of the defined pattern
+        %  Note:  mask = 70 deg includes entire defined pattern
+        %         mask = 42 deg includes only main and first side lobes
+        %         mask = 26 deg includes only main lobe
+    link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
+    link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
+        % Receiver implementation, A/D conversion losses [dB]
+        %   Novatel: L = -4.0 	
+        %   Plessey: L = -1.5		
+    link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
+    link_budget = linkbudget_default(link_budget, 'LNAGain', 40 ); % dB, LNA gain (trimble pre-amp spec = 42-48)
+    link_budget = linkbudget_default(link_budget, 'CableLoss', -2 ); % dB, Cable losses (after LNA)
+    link_budget = linkbudget_default(link_budget, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
+    link_budget = linkbudget_default(link_budget, 'RecTrackThresh', link_budget.RecAcqThresh ); % dB-Hz, Receiver tracking threshold
+    link_budget = linkbudget_default(link_budget, 'DynamicTrackRange', 15 ); % dB
+        % Dynamic tracking range of receiver, or maximum difference  
+        % in power levels tracked simultaneously. If the difference
+        % in snrs between two satellites is more that link_budget.DynamicTrackRange,
+        % the weaker of the two will not be considered visible. 
+    
+    % Reassign the options structure with any changed/default link budget values
+    options = setOdtbxOptions(options, 'linkbudget', link_budget);
 else
     dolinkbudget = false;
-    fprintf('Will *not* perform link budget.\n');
 end
 
 
@@ -278,6 +321,7 @@ if nargout > 2,
     R = repmat(sigma.^2,[1,1,N]);
 end
 
+%% Perform link budget analysis
 if dolinkbudget
     
 else

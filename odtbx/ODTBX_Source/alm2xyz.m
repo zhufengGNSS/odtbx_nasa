@@ -1,4 +1,4 @@
-function [pos,vel,vel_tot] = alm2xyz(time,alm,frame)
+function [pos,vel,vel_tot,dtsv] = alm2xyz(time,alm,frame)
 % ALM2XYZ  Compute R and V from GPS alamanc data
 %
 %    [pos,vel] = alm2xyz(time,alm,frame) 
@@ -18,7 +18,14 @@ function [pos,vel,vel_tot] = alm2xyz(time,alm,frame)
 %       pos	      x,y,z position of each SVN at each 'n' time step
 %       vel	      x,y,z velocity of each SVN at each 'n' time step
 %       vel_tot   x,y,z total velocity of each SVN at each 'n' time step
-%                 If frame = 0 (ECI), vel = vel_tot.
+%                 If frame = 0 (ECI), vel = vel_tot
+%       dtsv      (n,mm) matrix of time tag corrections accounting for
+%                 AF0 and Af1.  The corrections are applied from the
+%                 almanac as gpstime = sat_time - dtsv
+%                 To add the clock bias from the message to data, each
+%                 indiviudal satellite would have a time tag of time(1,n) +
+%                 dtsv(n,mm) where n represents the time index in GPS secs
+%                 and mm is the PRN.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for
@@ -109,6 +116,8 @@ inc = alm(:,5);               % inclination
 OMEGA_not = alm(:,8);         % long of asc node at epoch
 OMEGA_dot = alm(:,6);         % rate of long of asc node
 n_not = sqrt(MU./a.^3);       % mean motion (rad/s)
+AF0 = alm(:,11);              % clock bias
+AF1 = alm(:,12);              % clock drift
 
 % Initialize variables
 pos = zeros(3,size(t_epoch,2),mm);
@@ -198,6 +207,9 @@ for time_step = 1:size(t_epoch,2)      % Start loop through each time step
 	%pos(:,time_step)=[reshape(sat_pos,mm*3,1)];
 	%vel(:,time_step)=[reshape(sat_vel,mm*3,1)];
 	
+    %Create the clock bias matrix
+     dtsv(time_step,1:mm) = AF0 + AF1.*t_k;
+
 	% Data saved in 3D arrays
 	pos(:,time_step,:) = sat_pos;
 	vel(:,time_step,:) = sat_vel;

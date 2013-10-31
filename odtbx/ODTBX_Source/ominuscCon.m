@@ -1,4 +1,4 @@
-function [dy,H,R,Pdy] = ominusc(datfun,t,x,y,options,P,datarg,isel)
+function [dy,H,R,Pdy] = ominuscCon(datfun,t,x,y,options,P,datarg,isel)
 % OMINUSC  Innovations, meas. partials, and possibly innovation covariance.
 %   [DY,H,R] = OMINUSC(DATFUN,T,X,Y,OPTIONS) uses the supplied measurement
 %   data function DATFUN to compute the difference between observed and
@@ -71,10 +71,19 @@ function [dy,H,R,Pdy] = ominusc(datfun,t,x,y,options,P,datarg,isel)
 % Russell Carpenter
 % NASA Goddard Space Flight Center
 
+% datfun
+% size(t)
+% size(x)
+% size(y)
+% options
+% size(P)
+% datarg
+
 if nargin < 7,
     datarg = [];
 end
 mt = length(t);
+
 [h,H,R] = feval(datfun,t,x,datarg);
 if isempty(H),
     for k = mt:-1:1,
@@ -91,15 +100,10 @@ if nargout == 4,
     end
     [m,n] = size(dy);
     Pdy = NaN(m,m,mt);
-    
-    % Find the indices of each column of dy that contains at least one
-    % number (i.e. not all NaNs)
-%     ig = [];
-%     for k = 1:m
-%         ig=union(ig,find(~isnan(dy(k,:))),'legacy');
-%     end
-    ig = find(any(~isnan(dy)));
-    
+    ig = [];
+    for k = 1:m
+        ig=union(ig,find(~isnan(dy(k,:))));
+    end
     for k = ig
         if nargin == 8
             ikeep = ~isnan(dy(:,k)) & isel(:,k);
@@ -110,6 +114,9 @@ if nargout == 4,
 %         size(k)
 %         size(H)
 %         disp('-')
+        if numel(ikeep) < 1
+            keyboard;
+        end
         Hnn = H(ikeep(1),:,k(1));
         Rnn = R(ikeep(1),ikeep(1),k(1));
         Pdynn = Hnn*P(:,:,k(1))*Hnn' + Rnn;

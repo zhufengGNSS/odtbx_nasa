@@ -159,8 +159,10 @@ if isnan(epoch); error('An epoch must be set in the options structure.'); end
 
 if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
     dolinkbudget = true;
+    fprintf('Will perform link budget.\n');
 else
     dolinkbudget = false;
+    fprintf('Will *not* perform link budget.\n');
 end
 
 

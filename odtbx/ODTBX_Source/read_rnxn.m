@@ -70,7 +70,7 @@
 %   This must be replaced with -0.5222959E-11 in the text file for this script to work.
 
 
-function [eph] = read_rnxn(rnxname)
+function [eph,KlobucharCoefs] = read_rnxn(rnxname)
 
 gps_constants
 format long e
@@ -90,6 +90,15 @@ EOH = 0;
 % Read header (but currently don't do anything with header data)
 while (feof(fid) == 0) & (EOH == 0)
     line = fgetl(fid);
+    if strcmp(line(61:65),'ION A')
+        Alphas = line(1:60);
+        Alphas = strrep(Alphas,'D','E');
+        KlobucharCoefs.A = sscanf(Alphas,'%f');
+    elseif strcmp(line(61:65),'ION B')
+        Betas = line(1:60);
+        Betas = strrep(Betas,'D','E');
+        KlobucharCoefs.B = sscanf(Betas,'%f');
+    end
     labela = line(61:length(line));
     label = '                    ';
     label(1:length(labela)) = labela;

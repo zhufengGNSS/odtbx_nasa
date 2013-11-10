@@ -262,7 +262,6 @@ link_budget      = getOdtbxOptions(options, 'linkbudget', []);
 
 %% Link Budget values required from gpsmeas 
 % (set them if something isn't already there)
-% link_budget = linkbudget_default(link_budget, 'AntennaPointing', 1);
 link_budget = linkbudget_default(link_budget, 'GPSBand', 'L1');
 link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
     %  Specify antenna pattern for each antenna, existing antennas are:

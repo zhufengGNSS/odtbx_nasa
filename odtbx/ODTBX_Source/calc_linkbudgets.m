@@ -123,9 +123,11 @@ end
 
 % Check that we have the necessary information for a link budget
 % calculation. If not, assume a value and warn user.
+options = linkbudget_default(options, 'frequencyTransmit', 1575.42e6 );  % Hz
+
 link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
 link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
-link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
+% link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
 link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
 link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
 link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
@@ -148,7 +150,7 @@ num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antenna
 % Set receiver and transmitter structure data from link budget information
 RX_link.Nf = link_budget.ReceiverNoise;
 RX_link.L = link_budget.RecConversionLoss;
-RX_link.freq = link_budget.Frequency;
+RX_link.freq = getOdtbxOptions(options, 'frequencyTransmit', 1575.42e6 );  % Hz;
 RX_link.Ts = link_budget.NoiseTemp;
 RX_link.As = link_budget.SystemLoss;
 RX_link.Ae = link_budget.AtmAttenuation;

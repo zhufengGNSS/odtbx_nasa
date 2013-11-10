@@ -311,6 +311,9 @@ link_budget = linkbudget_default(link_budget, 'DynamicTrackRange', 15 ); % dB
     % in snrs between two satellites is more that link_budget.DynamicTrackRange,
     % the weaker of the two will not be considered visible. 
 
+% Reassign the options structure with any changed/default link budget values
+options = setOdtbxOptions(options, 'linkbudget', link_budget);
+    
 % Error messages associated with user inputs
 if( useDoppler && useRangeRate)
     error('gpsmeas is not designed to handle both RangeRate and Doppler at the same time')
@@ -331,7 +334,8 @@ GPSFreq.L1      = 1575.42e6;    % Hz
 GPSFreq.L2      = 1227.6e6;     % Hz
 GPSFreq.L5      = 1176.45e6;    % Hz
 freq            = GPSFreq.(link_budget.GPSBand);
-link_budget.Frequency = freq;
+% link_budget.Frequency = freq;
+options = setOdtbxOptions(options, 'frequencyTransmit', freq);
 % r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
  
 
@@ -345,9 +349,6 @@ else
     GPS_SIZE = 1;
     link_budget.GPSBlock = block(sv);
 end
- 
-% Reassign the options structure with any changed/default link budget values
-options = setOdtbxOptions(options, 'linkbudget', link_budget);
                     
 %% Input Evaluation
 % This Section includes GPS satellite gain pattern file names, reference transmitter

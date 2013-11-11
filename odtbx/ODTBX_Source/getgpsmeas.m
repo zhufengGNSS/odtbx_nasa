@@ -1,11 +1,11 @@
 function out = getgpsmeas(t,x,options,qatt,params)
-% GETGPSMEAS  Computes physical parameters required for GPS based measurements 
+% GETGPSMEAS  Computes physical parameters required for GPS based measurements
 %
-%   out = GETGPSMEAS(t,x,options) computes physical parameters such as LOS 
-% angles, vectors, range, and range rate required for GPS measurements.  
-% These are based on the information in OPTIONS. See the OD Toolbox 
+%   out = GETGPSMEAS(t,x,options) computes physical parameters such as LOS
+% angles, vectors, range, and range rate required for GPS measurements.
+% These are based on the information in OPTIONS. See the OD Toolbox
 % function of the same name for details of each measurement type.  This
-% function is called by the functions GPSMEAS and gps_phys_params.  
+% function is called by the functions GPSMEAS and gps_phys_params.
 %
 % Note that this function can be called in two different ways based on the
 % params.GPS_SIZE and params.PRN.  If called to compute all satellites in
@@ -33,7 +33,7 @@ function out = getgpsmeas(t,x,options,qatt,params)
 %                                              types are not yet implemented:
 %                                              (2) parallel or (-2) antiparallel to the Earth-Sun vector
 %                                              (3) ecliptic north or south (-3)
-%                                              (4) fixed with respect to apogee zenith, or (-4) nadir vector apogee 
+%                                              (4) fixed with respect to apogee zenith, or (-4) nadir vector apogee
 %                                                selected as the point of highest altitude (ephemeris must include apogee)
 %                                              (5) body fore and (-5) aft directions relative to geocentric LVLH
 %                                              (6) body port and (-6) starboard directions relative to geocentric LVLH
@@ -64,8 +64,8 @@ function out = getgpsmeas(t,x,options,qatt,params)
 %   AntennaOrientation  3 x 3 x num_ant        unit orthogonal matrices
 %                                              representing the rotation of
 %                                              each antenna with respect to
-%                                              the body.  The Z-axis of the 
-%                                              antenna frame is the 
+%                                              the body.  The Z-axis of the
+%                                              antenna frame is the
 %                                              boresite.  This option
 %                                              parameter is used only if
 %                                              the corresponding antenna
@@ -91,80 +91,80 @@ function out = getgpsmeas(t,x,options,qatt,params)
 %                           [sin(theta/2)*e_vec;cos(theta/2)] where e_vec is the
 %                           unit vector representing the axis of rotation
 %                           and theta is the angle of rotation about that
-%                           axis.  The quaternion information is used IF a 
-%                           2-D antenna is specified for the user satellite.  
-%                           If the quaternion is not supplied and the 2-D 
-%                           antenna is specified, then it will assume that 
-%                           spacecraft attitude is aligned with the 
-%                           coordinate frame that the position and velocity 
+%                           axis.  The quaternion information is used IF a
+%                           2-D antenna is specified for the user satellite.
+%                           If the quaternion is not supplied and the 2-D
+%                           antenna is specified, then it will assume that
+%                           spacecraft attitude is aligned with the
+%                           coordinate frame that the position and velocity
 %                           are given in, i.e., the default is [0 0 0 1]'.
 %                           Additionally, the orientation matrix
-%                           of each antenna wrt to the spacecraft body can 
+%                           of each antenna wrt to the spacecraft body can
 %                           be specified through the options strucutre.  If
 %                           the antennae orientation is not specified, the
 %                           default is identity, i.e., aligned with the body
 %                           axes.
 %     params        (1x1)   Input structure containing the following
 %                           fields:
-%                              params.num_ant           (1 x 1)       
+%                              params.num_ant           (1 x 1)
 %                                  Number of receiver antennas
-%                              params.xmit_pattern_dim  (1 x 1)       
+%                              params.xmit_pattern_dim  (1 x 1)
 %                                  1 or 2 for dimension of the transmit antenna pattern
-%                              params.rec_pattern_dim   (num_ant x 1) 
+%                              params.rec_pattern_dim   (num_ant x 1)
 %                                  1 or 2 for dimension of the receiver antenna patterns
-%                              params.GPS_SIZE          (1 x 1)       
+%                              params.GPS_SIZE          (1 x 1)
 %                                  Number of GPS satellites to calculate,
 %                                  allowable values: 1 or 32
-%                              params.doH               (1 x 1)       
+%                              params.doH               (1 x 1)
 %                                  Flag indicating whether the parameters
-%                                  required for the computation of the 
+%                                  required for the computation of the
 %                                  measurement partials are required
-%                              params.PRN               (1 x 1)       
+%                              params.PRN               (1 x 1)
 %                                  OPTIONAL, forces calculation for only one
 %                                  GPS PRN, and designates the index of the
 %                                  desired PRN to be calculated, note
 %                                  GPS_SIZE must be one.
-% 
+%
 %   OUTPUTS
 %      out           (1x1)  Output structure containing the following
 %                           fields:
-%                              out.epoch      (1 x 1) 
+%                              out.epoch      (1 x 1)
 %                                  epoch in Matlab datenum
-%                              out.TX_az      (N x GPS_SIZE) 
+%                              out.TX_az      (N x GPS_SIZE)
 %                                  transmitter azimuth [deg]
-%                              out.TX_el      (N x GPS_SIZE) 
+%                              out.TX_el      (N x GPS_SIZE)
 %                                  transmitter elevation [deg]
-%                              out.RX_az      (N x GPS_SIZExnum_ant) 
+%                              out.RX_az      (N x GPS_SIZExnum_ant)
 %                                  receiver azimuth [deg]
-%                              out.RX_el      (N x GPS_SIZExnum_ant) 
+%                              out.RX_el      (N x GPS_SIZExnum_ant)
 %                                  receiver elevation [deg]
-%                              out.range      (GPS_SIZE x N) 
+%                              out.range      (GPS_SIZE x N)
 %                                  range [km]
-%                              out.rrate      (GPS_SIZE x N) 
+%                              out.rrate      (GPS_SIZE x N)
 %                                  range rate [km/sec]
-%                              out.GPS_yaw    (N x GPS_SIZE) 
+%                              out.GPS_yaw    (N x GPS_SIZE)
 %                                  GPS SV yaw angle
-%                              out.rgps_mag   (N x GPS_SIZE) 
+%                              out.rgps_mag   (N x GPS_SIZE)
 %                                  magnitude of the GPS SV position [km]
-%                              out.health     (N x GPS_SIZE) 
+%                              out.health     (N x GPS_SIZE)
 %                                  health flag of each GPS SV
-%                              out.prn        (1 x H) 
+%                              out.prn        (1 x H)
 %                                  PRN ID of each healthy GPS SV in this out struct
 %
-%                              If the params.doH == 1, then the following 
+%                              If the params.doH == 1, then the following
 %                              fields are also set:
-%                                  out.eciRotation   (9 x 9 x N) 
+%                                  out.eciRotation   (9 x 9 x N)
 %                                     rotation matrix from ECI to ECEF
-%                                  out.los_3d        (3 x N x GPS_SIZE) 
+%                                  out.los_3d        (3 x N x GPS_SIZE)
 %                                     LOS 3D vector
-%                                  out.gps_vel_tot   (3 x N x GPS_SIZE) 
+%                                  out.gps_vel_tot   (3 x N x GPS_SIZE)
 %                                     total velocity of GPS SVs in ECEF
 %                                     frame [km/s]
-%                                  out.sat_vel_tot   (3 x N) 
+%                                  out.sat_vel_tot   (3 x N)
 %                                     total velocity of the satellite in
 %                                     ECEF frame [km/s]
-%                                  out.Rotation2ECI  (1 x 1) 
-%                                     name of function that computes 
+%                                  out.Rotation2ECI  (1 x 1)
+%                                     name of function that computes
 %                                     rotation from input frame to ECI
 %
 %
@@ -176,17 +176,17 @@ function out = getgpsmeas(t,x,options,qatt,params)
 %  more details.)
 
 % ODTBX: Orbit Determination Toolbox
-% 
+%
 % Copyright (c) 2003-2011 United States Government as represented by the
 % administrator of the National Aeronautics and Space Administration. All
 % Other Rights Reserved.
-% 
+%
 % This file is distributed "as is", without any warranty, as part of the
 % ODTBX. ODTBX is free software; you can redistribute it and/or modify it
 % under the terms of the NASA Open Source Agreement, version 1.3 or later.
-% 
+%
 % You should have received a copy of the NASA Open Source Agreement along
-% with this program (in a file named License.txt); if not, write to the 
+% with this program (in a file named License.txt); if not, write to the
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
 %  REVISION HISTORY
@@ -199,7 +199,7 @@ persistent rinexCache;
 persistent YumaCache;
 
 %% Get values from options
-OMEGA_EARTH = 7.2921151467e-5; 
+OMEGA_EARTH = 7.2921151467e-5;
 epoch           = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') );
 precnNutnExp    = getOdtbxOptions(options, 'PrecnNutnExpire', 1);
 Rotation2ECI    = getOdtbxOptions(options, 'Rotation2ECI', @IdentRot );
@@ -302,15 +302,16 @@ if useLightTimeCor
     % 3 times as many GPS states will be calculated.  Time of flight
     % calculation requires several GPS positions for interpolation
     gps_pos_fixed = zeros(3,3*nn,GPS_SIZE);
-    gps_vel_fixed = zeros(3,3*nn,GPS_SIZE);
+    gps_vel_fixed   = zeros(3,3*nn,GPS_SIZE);
     gps_vel_total = gps_vel_fixed;
-    gps_pos_eci   = zeros(3,3*nn,GPS_SIZE);
-    gps_vel_eci   = zeros(3,3*nn,GPS_SIZE);
-    gpsState      = zeros(6, 3*nn,GPS_SIZE);
-    tTrans        = zeros(nn,GPS_SIZE);
+    gps_pos_eci    = zeros(3,3*nn,GPS_SIZE);
+    gps_vel_eci      = zeros(3,3*nn,GPS_SIZE);
+    gpsState          = zeros(6, 3*nn,GPS_SIZE);
+    tTrans              = zeros(nn,GPS_SIZE);
     
     % Read the input file
-    rinexFile   = 'brdc0010.13n'; % This needs to be set by user!!
+    rinexFile   = 'brdc0010.13n';
+%     rinexFile = 'brdc_2013-01-01.2.nav';
     rinex_ephs = dataCache('get',rinexCache, rinexFile);
     if isempty(rinex_ephs)
         % TODO check for valid RINEX file given sim time and duration (only
@@ -326,7 +327,7 @@ if useLightTimeCor
         prns = params.PRN;
     else
         [gps_pos_fixed, gps_vel_fixed, ~,dtsv] = rnxnEval(timeGps,rinex_ephs);
-        prns = [1:32];  
+        prns = [1:32];
     end
     
     % Convert the GPS states from ECEF to ECI
@@ -380,7 +381,7 @@ else  % use Yuma to quickly create geometric measurements
     
     %  Convert simulation start time from UTC to GPS time in seconds
     time = 86400 * convertTime('GPS','UTC', epoch+t/86400);
-
+    
     % Read the input file
     gps_alm = dataCache('get',YumaCache,YumaFile);
     if isempty(gps_alm)
@@ -392,34 +393,37 @@ else  % use Yuma to quickly create geometric measurements
     % Find the list of PRNs with valid almanac health flag
     healthy = gps_alm(:,2)==0;
     healthy_ind = find(healthy);
+    prns = gps_alm(healthy_ind,1);
     
     % check against params.PRN request
     if ~isempty(params.PRN)
-        if any(healthy_ind == params.PRN)
-            healthy_ind = params.PRN; %override and select only this PRN
+        if any(prns == params.PRN)
+            prns = params.PRN;
+            healthy_ind =find(prns == params.PRN); %override and select only this PRN
         else
             healthy_ind = []; % bad selection vs almanac health
+            fprintf('Yuma Data unavailable for PRN %d\n', params.PRN);
         end
     end
     
-    prns = gps_alm(healthy_ind,1);
-    [gps_pos,gps_vel,gps_vel_tot,dtsv] = alm2xyz(time(:)',gps_alm(healthy_ind,:),1);	% [3,nn,mm] arrays
-    if GPS_SIZE == 1
-        % one SV calc only, PRN is in out.prn
-        gps_pos(:,:,1) = gps_pos; % km
-        gps_vel(:,:,1) = gps_vel; % km/s omega-cross term removed
-        gps_vel_tot(:,:,1) = gps_vel_tot;
+    if ~isempty(healthy_ind)
+        [gps_pos_ecef,gps_vel_ecef,gps_vel_tot_ecef,dtsv] = alm2xyz(time(:)',gps_alm(healthy_ind,:),1);	% [3,nn,mm] arrays
+        if GPS_SIZE == 1
+            % one SV calc only, PRN is in out.prn
+            gps_pos(:,:,1) = gps_pos_ecef; % km
+            gps_vel(:,:,1) = gps_vel_ecef; % km/s omega-cross term removed
+            gps_vel_tot(:,:,1) = gps_vel_tot_ecef;
+        else
+            % all 32 SVs, index PRN via location in GPS_SIZE
+            gps_pos(:,:,prns) = gps_pos_ecef; % km
+            gps_vel(:,:, prns) = gps_vel_ecef; % km/s omega-cross term removed
+            gps_vel_tot(:,:,prns) = gps_vel_tot_ecef;
+        end
+        
+        % No healthy SVs in the healthy_ind, early exit w/ no computation.
+        % This is due to the almanac file, the GPS_SIZE, or by selecting a PRN
+        % that isn't healthy.
     else
-        % all 32 SVs, index PRN via location in GPS_SIZE
-        gps_pos(:,:,prns) = gps_pos; % km
-        gps_vel(:,:,prns) = gps_vel; % km/s omega-cross term removed
-        gps_vel_tot(:,:,prns) = gps_vel_tot;
-    end
-    
-    % No healthy SVs in the healthy_ind, early exit w/ no computation.
-    % This is due to the almanac file, the GPS_SIZE, or by selecting a PRN
-    % that isn't healthy.
-    if isempty(healthy_ind)
         out.epoch = 0;
         out.TX_az = zeros(nn,GPS_SIZE);
         out.TX_el = zeros(nn,GPS_SIZE);
@@ -489,14 +493,14 @@ else
     denom=rgps_mag.*los_mag;
     denom(denom==0)=NaN;
     TX_el = acos(reshape(dot(gps_pos,los_3d),nn,GPS_SIZE)./denom)*r2d;    % (nn,GPS_SIZE)
-
+    
 end
 
 if ~exist('qatt','var') || isempty(qatt)
     wstr = ['S/C body quaternion is not specified in the input.  ',...
         'Body will be assumed to be aligned with the same coordinate ',...
         'frame as the position and velocity states.'];
-    warning('ODTBX:GPSMEAS:noBodyQuat',wstr); 
+    warning('ODTBX:GPSMEAS:noBodyQuat',wstr);
     qatt = repmat([0;0;0;1],1,nn);
 end
 if ~exist('ref2body','var')
@@ -535,7 +539,7 @@ for ANT=1:loop
         boresite = comp_bs_3d(1, time, sat_pos, sat_vel, pointing_ref(ANT), 1);  % [3,nn]
         boresite_3d = reshape(repmat(boresite,1,GPS_SIZE),3,nn,GPS_SIZE);
         RX_el(:,:,ANT) = (abs(acos(reshape(dot(boresite_3d,los_unit_3d),nn,GPS_SIZE))))*r2d;  % (nn,GPS_SIZE)
-
+        
     end
     
 end

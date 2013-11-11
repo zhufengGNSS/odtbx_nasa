@@ -323,10 +323,10 @@ if useLightTimeCor
     
     % Evaluate RINEX ICD-200 Ephemeris, ECEF km, km/s
     if params.GPS_SIZE == 1
-        [gps_pos_fixed, gps_vel_fixed, ~,dtsv] = rnxnEval(timeGps,rinex_ephs,params.PRN);
+        [gps_pos_fixed, gps_vel_fixed, ~,biasStates] = rnxnEval(timeGps,rinex_ephs,params.PRN);
         prns = params.PRN;
     else
-        [gps_pos_fixed, gps_vel_fixed, ~,dtsv] = rnxnEval(timeGps,rinex_ephs);
+        [gps_pos_fixed, gps_vel_fixed, ~,biasStates] = rnxnEval(timeGps,rinex_ephs);
         prns = [1:32];
     end
     
@@ -365,6 +365,9 @@ if useLightTimeCor
             
             % Store time of transmit for debug purposes
             tTrans(i,sv) = tTrans_i;
+            
+            % Find/store GPS clock Bias at time of transmission
+            dtsv(i,sv) = interp1(tIter(3*i-2:3*i),biasStates(3*i-2:3*i),tTrans_i,'spline');
             
             % Rotate GPS States at time of transmission into ECEF Frame at time of reception
             gps_pos(1:3,i,sv) = eciRotation(1:3,1:3,i) * gpsState_i(1:3);

@@ -208,7 +208,7 @@ for time_step = 1:size(t_epoch,2)      % Start loop through each time step
 	%vel(:,time_step)=[reshape(sat_vel,mm*3,1)];
 	
     %Create the clock bias matrix
-    dtsv(time_step,1:mm) = AF0 + AF1.*t_k;
+     dtsv(time_step,1:mm) = AF0 + AF1.*t_k;
 
 	% Data saved in 3D arrays
 	pos(:,time_step,:) = sat_pos;

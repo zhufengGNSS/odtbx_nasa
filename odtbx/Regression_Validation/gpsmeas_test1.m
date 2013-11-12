@@ -1,4 +1,4 @@
-function [y,H,R] = gpsmeas_test1()
+function [y,H,R,yabs,Habs,Rabs] = gpsmeas_test1()
 % This demonstrates the use of the gpsmeas measurement model with several
 % inputs times and several gps satellites.  It is useful for producing a
 % repeatable data set via a batch-style call.
@@ -64,5 +64,7 @@ measOptions = setOdtbxOptions(measOptions,'usetropo',false);
 tPos  = v1.state_j2k.tSim;
 
 % This demonstrates batch measurement generation
-[y,H,R] = gpsmeas(tPos, x1, measOptions);
+[y,H,R] = gpsmeas(tPos, x1, measOptions)
+[yabs,Habs,Rabs] = gpsmeasAbs(tPos, x1, measOptions,[])
+
 

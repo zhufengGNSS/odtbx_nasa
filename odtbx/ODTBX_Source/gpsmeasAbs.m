@@ -1,5 +1,5 @@
-function [y,H,R,AntLB,dtsv] = gpsmeas(t,x,options,qatt,sv)
-
+% function [y,H,R,AntLB] = gpsmeasAbs(varargin)
+function [y,H,R,AntLB] = gpsmeasAbs(t,x,options,qatt)
 % GPSMEAS  Makes GPS based measurements using dynamic C/No tracking threshold
 %
 % [y,H,R,AntLB] = GPSMEAS(t,x,options,qatt) creates GPS measurements based on the 
@@ -121,7 +121,7 @@ function [y,H,R,AntLB,dtsv] = gpsmeas(t,x,options,qatt,sv)
 %                                              when it is run for all times at once (i.e. batch mode).  
 %   DynamicTrackRange   dB                     Dynamic tracking range of receiver, or maximum difference  
 %                                              in power levels tracked simultaneously. If the difference
-%                                              in snrs between two satellites is more that link_budget.DynamicTrackRange,
+%                                              in snrs between two satellites is more that dyn_range,
 %                                              the weaker of the two will not be considered visible. 
 %   PrecnNutnExpire     days                   For how long, in days, a
 %                                              computed value for
@@ -250,7 +250,6 @@ function [y,H,R,AntLB,dtsv] = gpsmeas(t,x,options,qatt,sv)
 %   Kevin Berry         03/08/2011      Modified doppler and added range
 %                                       rate for consistency with other 
 %                                       ODTBX measurement models
-%   Phillip Anderson    10/16/2013      Abstracted out link budget code
 
 d2r             = pi/180;
 
@@ -258,64 +257,60 @@ d2r             = pi/180;
 useRange        = getOdtbxOptions(options, 'useRange', true );
 useRangeRate    = getOdtbxOptions(options, 'useRangeRate', false );
 useDoppler      = getOdtbxOptions(options, 'useDoppler', false );
-link_budget      = getOdtbxOptions(options, 'linkbudget', []);
+GPSBand         = getOdtbxOptions(options, 'GPSBand', 'L1' );
+rec_pattern     = getOdtbxOptions(options, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'} );
+                %  Specify antenna pattern for each antenna, existing antennas are:
+                %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
+                %     omni.txt                  - zero dB gain,  180 degree half beamwidth
+                %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
+                %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
+                %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
+num_ant         = length(rec_pattern); %hasn't been tested for >4 antennas
+rcv_ant_mask    = getOdtbxOptions(options, 'AntennaMask', 180*d2r );  % in rad
+                %  Global receiving antenna mask angle.  The lesser of the 
+                %  maximum defined angle of the pattern and this number used
+AtmMask         = getOdtbxOptions(options, 'AtmosphereMask', 50 ); % km 
+                %  Troposphere mask radius ~50 km
+                %  Ionosphere mask radius ~(500-1000 km)
+Ts              = getOdtbxOptions(options, 'NoiseTemp', 300 ); % K
+                % System noise temp [K], space pointing antenna = 290
+                % System noise temp [K], earth pointing antenna = 300
+Ae              = getOdtbxOptions(options, 'AtmAttenuation', 0.0 ); % dB
+                % attenuation due to atmosphere (should be negative) [dB]
+sv_power        = getOdtbxOptions(options, 'TransPowerLevel', 2 ); % 1-minimum, 2-typical, 3-max
+sv_power_offset = getOdtbxOptions(options, 'TransPowerOffset', 0.0 ); % dB, global offset
+sv_block        = getOdtbxOptions(options, 'GPSBlock', 1 ); 
+                  % 1 - II/IIA
+                  % 2 - IIR
+                  % 3 - IIR-M
+                  % 4 - IIF
+                  % 5 - III  - currently use IIR-M gain pattern and -158.5 min power
+                  % 6 - Fictitious 3D antenna pattern based on IIA
+xmit_ant_mask   = getOdtbxOptions(options, 'TransAntMask', pi );  % in rad
+                %  The actual mask used is the lesser of this mask and the limit of the defined pattern
+                %  Note:  mask = 70 deg includes entire defined pattern
+                %         mask = 42 deg includes only main and first side lobes
+                %         mask = 26 deg includes only main lobe
+Nf              = getOdtbxOptions(options, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
+L               = getOdtbxOptions(options, 'RecConversionLoss', -1.5 );  % dB
+				% Receiver implementation, A/D conversion losses [dB]
+				%   Novatel: L = -4.0 	
+				%   Plessey: L = -1.5		
+As              = getOdtbxOptions(options, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
+%Ga              = getOdtbxOptions(options, 'LNAGain', 40 ); % dB, LNA gain (trimble pre-amp spec = 42-48)
+%Ac              = getOdtbxOptions(options, 'CableLoss', -2 ); % dB, Cable losses (after LNA)
+CN0_acq         = getOdtbxOptions(options, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
+CN0_lim         = getOdtbxOptions(options, 'RecTrackThresh', CN0_acq ); % dB-Hz, Receiver tracking threshold
+dyn_range       = getOdtbxOptions(options, 'DynamicTrackRange', 15 ); % dB
+       			% Dynamic tracking range of receiver, or maximum difference  
+                % in power levels tracked simultaneously. If the difference
+                % in snrs between two satellites is more that dyn_range,
+                % the weaker of the two will not be considered visible. 
 
-%% Link Budget values required from gpsmeas 
-% (set them if something isn't already there)
-link_budget = linkbudget_default(link_budget, 'AntennaPointing', 1);
-link_budget = linkbudget_default(link_budget, 'GPSBand', 'L1');
-link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
-    %  Specify antenna pattern for each antenna, existing antennas are:
-    %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth
-    %     omni.txt                  - zero dB gain,  180 degree half beamwidth
-    %     trimblepatch_ant.txt      - hemi antenna, 4.5 dB gain, 90 deg half beamwidth
-    %     ballhybrid_10db_60deg.txt - high gain, 10 db peak gain, 60 degree half-beamwidth
-    %     ao40_hga_measured_10db.txt- another 10 dB HGA with 90 deg beamwidth
-num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antennas
-link_budget = linkbudget_default(link_budget, 'RXAntennaMask', 180*d2r);
-link_budget = linkbudget_default(link_budget, 'AtmosphereMask', 50); % km
-    %  Troposphere mask radius ~50 km
-    %  Ionosphere mask radius ~(500-1000 km)
-link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
-    % System noise temp [K], space pointing antenna = 290
-    % System noise temp [K], earth pointing antenna = 300
-link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
-    % attenuation due to atmosphere (should be negative) [dB]
-link_budget = linkbudget_default(link_budget, 'TransPowerLevel', 2); % 1-minimum, 2-typical, 3-max
-link_budget = linkbudget_default(link_budget, 'TransPowerOffset', 0.0); % dB, global offset
-link_budget = linkbudget_default(link_budget, 'GPSBlock', 1 ); 
-    % 1 - II/IIA
-    % 2 - IIR
-    % 3 - IIR-M
-    % 4 - IIF
-    % 5 - III  - currently use IIR-M gain pattern and -158.5 min power
-    % 6 - Fictitious 3D antenna pattern based on IIA
-link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi );  % in rad
-    %  The actual mask used is the lesser of this mask and the limit of the defined pattern
-    %  Note:  mask = 70 deg includes entire defined pattern
-    %         mask = 42 deg includes only main and first side lobes
-    %         mask = 26 deg includes only main lobe
-link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
-link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
-    % Receiver implementation, A/D conversion losses [dB]
-    %   Novatel: L = -4.0 	
-    %   Plessey: L = -1.5		
-link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
-link_budget = linkbudget_default(link_budget, 'LNAGain', 40 ); % dB, LNA gain (trimble pre-amp spec = 42-48)
-link_budget = linkbudget_default(link_budget, 'CableLoss', -2 ); % dB, Cable losses (after LNA)
-link_budget = linkbudget_default(link_budget, 'RecAcqThresh', 32 ); % dB-Hz, Receiver acquisition threshold
-link_budget = linkbudget_default(link_budget, 'RecTrackThresh', link_budget.RecAcqThresh ); % dB-Hz, Receiver tracking threshold
-link_budget = linkbudget_default(link_budget, 'DynamicTrackRange', 15 ); % dB
-    % Dynamic tracking range of receiver, or maximum difference  
-    % in power levels tracked simultaneously. If the difference
-    % in snrs between two satellites is more that link_budget.DynamicTrackRange,
-    % the weaker of the two will not be considered visible. 
-
-% Error messages associated with user inputs
 if( useDoppler && useRangeRate)
     error('gpsmeas is not designed to handle both RangeRate and Doppler at the same time')
 end
-if(length(t) == 1 && link_budget.RecAcqThresh ~= link_budget.RecTrackThresh)
+if(length(t) == 1 && CN0_acq ~= CN0_lim)
     warning('WarnTests:CNOLIM',['gpsmeas can only utilize a tracking '...
         'limit that is different from the acquisition limit when it is '...
         'run for all times at once (i.e. batch mode).'])
@@ -324,30 +319,21 @@ end
 % Count number of measurement types
 nMTypes         = sum([useRange useRangeRate useDoppler]);
 
+%% Get Some Constants from JAT
+EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of Earth
+c            = JATConstant('c') / 1000;               % km/sec speed of light
+
+%% Set Some Values
 
 %  Select L-band carrier for simulation
 %  Models civil signal power on selected carrier (C/A on L1, L2C on L2)
 GPSFreq.L1      = 1575.42e6;    % Hz
 GPSFreq.L2      = 1227.6e6;     % Hz
 GPSFreq.L5      = 1176.45e6;    % Hz
-freq            = GPSFreq.(link_budget.GPSBand);
-link_budget.Frequency = freq;
-% r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
- 
+freq            = GPSFreq.(GPSBand);
+r_mask          = EARTH_RADIUS + AtmMask;	% Atmosphere mask radius (km)
+GPS_SIZE        = 32;
 
-%Set up block type for antenna pattern selection, indexed by PRN
-block=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
-
-if nargin < 5
-    GPS_SIZE = 32;
-else
-    params.PRN = sv;
-    GPS_SIZE = 1;
-    link_budget.GPSBlock = block(sv);
-end
- 
-% Reassign the options structure with any changed/default link budget values
-options = setOdtbxOptions(options, 'linkbudget', link_budget);
                     
 %% Input Evaluation
 % This Section includes GPS satellite gain pattern file names, reference transmitter
@@ -412,7 +398,7 @@ options = setOdtbxOptions(options, 'linkbudget', link_budget);
 
 switch freq
     case GPSFreq.L1
-        switch link_budget.GPSBlock
+        switch sv_block
             case 1  % II/IIA
                 xmit_pattern = 'GPSIIA_L1MEAN.txt';	 % GPS SV gain pattern file
                 xmit_power = 13.4;
@@ -439,7 +425,7 @@ switch freq
                 xmit_power = 13.4;
         end
     case GPSFreq.L2
-        switch link_budget.GPSBlock
+        switch sv_block
             case 1  % II/IIA
                 error('Unsupported Option: No IIA L2 antenna pattern defined');	 % GPS SV gain pattern file
             case 2  % IIR
@@ -465,9 +451,9 @@ switch freq
 end
 
 % Apply global offset to transmitter power
-xmit_power = xmit_power + link_budget.TransPowerOffset;
+xmit_power = xmit_power + sv_power_offset;
 
-switch link_budget.TransPowerLevel    % Set power into transmitter
+switch sv_power    % Set power into transmitter
     case 1
         P_sv = xmit_power;
     case 2
@@ -490,13 +476,14 @@ end
 rec_pattern_dim = ones(loop,1);
 RXpattern = cell(loop,1);
 for ANT = 1:loop
-    RXpattern{ANT} = load(link_budget.AntennaPattern{ANT});  % [x,2]
+    RXpattern{ANT} = load(rec_pattern{ANT});  % [x,2]
     if size(RXpattern{ANT},2) > 2
         rec_pattern_dim(ANT) = 2;
     end
 end
 
-%% Compute the gps physical relationships between the transmitters and receivers
+%% Compute the gps physical relationships between the transmitters and
+%  receivers
 params.xmit_pattern_dim = xmit_pattern_dim;
 params.rec_pattern_dim = rec_pattern_dim;
 params.GPS_SIZE = GPS_SIZE;
@@ -514,31 +501,15 @@ end
 % Calculate the physical parameters
 out = getgpsmeas(t,x,options,qatt,params);
 
-%% Generate link budget structures from calculated data
-
-% set link budget params in structs
-TX_link.P_sv = P_sv;
-
-% Transmitter and Receiver antenna patterns
-RX_link.pattern = RXpattern;
-TX_link.pattern = TXpattern;
-
-%% Calculate Link Budget
-[AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link);
-
-%% Pull information from measurements helpful in calculating outputs
 % the physical parameter results:
 epoch = out.epoch;       % epoch of first time [1x1]
-% TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
-% TX_link.alpha = out.TX_el*d2r; % The transmitter elevation angle (rad) [nn x GPS_SIZE]
-% RX_link.alpha = out.RX_el*d2r; % The receiver elevation angle (rad)
-
+TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
+alpha_t = out.TX_el*d2r; % The transmitter elevation angle (rad) [nn x GPS_SIZE]
 % Note, the receiver angles from "out" are below, in the ANT loop
 Hrange = out.range;      % [GPS_SIZE x nn]
 Hrrate = out.rrate;      % [GPS_SIZE x nn]
-% rgps_mag = out.rgps_mag; % [nn x GPS_SIZE]
-% health = out.health;     % the health indicator, [nn x GPS_SIZE]
-% dtsv = out.dtsv;          %individual satellite clock bias which is added to the epoch time to reflect the GPS time of measurement (using AFO and AF1)
+rgps_mag = out.rgps_mag; % [nn x GPS_SIZE]
+health = out.health;     % the health indicator, [nn x GPS_SIZE]
 
 % Auxiliary parameters useful for H calculation
 if params.doH == 1
@@ -548,6 +519,121 @@ if params.doH == 1
     sat_vel_tot = out.sat_vel_tot;
     Rotation2ECI = out.Rotation2ECI;
 end
+
+
+% Set alpha_t for non-existent/unhealthy SVs to pi rad
+alpha_t(~health) = pi;
+
+% Compute angle subtended by Earth and Earth mask angles for each SV
+denom=rgps_mag;
+denom(denom==0)=NaN;
+gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
+gamma_mask = asin(r_mask./denom);    % Angle subtended by Earth plus altitude mask (nn,GPS_SIZE)
+%  Set prns visible if not blocked by Earth
+vis_earth = (alpha_t > gamma) | (Hrange' <= rgps_mag.*cos(gamma));   % (nn,GPS_SIZE)
+%  Set prns visible if not subject to atmosphere mask
+vis_atm = (alpha_t > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask)); % (nn,GPS_SIZE)
+
+Hvis_earth = vis_earth';
+Hvis_atm = vis_atm';
+
+%% Compute antenna specific data
+
+% set link budget params in structs
+RX_link.Nf = Nf;
+RX_link.L = L;
+RX_link.freq = freq;
+RX_link.Ts = Ts;
+RX_link.As = As;
+RX_link.Ae = Ae;
+TX_link.P_sv = P_sv;
+
+% Transmitter and receiver antenna masks
+beta_t = xmit_ant_mask;  % User input from options
+beta_r = rcv_ant_mask;   % User input from options
+
+% ----------------------------------------
+%  Antenna calculation loop
+% ----------------------------------------
+AntLB = cell(loop,1); % cell array of structs to hold link budget data
+                      % for each antenna
+
+for ANT=1:loop
+    % Break down the variables used in this section so that they can be
+    % used individually
+    out_slice.RX_el = out.RX_el(:,:,ANT);
+    out_slice.RX_az = out.RX_az(:,:);
+    out_slice.health = out.health;
+    out_slice.range = out.range;
+    
+    % Perform the calculations for each antenna
+    AntLB{ANT} = antennaCalc(out_slice, RXpattern{ANT}, params, nn, d2r, ...
+        RX_link, TX_link, TXpattern, alpha_t,TX_az,beta_r, beta_t, CN0_lim, ...
+        Hvis_earth);
+    
+end % ANT loop
+
+
+%% Initialize - Combine results across multiple antennas
+HVIS = zeros(size(health'));
+HCN0 = ones(size(health')).*-300;
+HRP = ones(size(health')).*-300;
+HVISdyn = zeros(size(health'));
+
+% HVIScases is a cell array of matrices that contain
+% visibility information for both antennas.  It is sized 2+(2*n) where n is
+% the number of antennas on the satellite.
+%HVIScases={'HVIS','HVISdyn'};
+HVIScases=cell(1, 2*loop+2);
+
+betar_gss = 180*d2r; %Aperature mask (half angle) used with rcv antennas in GSS simulator
+
+
+% Compute visibility and other derived parameters
+% These can be re-computed quickly and therefore are not saved
+
+AntVis = cell(loop,1); % cell array of structs to hold visibility data
+                      % for each antenna
+for ANT=1:loop
+    
+    [AntVis{ANT}, HVIScases{2*ANT-1}, HVIScases{2*ANT}] = antennaVis(health, Hvis_earth, AntLB{ANT}, betar_gss, ...
+        Hvis_atm, GPS_SIZE, CN0_lim, dyn_range, HVIS, HVISdyn, ANT, HRP, HCN0);
+
+end
+HVIScases{2*loop+1} = HVIS;
+HVIScases{2*loop+2} = HVISdyn;
+
+%% Apply Aquisition constraint to visibility (HCNO with HVIS and HVISdyn)
+for HVc=1:length(HVIScases)    
+    %VISCN0=eval(['HCN0.*' HVIScases{HVc}]);
+    VISCN0=HCN0.*HVIScases{HVc};
+    VISCN0acq=zeros(size(VISCN0));
+    for n=1:size(VISCN0,1)
+        Vacq=find(VISCN0(n,:)>=CN0_acq);
+        Vzero=union(find(VISCN0(n,:)==0),size(VISCN0,2)+1);
+        if isempty(Vacq)
+            VStartIndex=[];
+        else
+            VStartIndex=1;
+        end
+        while ~isempty(VStartIndex)
+            VStart=Vacq(VStartIndex);
+            VStop=Vzero(find(Vzero>=VStart,1,'first'))-1;
+            VISCN0acq(n,VStart:VStop)=VISCN0(n,VStart:VStop);
+            VStartIndex=VStartIndex+find((Vacq(VStartIndex+1:end)-Vacq(VStartIndex:end-1))>1,1,'first');
+        end
+    end
+    %eval([HVIScases{HVc} '=(VISCN0acq~=0);']);
+    HVIScases{HVc} = (VISCN0acq~=0);
+    clear n VISCNO VISCN0acq Vacq Vzero VStartIndex VStart VStop
+end
+
+
+%HRR = sqrt(sum(sat_pos.^2));   % [1,nn]  magnitude of user vehicle position vector
+
+HVIS = HVIS.*health';  % Make sure all non-existent SVs are not visible
+%HCN0(~health') = -300;  % Set C/No for all non-existent SVs to -300
+%HRP(~health') = -300;  % Set RP for all non-existent SVs to -300
 
 %% Create Outputs
 y = NaN(size(Hrange,1)*(nMTypes),size(Hrange,2));
@@ -571,7 +657,6 @@ for n=1:size(Hrange,1)
     end
 
     if nargout > 1,
-        dtsv = zeros(3,nn);
         dr = zeros(3,nn);
         dv = zeros(3,nn);
         for nt=1:nn

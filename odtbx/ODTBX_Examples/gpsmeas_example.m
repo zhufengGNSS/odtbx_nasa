@@ -94,37 +94,45 @@ EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of 
 % measOptions is the structure that specifies the options required by
 % gpsmeas.m.  See gpsmeas.m for information on each of these options.
 % Note, only two options are not set in this example.
-measOptions.('epoch')             = epoch;                  % Time associated with start of simulation, datenum format
-measOptions.('useRange')          = true;                   % Compute range measurements
-measOptions.('useRangeRate')      = true;                   % Compute range rate measurements
-measOptions.('useLightTime')      = true;                   % Move GPS Position to account for travel time
+measOptions = odtbxOptions('measurement');
+measOptions = setOdtbxOptions(measOptions, 'useRange', true);                   % Compute range measurements
+measOptions = setOdtbxOptions(measOptions, 'useRangeRate', true);                   % Compute range rate measurements
+measOptions = setOdtbxOptions(measOptions, 'useLightTime', true);               % Move GPS Position to account for travel time
+
 % The rSigma parameter is not demonstrated in this example, this parameter
 % is only required when calculating the measurement covariance, R, as in:
 % [y, H, R] = gpsmeas(t, x, measOptions);
-measOptions.('GPSBand')           = 'L1';                   % See truth.freq
-measOptions.('YumaFile')          = yuma_file;              % Input YUMA file
+measOptions = setOdtbxOptions(measOptions, 'epoch', epoch);         % Time associated with start of simulation, datenum format
+measOptions = setOdtbxOptions(measOptions, 'YumaFile', yuma_file);  % Input YUMA file
+measOptions = setOdtbxOptions(measOptions, 'PrecnNutnExpire', 0.1); % Length of time an Earth rotation parameter set is valid (days)
+measOptions = setOdtbxOptions(measOptions, 'AntennaPointing', ant_point);              % Specify attitude profile for each antenna
 % The Rotation2ECI parameter is not demonstrated in this example, this
 % parameter is only required when providing satellite state in another
 % coordinate system other than ECI.
-measOptions.('AntennaPointing')   = ant_point;              % Specify attitude profile for each antenna
-measOptions.('AntennaPattern')    = ant_pat;                % Specify receive antenna pattern for each antenna
-measOptions.('AntennaMask')       = truth.rcv_ant_mask;     % Cut off angle for the receive antenna
-measOptions.('AtmosphereMask')    = truth.r_mask/1000 - EARTH_RADIUS; % Mask altitude, km
-measOptions.('NoiseTemp')         = truth.Ts;               % System noise temp of receive antenna (K)
-measOptions.('AtmAttenuation')    = truth.Ae;               % Attenuation due to atmosphere, should be negative (dB)
-measOptions.('TransPowerLevel')   = truth.sv_power;         % Transmitter power level (1=min, 2=typical, 3=max)
-measOptions.('TransPowerOffset')  = truth.xmit_power_offset;% Global transmitter power offset (dB)
-measOptions.('GPSBlock')          = truth.sv_block;         % GPS Satellite Block  (1-II/IIA, 2-IIR, 3-IIR-M, 4-IIF)
-measOptions.('TransAntMask')      = truth.xmit_ant_mask;    % Cut off angle for the transmit antenna (rad)
-measOptions.('ReceiverNoise')     = truth.Nf;               % Noise figure of receiver/LNA (dB)
-measOptions.('RecConversionLoss') = truth.L;                % Receiver implementation, A/D conversion losses (dB)
-measOptions.('SystemLoss')        = truth.As;               % System losses, in front of LNA (dB)
-measOptions.('LNAGain')           = truth.Ga;               % Gain provided by the LNA (dB)
-measOptions.('CableLoss')         = truth.Ac;               % Cable losses after LNA (dB)
-measOptions.('RecAcqThresh')      = truth.CN0_lim;          % Receiver acquisition threshold (dB-Hz)
-measOptions.('RecTrackThresh')    = truth.CN0_lim;          % Receiver tracking threshold (dB-Hz)
-measOptions.('DynamicTrackRange') = truth.dyn_range;        % Receiver dynamic range (dB)
-measOptions.('PrecnNutnExpire')   = 0.1;                    % Length of time an Earth rotation parameter set is valid (days)
+% Also not used in this example: AntennaOrientation.
+
+% Parameters specific to link budget
+link_budget.GPSBand           = 'L1';                   % See truth.freq
+link_budget.AntennaPattern    = ant_pat;                % Specify receive antenna pattern for each antenna
+link_budget.RXAntennaMask     = truth.rcv_ant_mask;     % Cut off angle for the receive antenna
+link_budget.AtmosphereMask    = truth.r_mask/1000 - EARTH_RADIUS; % Mask altitude, km
+link_budget.NoiseTemp         = truth.Ts;               % System noise temp of receive antenna (K)
+link_budget.AtmAttenuation    = truth.Ae;               % Attenuation due to atmosphere, should be negative (dB)
+link_budget.TransPowerLevel   = truth.sv_power;         % Transmitter power level (1=min, 2=typical, 3=max)
+link_budget.TransPowerOffset  = truth.xmit_power_offset;% Global transmitter power offset (dB)
+link_budget.GPSBlock          = truth.sv_block;         % GPS Satellite Block  (1-II/IIA, 2-IIR, 3-IIR-M, 4-IIF)
+link_budget.TXAntennaMask     = truth.xmit_ant_mask;    % Cut off angle for the transmit antenna (rad)
+link_budget.ReceiverNoise     = truth.Nf;               % Noise figure of receiver/LNA (dB)
+link_budget.RecConversionLoss = truth.L;                % Receiver implementation, A/D conversion losses (dB)
+link_budget.SystemLoss        = truth.As;               % System losses, in front of LNA (dB)
+link_budget.LNAGain           = truth.Ga;               % Gain provided by the LNA (dB)
+link_budget.CableLoss         = truth.Ac;               % Cable losses after LNA (dB)
+link_budget.RecAcqThresh      = truth.CN0_lim;          % Receiver acquisition threshold (dB-Hz)
+link_budget.RecTrackThresh    = truth.CN0_lim;          % Receiver tracking threshold (dB-Hz)
+link_budget.DynamicTrackRange = truth.dyn_range;        % Receiver dynamic range (dB)
+
+measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
+
 
 
 %% GPSMeas function call, calculating measurements only
@@ -136,7 +144,7 @@ measOptions.('PrecnNutnExpire')   = 0.1;                    % Length of time an 
 y=[];
 qatt=[];
 for sv=1:32
-    GeneratingPRN=sv
+    GeneratingPRN = sv
     [ym,H,R,AntLB,dtsv] = gpsmeas(t, x, measOptions,qatt,sv);
     y=[y;ym];
 end
@@ -152,12 +160,14 @@ end
 r = 1:2:64; % Pick out the range measurements from the data
 d = 2:2:64; % Pick out the range rate measurements from the data
 
+figure;
 subplot(2,1,1),plot(y(r,:)','.');
 title('gpsmeas() Range Measurements  (per GPS satellite)');
 ylabel('Range (Km)');
 subplot(2,1,2),plot(y(d,:)','.');
 title('gpsmeas() Range Rate Measurements (per GPS satellite)');
 ylabel('Range Rate (Km/s');
+
 
 
 

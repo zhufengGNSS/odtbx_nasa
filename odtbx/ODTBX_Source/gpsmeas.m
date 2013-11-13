@@ -538,7 +538,6 @@ Hrange = out.range;      % [GPS_SIZE x nn]
 Hrrate = out.rrate;      % [GPS_SIZE x nn]
 % rgps_mag = out.rgps_mag; % [nn x GPS_SIZE]
 % health = out.health;     % the health indicator, [nn x GPS_SIZE]
-% dtsv = out.dtsv;          %individual satellite clock bias which is added to the epoch time to reflect the GPS time of measurement (using AFO and AF1)
 
 % Auxiliary parameters useful for H calculation
 if params.doH == 1
@@ -572,6 +571,7 @@ for n=1:size(Hrange,1)
 
     if nargout > 1,
 %         dtsv = zeros(3,nn);
+        dtsv = out.dtsv;          %individual satellite clock bias which is added to the epoch time to reflect the GPS time of measurement (using AFO and AF1)
         dr = zeros(3,nn);
         dv = zeros(3,nn);
         for nt=1:nn

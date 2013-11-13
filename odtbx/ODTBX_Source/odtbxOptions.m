@@ -398,6 +398,8 @@ function options = odtbxOptions(type)
 %
 % YumaFile - Used in gpsmeas
 %
+% RinexFile - Used in gpsmeas when useLightTime is enabled
+%
 % Rotation2ECI - For coordinate frames other than ECI. This value allows
 %   the user to have x in any coordinate frame as long as the
 %   rotation to ECI goes with it. Input must be a pointer to a
@@ -477,6 +479,7 @@ function options = odtbxOptions(type)
 %   Phillip Anderson    10/30/2013      Added: linkbudget, YumaFile, 
 %                                       Rotation2ECI, AntennaPointing
 %                                       AntennaOrientation
+%   Ravi Mathur         11/12/2013      Added: RinexFile
 
 types = {
     'estimator'
@@ -573,6 +576,7 @@ measurementOptions = {
     'localConsider'
     'linkbudget'
     'YumaFile'
+    'RinexFile'
     'Rotation2ECI'
     'AntennaPointing'
     'AntennaOrientation'
@@ -709,6 +713,7 @@ fprintf('                   Camera: [ Camera Object ]\n');
 fprintf('                 Attitude: [ Attitude Object ]\n');
 fprintf('               linkbudget: [ structure for gpsmeas.m ]\n');
 fprintf('                 YumaFile: [ file containing Yuma information]\n');
+fprintf('                RinexFile: [ file containing Rinex information]\n');
 fprintf('             Rotation2ECI: [ function handle for non ECI rotations]\n');
 fprintf('          AntennaPointing: [ described in getgpsmeas.m ]\n');
 fprintf('       AntennaOrientation: [ described in getgpsmeas.m ]\n');

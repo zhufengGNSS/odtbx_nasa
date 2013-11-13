@@ -571,7 +571,7 @@ for n=1:size(Hrange,1)
     end
 
     if nargout > 1,
-        dtsv = zeros(3,nn);
+%         dtsv = zeros(3,nn);
         dr = zeros(3,nn);
         dv = zeros(3,nn);
         for nt=1:nn

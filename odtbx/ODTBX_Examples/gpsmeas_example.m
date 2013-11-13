@@ -56,7 +56,6 @@ epoch = datenum([2013 1 1 0 0 0]);
 % first time
 t = truth.time - truth.time(1);
 
-
 % Set up satellite state in Km and Km/s
 % This truth data is in the Earth-Centered, Earth-Fixed (ECEF) frame.
 xecef(1:3,:) = truth.sat_pos/1000;
@@ -95,17 +94,23 @@ EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of 
 % gpsmeas.m.  See gpsmeas.m for information on each of these options.
 % Note, only two options are not set in this example.
 measOptions = odtbxOptions('measurement');
-measOptions = setOdtbxOptions(measOptions, 'useRange', true);                   % Compute range measurements
-measOptions = setOdtbxOptions(measOptions, 'useRangeRate', true);                   % Compute range rate measurements
-measOptions = setOdtbxOptions(measOptions, 'useLightTime', true);               % Move GPS Position to account for travel time
+measOptions = setOdtbxOptions(measOptions, 'epoch', epoch);         % [datenum] Time associated with start of simulation, datenum format
+measOptions = setOdtbxOptions(measOptions, 'useRange', true);       % Compute range measurements
+measOptions = setOdtbxOptions(measOptions, 'useRangeRate', true);   % Compute range rate measurements
+
+% When Light time delay on signal is used, Rinex ICD-200 ephemerides are
+% used.  When light-time is turned off, Yuma almanac orbits are used to
+% speed up measurement creation.
+measOptions = setOdtbxOptions(measOptions, 'useLightTime', true);        % Move GPS Position to account for signal travel time
+measOptions = setOdtbxOptions(measOptions, 'YumaFile', yuma_file);       % Input YUMA file
+measOptions = setOdtbxOptions(measOptions, 'RinexFile', 'brdc0010.13n'); % Input Rinex file
 
 % The rSigma parameter is not demonstrated in this example, this parameter
 % is only required when calculating the measurement covariance, R, as in:
 % [y, H, R] = gpsmeas(t, x, measOptions);
-measOptions = setOdtbxOptions(measOptions, 'epoch', epoch);         % Time associated with start of simulation, datenum format
-measOptions = setOdtbxOptions(measOptions, 'YumaFile', yuma_file);  % Input YUMA file
-measOptions = setOdtbxOptions(measOptions, 'PrecnNutnExpire', 0.1); % Length of time an Earth rotation parameter set is valid (days)
-measOptions = setOdtbxOptions(measOptions, 'AntennaPointing', ant_point);              % Specify attitude profile for each antenna
+measOptions = setOdtbxOptions(measOptions, 'PrecnNutnExpire', 0.1);       % [days] Length of time an Earth rotation parameter set is valid
+measOptions = setOdtbxOptions(measOptions, 'AntennaPointing', ant_point); % Specify attitude profile for each antenna
+
 % The Rotation2ECI parameter is not demonstrated in this example, this
 % parameter is only required when providing satellite state in another
 % coordinate system other than ECI.
@@ -132,8 +137,6 @@ link_budget.RecTrackThresh    = truth.CN0_lim;          % Receiver tracking thre
 link_budget.DynamicTrackRange = truth.dyn_range;        % Receiver dynamic range (dB)
 
 measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
-
-
 
 %% GPSMeas function call, calculating measurements only
 
@@ -167,7 +170,3 @@ ylabel('Range (Km)');
 subplot(2,1,2),plot(y(d,:)','.');
 title('gpsmeas() Range Rate Measurements (per GPS satellite)');
 ylabel('Range Rate (Km/s');
-
-
-
-

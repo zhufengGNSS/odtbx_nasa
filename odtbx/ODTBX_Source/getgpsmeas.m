@@ -310,8 +310,7 @@ if useLightTimeCor
     tTrans              = zeros(nn,GPS_SIZE);
     
     % Read the input file
-    rinexFile   = 'brdc0010.13n';
-%     rinexFile = 'brdc_2013-01-01.2.nav';
+    rinexFile = getOdtbxOptions(options, 'RinexFile', 'brdc0010.13n');
     rinex_ephs = dataCache('get',rinexCache, rinexFile);
     if isempty(rinex_ephs)
         % TODO check for valid RINEX file given sim time and duration (only

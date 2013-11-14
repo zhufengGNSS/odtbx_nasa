@@ -253,6 +253,7 @@ function [y,H,R,AntLB,dtsv] = gpsmeas(t,x,options,qatt,sv)
 %   Phillip Anderson    10/16/2013      Abstracted out link budget code
 
 d2r             = pi/180;
+c            = JATConstant('c') / 1000;               % km/sec speed of light
 
 %% Get values from options
 useRange        = getOdtbxOptions(options, 'useRange', true );

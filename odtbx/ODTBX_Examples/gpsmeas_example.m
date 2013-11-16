@@ -47,7 +47,7 @@ ant_point = 1;
 % position, velocity, and time, it contains additional data on the transmit
 % and receive systems.
 truth = load('gpsmeas_testtraj.mat');
-
+clear x y1 y2 y3 y4
 %  Provide the epoch as a datenum
 % epoch = datenum(truth.sim_start_utc);
 epoch = datenum([2013 1 1 0 0 0]);
@@ -135,7 +135,7 @@ link_budget.CableLoss         = truth.Ac;               % Cable losses after LNA
 link_budget.RecAcqThresh      = truth.CN0_lim;          % Receiver acquisition threshold (dB-Hz)
 link_budget.RecTrackThresh    = truth.CN0_lim;          % Receiver tracking threshold (dB-Hz)
 link_budget.DynamicTrackRange = truth.dyn_range;        % Receiver dynamic range (dB)
-
+link_budget.TX_AntennaPointing= -1; % 1 for zenith pointing, -1 for nadir pointing
 measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
 
 %% GPSMeas function call, calculating measurements only

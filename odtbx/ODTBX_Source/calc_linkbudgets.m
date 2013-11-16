@@ -110,7 +110,6 @@ d2r             = pi/180;
 
 % Get Some Constants from JAT
 EARTH_RADIUS = JATConstant('rEarth','WGS84') / 1000;  % km Equatorial radius of Earth
-% c            = JATConstant('c') / 1000;               % km/sec speed of light
 
 % Get link budget information
 link_budget = getOdtbxOptions(options, 'linkbudget', []);
@@ -123,11 +122,10 @@ end
 
 % Check that we have the necessary information for a link budget
 % calculation. If not, assume a value and warn user.
-options = linkbudget_default(options, 'frequencyTransmit', 1575.42e6 );  % Hz
+options = linkbudget_default(options, 'frequencyTransmit', JATConstant('L1Frequency') );  % Hz
 
 link_budget = linkbudget_default(link_budget, 'ReceiverNoise', -3 );  % dB, Noise figure of receiver/LNA
 link_budget = linkbudget_default(link_budget, 'RecConversionLoss', -1.5 );  % dB
-% link_budget = linkbudget_default(link_budget, 'Frequency', 1575.42e6 );  % Hz
 link_budget = linkbudget_default(link_budget, 'NoiseTemp', 300); % K
 link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System losses, in front of LNA
 link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
@@ -150,7 +148,7 @@ num_ant = length(link_budget.AntennaPattern); %hasn't been tested for >4 antenna
 % Set receiver and transmitter structure data from link budget information
 RX_link.Nf = link_budget.ReceiverNoise;
 RX_link.L = link_budget.RecConversionLoss;
-RX_link.freq = getOdtbxOptions(options, 'frequencyTransmit', 1575.42e6 );  % Hz;
+RX_link.freq = getOdtbxOptions(options, 'frequencyTransmit', JATConstant('L1Frequency') );  % Hz;
 RX_link.Ts = link_budget.NoiseTemp;
 RX_link.As = link_budget.SystemLoss;
 RX_link.Ae = link_budget.AtmAttenuation;
@@ -173,7 +171,6 @@ health = out.health;     % the health indicator, [nn x GPS_SIZE]
 %% Calculate link constraint and mask information
 % Set alpha_t for non-existent/unhealthy SVs to pi rad
 TX_link.alpha(~health) = pi;
-
 % Set alpha_r for non-existent/unhealthy SVs to 180 deg
 RX_link.alpha(~health) = pi;
 
@@ -183,10 +180,15 @@ denom=rgps_mag;
 denom(denom==0)=NaN;
 gamma = asin(EARTH_RADIUS./denom);   % Angle subtended by Earth at SV (nn,GPS_SIZE)
 gamma_mask = asin(r_mask./denom);    % Angle subtended by Earth plus altitude mask (nn,GPS_SIZE)
-%  Set prns visible if not blocked by Earth
-vis_earth = (TX_link.alpha > gamma) | (Hrange' <= rgps_mag.*cos(gamma));   % (nn,GPS_SIZE)
-%  Set prns visible if not subject to atmosphere mask
-vis_atm = (TX_link.alpha > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask)); % (nn,GPS_SIZE)
+%  Set prns visible if not blocked by Earth of horizon
+if link_budget.TX_AntennaPointing == -1 % nadir pointing
+    vis_earth = (TX_link.alpha > gamma) | (Hrange' <= rgps_mag.*cos(gamma));   % (nn,GPS_SIZE)
+    %  Set prns visible if not subject to atmosphere mask
+    vis_atm = (TX_link.alpha > gamma_mask) | (Hrange' <= rgps_mag.*cos(gamma_mask)); % (nn,GPS_SIZE)
+elseif link_budget.TX_AntennaPointing == 1 % zenith pointing
+    vis_earth = ((-out.TX_el+90) > getOdtbxOptions(options, 'gsElevationConstraint', 10));
+    vis_atm = vis_earth;
+end
 
 Hvis_earth = vis_earth';
 Hvis_atm = vis_atm';
@@ -229,7 +231,7 @@ for ANT=1:loop
             % 2D transmit antenna
             TX_antenna.az = TX_az(:,j);
         end
-        
+         
          % Compute gain/attenuation of receiving antenna pattern
         [AntLB_raw.CN0(:,j), AntLB_raw.Ar(:,j), AntLB_raw.At(:,j), ...
             AntLB_raw.Ad(:,j), AntLB_raw.AP(:,j), AntLB_raw.RP(:,j)] = ...
@@ -279,7 +281,6 @@ for ANT=1:loop
     AntLB{ANT}.HAt(~VIS_ant) = -300;             % [GPS_SIZE,nn]
     
 end % ANT loop
-
 
 %% Combine results across multiple antennas
 HVIS = visibility_constraints(AntLB, options, health, Hvis_earth, Hvis_atm);

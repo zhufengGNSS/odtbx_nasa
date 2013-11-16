@@ -87,9 +87,9 @@ link_budget.RecAcqThresh      = 32;                     % Receiver acquisition t
 link_budget.RecTrackThresh    = 32;                     % Receiver tracking threshold (dB-Hz)
 link_budget.DynamicTrackRange = 15;                     % Receiver dynamic range (dB)
 link_budget.Frequency = 146.520e6;                      % Hz 
-link_budget.RXpattern = 'ao40_hga_measured_10db.txt';
+%link_budget.RXpattern = 'ao40_hga_measured_10db.txt';
 link_budget.TXpattern = 'ao40_hga_measured_10db.txt';
-
+link_budget.TX_AntennaPointing= 1; % 1 for zenith pointing, -1 for nadir pointing
 measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
 
 %% Set variations and run gsmeas

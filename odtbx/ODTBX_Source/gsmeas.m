@@ -1,4 +1,4 @@
-function [y,H,R] = gsmeas(t,x,options)
+function [y,H,R,AntLB] = gsmeas(t,x,options,qatt)
 % GSMEAS  Makes ground station based measurements.
 %
 % [y,H,R] = GSMEAS(tspan,x,options) creates ground station measurements
@@ -129,8 +129,8 @@ function [y,H,R] = gsmeas(t,x,options)
 %                                         time step
 %   Russell Carpenter   02/11/2011      Added useAngles option
 
-d2r             = pi/180;
-
+d2r          = pi/180;
+r2d          = 180/pi;
 %% Get values from options
 gsID         = getOdtbxOptions(options, 'gsID', [] );
 gsList       = getOdtbxOptions(options, 'gsList', []);
@@ -146,14 +146,15 @@ useAngles    = getOdtbxOptions(options, 'useAngles', false );
 Sched        = getOdtbxOptions(options, 'Schedule',[]); %Tracking Schedule
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit+2*useAngles;
 
+numGS = length(gsID);
 if isempty(gsECEF)
     if( isempty(gsList) && ~isempty(gsID) ); gsList = createGroundStationList(); end
     gsECEF = zeros(3,length(gsID));
-    for n=1:length(gsID)
+    for n=1:numGS
             gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
     end
 end
-M            = size(gsECEF,2) * numtypes;
+M            = numGS * numtypes;
 N            = length(t);
 if size(t,1)==N, t=t'; end
 
@@ -162,7 +163,7 @@ if isnan(epoch); error('An epoch must be set in the options structure.'); end
 if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
     dolinkbudget = true;
     link_budget = getOdtbxOptions(options, 'linkbudget',[]);
-    
+
     % Set some default values
     link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'omni.txt'});
         %  Specify antenna pattern for each antenna, existing antennas are:
@@ -203,8 +204,6 @@ if isfield(options,'linkbudget') && ~isempty(options.linkbudget)
         % in power levels tracked simultaneously. If the difference
         % in snrs between two satellites is more that link_budget.DynamicTrackRange,
         % the weaker of the two will not be considered visible. 
-    link_budget = linkbudget_default(link_budget, 'Frequency', 146.520e6);
-    
     % Reassign the options structure with any changed/default link budget values
     options = setOdtbxOptions(options, 'linkbudget', link_budget);
 else
@@ -225,7 +224,7 @@ if uselt
     t2   =  unique([t-ltDT, t, t+ltDT]);
 
     % Get the ground station positions at times t2 (see subfunction below)
-    x2 = getGSstates(gsECEF,epoch,t2);
+    x2 = getECIstates([gsECEF;zeros(size(gsECEF))],epoch,t2);
 
     % Run rrdotlt for each ground station
     for n=1:size(gsECEF,2)
@@ -252,8 +251,17 @@ if uselt
             Ephem.Epoch       = epoch+t2_lt{1}/86400; %UTC
             Ephem.StationInfo = 'ECEF';
             Ephem.staPos      = gsECEF(:,n)*1000;
-            [~,el]            = jatStaAzEl(Ephem);
+            [az,el]            = jatStaAzEl(Ephem);
             index0            = find( el < elMin );
+            if dolinkbudget
+                %add TX_az, TX_el to out
+                if n==1
+                    out.TX_az = zeros(N,numGS);
+                    out.TX_el = zeros(N,numGS);
+                end
+                out.TX_az(:,n) = az*180/pi;
+                out.TX_el(:,n) = -(el*180/pi-90);
+            end
             if length(x2_lt)==2 %then it was a 2way measurement
                 Ephem.Epoch = epoch+t2_lt{2}/86400; %UTC
                 [~,el]      = jatStaAzEl(Ephem);
@@ -272,7 +280,7 @@ if uselt
     clear R;
 else
     % Get the ground station positions at times t (see subfunction below)
-    gx = getGSstates(gsECEF,epoch,t);
+    gx = getECIstates([gsECEF;zeros(size(gsECEF))],epoch,t);
 
     % Run rrdot for each ground station
     for n=1:size(gsECEF,2)
@@ -299,9 +307,17 @@ else
         Ephem.Epoch       = epoch+t1/86400;%UTC
         Ephem.StationInfo = 'ECEF';
         Ephem.staPos      = gsECEF(:,n)*1000;
-        [~,el]            = jatStaAzEl(Ephem);        
+        [az,el]            = jatStaAzEl(Ephem);        
         y1(:,el<elMin)    = NaN;
-
+        if dolinkbudget
+            %add TX_az, TX_el to out
+            if n==1
+                out.TX_az = zeros(N,numGS);
+                out.TX_el = zeros(N,numGS);
+            end
+            out.TX_az(:,n) = az*180/pi;
+            out.TX_el(:,n) = -(el*180/pi-90);
+        end
         % combine with results from previous stations
         indstart                     = 1 + numtypes*(n-1);
         indstop                      = numtypes*n;
@@ -326,33 +342,159 @@ end
 
 %% Perform link budget analysis
 if dolinkbudget
-    % Generate link budget structures from calculated data
-
+    % Generate link budget structures
+    pointing_ref    = getOdtbxOptions(options, 'AntennaPointing', [-1 1] );
+    % Specify attitude profile for each antenna
+    %   (1) zenith pointing or (-1) nadir pointing wrt geocentric LVLH
+    %   (2) parallel or (-2) antiparallel to the Earth-Sun vector
+    %   (3) ecliptic north or south (-3)
+    %   (4) fixed with respect to apogee zenith, or (-4) nadir
+    %   vector apogee
+    %       selected as the point of highest altitude (ephemeris must include apogee)
+    %   (5) body fore and (-5) aft directions relative to geocentric LVLH
+    %   (6) body port and (-6) starboard directions relative to geocentric LVLH
+    
     % set link budget params in structs
     TX_link.P_sv = link_budget.TransPowerOffset;
-
+    % Set loop to num_ant or 1
+    loop = max([1,num_ant]);
     % Transmitter and Receiver antenna patterns
-    RX_link.pattern = load(link_budget.RXpattern);
     TX_link.pattern = load(link_budget.TXpattern);
+    RX_link.pattern = cell(loop,1);
+    rec_pattern_dim = ones(loop,1);
+    for ANT = 1:loop
+        RX_link.pattern{ANT} = load(link_budget.AntennaPattern{ANT});
+        if size(RX_link.pattern{ANT},2) > 2
+            rec_pattern_dim(ANT) = 2;
+        end
+    end 
     
-    out.range = y;
+    ant_body        = getOdtbxOptions(options, 'AntennaOrientation',reshape(repmat(eye(3),1,num_ant),3,3,num_ant));
+    
 
+
+    %add rgps_mag, health to out
+    gsECEF_overTime=repmat(reshape(gsECEF,3,1,numGS),[1 N 1]);
+    out.rgps_mag = reshape(sqrt(sum(gsECEF_overTime.^2)),N,numGS);
+    out.health = reshape(max(gsECEF_overTime),N,numGS) ~= 0;
+    
+    %add RX_az, RX_el to out
+    
+        % Calculate x position in ECEF
+        [xECEF,init2fixed] = getECEFstates(x,epoch,t); 
+        sat_vel_tot = zeros(3,N);
+        for ii=1:N
+            R2ECI = eye(6);  % Unused, set at Identity
+            sat_vel_tot(:,ii) = init2fixed(:,:,ii) * R2ECI(4:6,:) *  x(1:6,ii);
+        end
+        %define attitude quaternion and DCM
+        if nargin < 4
+            wstr = ['S/C body quaternion is not specified in the input.  ',...
+                'Body will be assumed to be aligned with the same coordinate ',...
+                'frame as the position and velocity states.'];
+            warning('ODTBX:GSMEAS:noBodyQuat',wstr);
+            qatt = repmat([0;0;0;1],1,N);
+        end
+        [mq,nq] = size(qatt);
+        if mq ~= 4 || nq ~= N
+            error('In GPSMEAS, the specified spacecraft attitude quaternion does not have the right dimension(s).');
+        end
+        ref2body = q2dcm(qatt);
+    
+        % Define LOS unit vector
+        ruser_3d = zeros(3,N,numGS);
+        vuser_3d = zeros(3,N,numGS);
+        vuser_3d_tot = zeros(3,N,numGS);
+
+        for i=1:numGS
+            ruser_3d(:,:,i) = xECEF(1:3,:);                     % [3,N,numGS]
+            vuser_3d(:,:,i) = xECEF(4:6,:);                     % [3,N,numGS]
+            vuser_3d_tot(:,:,i) = sat_vel_tot;                     % [3,N,numGS]
+        end
+
+        los_3d = gsECEF_overTime - ruser_3d;                 % [3,N,numGS]
+        los_mag = reshape(sqrt(sum(los_3d.^2)),N,numGS);     % [N,numGS]
+        los_mag_3d = zeros(3,N,numGS);
+        rgps_mag_3d = zeros(3,N,numGS);
+        for i=1:3
+            los_mag_3d(i,:,:) = los_mag;                   % [3,N,numGS]
+            rgps_mag_3d(i,:,:) = out.rgps_mag;                 % [3,N,numGS]
+        end
+        los_unit_3d = los_3d./los_mag_3d;                  % [3,N,numGS]
+
+    % Define range, az and el
+    out.range = los_mag';
+    out.RX_az    = NaN(N,numGS,num_ant);
+    out.RX_el    = NaN(N,numGS,num_ant);
+
+    for ANT=1:num_ant
+
+        if(size(RX_link.pattern,2) >= 2) % 2D antenna
+
+            % Transform los from ecef frame to receiver antenna frame
+            for j = 1:numGS
+                los_ant = zeros(3,N);
+                for i = 1:N
+                    % los_ant = (antenna <- body <- state frame <- ECI <- ECEF) * los_ECEF
+                    los_ant(:,i) = ant_body(:,:,ANT) * ref2body(:,:,i) * R2ECI(1:3,1:3)' * ...
+                        init2fixed(:,:,i)' * los_unit_3d(:,i,j);
+                end
+                out.RX_az(:,j,ANT) = atan2(los_ant(2,:),los_ant(1,:))*r2d;
+                out.RX_el(:,j,ANT) = 90 - asin(los_ant(3,:))*r2d;
+
+            end
+
+        else % 1D antenna
+            %  Convert simulation start time from UTC to GPS time in seconds
+            time = 86400 * convertTime('GPS','UTC', epoch+t/86400);
+            % Compute matrix describing antenna boresite(s) [3,N]
+            boresite = comp_bs_3d(1, time, xECEF(1:3,:), xECEF(4:6,:), pointing_ref(ANT), 1);  % [3,N]
+            boresite_3d = reshape(repmat(boresite,1,numGS),3,N,numGS);
+            out.RX_el(:,:,ANT) = (abs(acos(reshape(dot(boresite_3d,los_unit_3d),N,numGS))))*r2d;  % (N,numGS)
+
+        end
+
+    end
     % Calculate Link Budget
-    [AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link);    
+    [AntLB, HVIS] = calc_linkbudgets(out, options, RX_link, TX_link);
+
+    % Make measurements that are not visible NaNs
+    kk=1;
+    for ii=1:size(HVIS,1)
+        for jj=1:size(HVIS,2)
+            if HVIS(ii,jj)==0
+                y(kk:kk+numtypes-1,jj) = NaN;
+            end
+        end
+        kk=kk+numtypes;
+    end
 end
 
 end
 
 
 %% Subfunction for getting ECI states of ground stations at times t
-function gx = getGSstates(gsECEF,epoch,t)
+function [xECI,D] = getECIstates(xECEF,epoch,t)
 
 D = jatDCM('ecef2eci', epoch+t/86400);
 w = [0;0;JATConstant('wEarth')];
 
-gx = zeros(6,length(t),size(gsECEF,2));
+xECI = zeros(6,length(t),size(xECEF,2));
 for nt = 1:length(t);
     M          = rotransf(-D(:,:,nt)*w,D(:,:,nt));
-    gx(:,nt,:) = M(1:6,1:6)*[gsECEF;zeros(size(gsECEF))];
+    xECI(:,nt,:) = M(1:6,1:6)*xECEF;
+end
+end
+
+%% Subfunction for getting ECEF states of sat at times t
+function [xECEF,D] = getECEFstates(xECI,epoch,t)
+
+D = jatDCM('eci2ecef', epoch+t/86400);
+w = [0;0;JATConstant('wEarth')];
+
+xECEF = zeros(6,length(t));
+for nt = 1:length(t);
+    M          = rotransf(D(:,:,nt)*w,D(:,:,nt));
+    xECEF(:,nt) = M(1:6,1:6)*xECI(:,nt);
 end
 end

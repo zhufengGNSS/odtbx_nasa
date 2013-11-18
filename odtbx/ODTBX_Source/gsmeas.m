@@ -397,7 +397,7 @@ if dolinkbudget
         end
         [mq,nq] = size(qatt);
         if mq ~= 4 || nq ~= N
-            error('In GPSMEAS, the specified spacecraft attitude quaternion does not have the right dimension(s).');
+            error('ODTBX:GSMEAS:badQuat','In GPSMEAS, the specified spacecraft attitude quaternion does not have the right dimension(s).');
         end
         ref2body = q2dcm(qatt);
     
@@ -429,7 +429,7 @@ if dolinkbudget
 
     for ANT=1:num_ant
 
-        if(size(RX_link.pattern,2) >= 2) % 2D antenna
+        if(size(RX_link.pattern{ANT},2) > 2) % 2D antenna
 
             % Transform los from ecef frame to receiver antenna frame
             for j = 1:numGS

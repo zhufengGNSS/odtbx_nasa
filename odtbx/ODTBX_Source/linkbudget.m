@@ -261,7 +261,7 @@ if have_rx
         if(size(RX_antenna.pattern,2) > 2)
 
             % arg check:
-            if (~exist('RX_antenna.az','var') || isempty(RX_antenna.az))
+            if (~exist('RX_antenna','var') || (~isfield(RX_antenna,'az')) || isempty(RX_antenna.az))
                 error('Presented 2D receiver model without azimuth angles - aborting.');
             end
 

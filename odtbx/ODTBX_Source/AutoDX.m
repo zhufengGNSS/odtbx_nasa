@@ -1,5 +1,5 @@
 function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out] = ...
-    AutoDX(F, t, X0, dX_max, iX, order, varargin)
+    AutoDX(F, t0, X0, dX_max, iX, order, varargin)
 %AutoDX Numerically compute the optimal step size dX to minimize the error
 %in the finite-difference derivative dF/dX of the function F(t,X). The
 %derivative is computed with respect to a specified element Xi of X.
@@ -15,6 +15,29 @@ function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out] = ...
 %      ORDER = 4: 4th-order Central Difference
 %      ORDER = 6: 6th-order Central Difference
 %   Additional input arguments are passed to function as F(t,X,varargin)
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+
+% ODTBX: Orbit Determination Toolbox
+% 
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+% 
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+% 
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the 
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+%  REVISION HISTORY
+%   Author      		Date         	Comment
+%   Ravi Mathur        11/20/2013      Original (adapted from FORTRAN code)
 
 numdX_exp = 60; % Number of dX exponents to test
 npoints = 2; % Number of points (gradients) used to compute estimated truncation error
@@ -27,7 +50,7 @@ end
 
 args = varargin;
 numX = length(X0);
-F0 = feval(F, t, X0, args{:}); % Function at input X0
+F0 = feval(F, t0, X0, args{:}); % Function at input X0
 numF = length(F0);
 
 slope_errt_starttol = 0.1; % Truncation error slope valid below this value
@@ -40,9 +63,9 @@ valid_errt_req = 7; % Number of required consecutive valid truncation error poin
 % methods, we will be computing order*dx, so make sure that the maximum
 % perturbation size does not exceed dx_max/order.
 if(order <= 1)
-    X_size = int32(log(dX_max(iX))/log(2.0)) + 1;
+    X_size = floor(log(dX_max(iX))/log(2.0)) + 1;
 else
-    X_size = int32(log(dX_max(iX)/(order/2))/log(2.0)) + 1;
+    X_size = floor(log(dX_max(iX)/(order/2))/log(2.0)) + 1;
 end
 
 numdX = 0; % Number of computed gradients
@@ -50,7 +73,7 @@ i_dX = np; % This will be incremented into the range [1,np]
 err_t_prev = 0.0*F0; % Previous dX value's truncation error (for comparison)
 dX_vec = inf(np,1); % Tested dX values
 dFdX = zeros(numF, np); % Matrix of gradient vectors for each tested dX value
-true_cn = 0.0*f0; % Corrected value of Cn coefficient
+true_cn = 0.0*F0; % Corrected value of Cn coefficient
 slope_errt_best = inf(numF,1); % Best value of truncation error slope
 num_valid_errt = 0*F0; % Number of potentially valid truncation errors
 num_zero_errt = 0*F0;  % Number of potentially zero truncation errors
@@ -60,10 +83,10 @@ max_valid_dx = 0.0*F0;
 % Perturbed function vectors for each dX
 % Submatrices contain F(X+-dX), F( X+- 2dX), F(X +- 3dX), stored as column
 % vectors for each tested dX.
-Fpert = zeroes(numF, np, abs(order)); % Perturbed function vectors for each tested dX
+Fpert = zeros(numF, np, abs(order)); % Perturbed function vectors for each tested dX
 
 for j = 1:numdX_exp
-    dX_test = 2.0^(X_size - j); % Step size for this iteration
+    dX_test = (2.0)^(X_size - j); % Step size for this iteration
     
     % Make sure perturbation is larger than machine precision
     Xplus = X0(iX) + dX_test;
@@ -74,14 +97,17 @@ for j = 1:numdX_exp
     end
     
     i_dX = advance(i_dX, 1, 1, np); % Increment index in range [1, np]
-    dX_vec(i_dX) = dX_test % Store current dX value
+    dX_vec(i_dX) = dX_test; % Store current dX value
     
     % Get gradient using the appropriate FD method
     [dFdX(:,i_dX), Fvals(:,i_dX,:)] = ...
-        getGradient_Order(F, t, X, iX, dX_test, order, F0, args{:});
+        getGradient_Order(F, t0, X0, iX, dX_test, order, F0, args{:});
     
-
+    
+    
 end
+
+dFdX_out = dFdX(:,i_dX);
 
 end % function AutoDX()
 
@@ -94,9 +120,9 @@ function i = advance(i, di, imin, imax)
 i = i + mod(di, imax-imin+1);
 
 if(i < imin)
-    i = imax - (imin - advance - 1);
-else
-    i = imin + (advance - imax - 1);
+    i = imax - (imin - i - 1);
+elseif(i > imax)
+    i = imin + (i - imax - 1);
 end
 
 end % function advance
@@ -194,13 +220,13 @@ if(order == 1) % O(dx) FD
     err_sub = max([abs(Fplus), abs(Fcurr)]);
 
 elseif(order == 2) % O(dx^2) CD
-    Fplus = Fpert(:,1,1):
+    Fplus = Fpert(:,1,1);
     Fminus = Fpert(:,1,2);
     err_cond = (abs(Fplus) + abs(Fminus))/2.0;
     err_sub = max([abs(Fplus), abs(Fminus)])/2.0;
 
 elseif(order == 4) % O(dx^4) CD
-    Fplus = Fpert(:,1,1):
+    Fplus = Fpert(:,1,1);
     Fminus = Fpert(:,1,2); 
     Fplus2 = Fpert(:,1,3);
     Fminus2 = Fpert(:,1,4);
@@ -210,7 +236,7 @@ elseif(order == 4) % O(dx^4) CD
                  + 8.0*max([abs(Fplus), abs(Fminus)]))/12.0;
 
 elseif(order == 6) % O(dx^6) CD
-    Fplus = Fpert(:,1,1):
+    Fplus = Fpert(:,1,1);
     Fminus = Fpert(:,1,2); 
     Fplus2 = Fpert(:,1,3);
     Fminus2 = Fpert(:,1,4);

@@ -21,18 +21,24 @@
 %   Author      		Date         	Comment
 %   Ravi Mathur        11/20/2013      Original (adapted from FORTRAN code)
 
+%% Start regression test for AutoDX
 function [failed] = AutoDX_test
 
-% Test function and evaluation values
+% Test function and true derivative
 F = @(t, X) X^3.5;
 dFdX = @(t, X) 3.5*X^2.5;
-t0 = 0;
-X0 = 9.1;
-dX_max = abs(X0)+1;
 
-dFdX_est = AutoDX(F, t0, X0, dX_max, 1, 2);
-dFdX_true = dFdX(t0, X0);
-dFdX_err = abs(dFdX_est - dFdX_true)/dFdX_true;
+% AutoDX inputs
+t0 = 0;             % Reference t
+X0 = 9.1;           % Reference X
+dX_max = abs(X0)+1; % Max step size for X
+iX = 1;             % Element of X for which to evaluate derivative
+order = 2;          % Order of finite-difference derivative method
+
+[dFdX_opt, dX_opt, dXmax, err, fcnerr] = ...
+    AutoDX(F, t0, X0, dX_max, iX, order, [])
+dFdX_true = dFdX(t0, X0)
+dFdX_err = abs(dFdX_opt - dFdX_true)/dFdX_true
 
 tol = 1.0e-10;
 

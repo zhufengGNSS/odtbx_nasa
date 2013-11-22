@@ -1,5 +1,5 @@
 function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out] = ...
-    AutoDX(F, t0, X0, dX_max, iX, order, dFdX_known, varargin)
+    AutoDX(F, t0, X0, dX_max, order, dFdX_known, varargin)
 %AutoDX Numerically compute the optimal step size dX to minimize the error
 %in the finite-difference derivative dF/dX of the function F(t,X). The
 %derivative is computed with respect to a specified element Xi of X.
@@ -8,8 +8,7 @@ function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out] = ...
 %   t: Scalar independent variable, passed to F
 %   X: Column vector of dependent variables for differentiation
 %   dX_max: Column vector of maximum perturbations for each element of X
-%   iX: Element of X to be analyzed. 1 <= i <= length(X)
-%   dFdX_known: Vector (length(F)) 
+%   dFdX_known: Boolean matrix (length(F)-by-length(X)) 
 %   ORDER: Desired finite-difference truncation order. Valid values:
 %      ORDER = 1: 1st-order Forward Difference
 %      ORDER = 2: 2nd-order Central Difference
@@ -41,9 +40,25 @@ function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out] = ...
 %   Ravi Mathur      Aug-Nov 2013      Original adapted from Fortran code
 %                                      and Ravi's dissertation
 
+numX = length(X0);
+args = varargin;
+
+for iX = numX:1
+    [dFdX_out(:,iX), dX_out(:,iX), dXmax_out(:,iX), err_out(:,iX), fcnerr_out(:,iX)] = ...
+        AutoDX_iX(F, t0, X0, dX_max, iX, order, dFdX_known, args{:});
+end
+
+end
+
+%%
+% AutoDX_iX: Performs the actual stepsize-search algorithm on a given
+% element of the input X vector (specified with iX)
+function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out] = ...
+    AutoDX_iX(F, t0, X0, dX_max, iX, order, dFdX_known, varargin)
+
 args = varargin;
 numX = length(X0);
-F0 = feval(F, t0, X0, args{:}); % Function at input X0
+F0 = F(t0, X0, args{:}); % Function at input X0
 numF = length(F0);
 
 numdX_exp = 60; % Number of dX exponents to test
@@ -57,7 +72,7 @@ end
 
 dFdX_computed = false(numF,1);
 if(~isempty(dFdX_known))
-    dFdX_computed(:) = dFdX_known(:);
+    dFdX_computed(:) = dFdX_known(:,iX);
 end
 
 numdX = 0; % Number of computed gradients
@@ -93,6 +108,10 @@ end
 Fpert = zeros(numF, np, abs(order)); % Perturbed function vectors for each tested dX
 
 for j = 1:numdX_exp
+    if(all(dFdX_computed))
+        break;
+    end
+    
     dX_test = (2.0)^(X_size - j); % Step size for this iteration
     
     % Make sure perturbation is larger than machine precision
@@ -133,7 +152,9 @@ for j = 1:numdX_exp
     i_dX_next = advance(i_dX, 1, 1, np);
     
     % Compute error estimates independently for each element of F(t,X)
-    for currF = 1:numF
+    % Note that this (probably) cannot be vectorized since each element of
+    % F (each subfunction) may have a different optimal step size.
+    for currF = numF:1
         if(dFdX_computed(currF))
             continue;
         end
@@ -148,7 +169,7 @@ for j = 1:numdX_exp
         % changing wrt dX, then the Cn value should be zero. BUT because of
         % numerical errors, we need to consider "zero" as some max cutoff.
         Cn = f2 - f1;
-        err_t = 10*eps*max(abs(f1), abs(f2)); % Cutoff for Cn
+        err_t = 10.0*eps*max(abs(f1), abs(f2)); % Cutoff for Cn
         if(abs(Cn) <= err_t)
             Cn = 0; % Change in dFdX is negligible, so Cn should be zero
         else
@@ -156,9 +177,9 @@ for j = 1:numdX_exp
         end
         err_t = Cn * dx1^order; % Estimated truncation error
         
-        % Check is truncation error is actually O(dx^order). To do so, we
+        % Check if truncation error is actually O(dx^order). To do so, we
         % test the slope of log(|err_t|) wrt log(dX), and test whether it
-        % is near the analytically predictd value.
+        % is near the analytically predicted value.
         if((err_t == 0.0) || (err_t_prev(currF) == 0.0))
             slope_errt = inf;
         else
@@ -252,7 +273,7 @@ for j = 1:numdX_exp
             % Estimate the current function's condition error assuming the
             % current dX value minimizes total truncation+roundoff errors.
             
-            i_dX_opt = i_dX; % Indicate optimal dX index
+            i_dX_opt = i_dX_prev; % Indicate optimal dX index
             
             % Compute the corrected optimal step size
             t_ratio = dx2/dx1;
@@ -274,8 +295,6 @@ for j = 1:numdX_exp
             % Store the estimated condition error for this function
             if(err_cond == 0.0)
                 fcnerr_out(currF) = 1.0; % Indicate a large relative error
-            elseif(err_a < eps)
-                fcnerr_out(currF) = 0.0; % Indicate no measurable condition error in function
             else
                 fcnerr_out(currF) = err_a/err_cond; % Convert to relative error
             end
@@ -306,7 +325,7 @@ for j = 1:numdX_exp
     
 end
 
-end % function AutoDX()
+end % function AutoDX_iX()
 
 %%
 function iout = advance(i, di, imin, imax)
@@ -335,17 +354,17 @@ args = varargin;
 
 if(order == 1) % First-order forward difference method, O(dx)
     Xcurr(iX) = X(iX) + dX;
-    Fplus = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus = F(t, Xcurr, args{:}); % Forward perturbed
     
     dFdX = (Fplus - FX)/dX;
     Fpert(:,1,1) = Fplus;
 
 elseif(order == 2) % Second-order central difference method, O(dx^2)
     Xcurr(iX) = X(iX) + dX;
-    Fplus = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus = F(t, Xcurr, args{:}); % Forward perturbed
     
     Xcurr(iX) = X(iX) - dX;
-    Fminus = feval(F, t, Xcurr, args{:}); % Backward perturbed
+    Fminus = F(t, Xcurr, args{:}); % Backward perturbed
     
     dFdX = (Fplus - Fminus)/(2.0*dX);
     Fpert(:,1,1) = Fplus;
@@ -353,16 +372,16 @@ elseif(order == 2) % Second-order central difference method, O(dx^2)
     
 elseif(order == 4) % Fourth-order CD method, O(dx^4)
     Xcurr(iX) = X(iX) + dX;
-    Fplus = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus = F(t, Xcurr, args{:}); % Forward perturbed
     
     Xcurr(iX) = X(iX) - dX;
-    Fminus = feval(F, t, Xcurr, args{:}); % Backward perturbed
+    Fminus = F(t, Xcurr, args{:}); % Backward perturbed
     
     Xcurr(iX) = X(iX) + 2.0*dX;
-    Fplus2 = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus2 = F(t, Xcurr, args{:}); % Forward perturbed
     
     Xcurr(iX) = X(iX) - 2.0*dX;
-    Fminus2 = feval(F, t, Xcurr, args{:}); % Backward perturbed
+    Fminus2 = F(t, Xcurr, args{:}); % Backward perturbed
     
     dFdX = (Fminus2 - Fplus2 + 8.0*(Fplus - Fminus))/(12.0*dX);
     Fpert(:,1,1) = Fplus;
@@ -372,22 +391,22 @@ elseif(order == 4) % Fourth-order CD method, O(dx^4)
     
 elseif(order == 6) % Sixth-order CD method, O(dx^6)
     Xcurr(iX) = X(iX) + dX;
-    Fplus = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus = F(t, Xcurr, args{:}); % Forward perturbed
     
     Xcurr(iX) = X(iX) - dX;
-    Fminus = feval(F, t, Xcurr, args{:}); % Backward perturbed
+    Fminus = F(t, Xcurr, args{:}); % Backward perturbed
     
     Xcurr(iX) = X(iX) + 2.0*dX;
-    Fplus2 = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus2 = F(t, Xcurr, args{:}); % Forward perturbed
     
     Xcurr(iX) = X(iX) - 2.0*dX;
-    Fminus2 = feval(F, t, Xcurr, args{:}); % Backward perturbed
+    Fminus2 = F(t, Xcurr, args{:}); % Backward perturbed
     
     Xcurr(iX) = X(iX) + 3.0*dX;
-    Fplus3 = feval(F, t, Xcurr, args{:}); % Forward perturbed
+    Fplus3 = F(t, Xcurr, args{:}); % Forward perturbed
     
     Xcurr(iX) = X(iX) - 3.0*dX;
-    Fminus3 = feval(F, t, Xcurr, args{:}); % Backward perturbed 
+    Fminus3 = F(t, Xcurr, args{:}); % Backward perturbed 
     
     dFdX = (Fplus3 - Fminus3 ...
             + 9.0*(Fminus2 - Fplus2) ...

@@ -52,7 +52,7 @@ np = npoints + 1; % Number of saved points (extra one for the "previous" gradien
 
 valid_orders = [1, 2, 4, 6]; % Possible values for FD method order
 if(~any(order == valid_orders))
-    error('AutoDX:InvalidOrder', 'Invalid input order');
+    error('AutoDX:InvalidOrder', 'order=%d is not supported', order);
 end
 
 dFdX_computed = false(numF,1);
@@ -182,13 +182,13 @@ for j = 1:numdX_exp
             
             % The first dX whose truncation error slope is nearly correct
             % is the maximum safe dX
-            if((max_valid_dx(currF) == 0.0) && (abs(slope_errt) <= 0.1*order))
+            if(max_valid_dx(currF) == 0.0)
                 max_valid_dx(currF) = dX_vec(i_dX_prev);
             end
                                                     
             % If the current truncation error slope is closer to ideal than
             % the previous slope, then use the current Cn value as the
-            % correct one. Note that Cn represents the (order+1)-th
+            % correct one. Note that Cn is proportional to the (order+1)-th
             % derivative of the function.
             if(abs(slope_errt) < abs(slope_errt_best(currF)))
                 Cn_true(currF) = Cn;
@@ -199,7 +199,7 @@ for j = 1:numdX_exp
             % then we are on the way to computing an optimal dX value. Note
             % that "sufficent number" is currently empirically obtained,
             % and must be at least 2.
-            if(num_valid_errt(currF) == max(2,valid_errt_req - order/2))
+            if(num_valid_errt(currF) == max(2,valid_errt_req - floor(order/2)))
                 errt_valid(currF) = true;
             end
             
@@ -220,7 +220,7 @@ for j = 1:numdX_exp
                     max_valid_dx(currF) = dx1;
 
                 % Truncation error is zero
-                elseif(num_zero_errt(currF) == (valid_errt_req - order/2))  
+                elseif(num_zero_errt(currF) == (valid_errt_req - floor(order/2)))  
                     % If the computed dF/dX = 0, then there is no way to
                     % tell if the derivative is just zero at the current X,
                     % or if it is zero at every X (i.e. constant function).
@@ -399,7 +399,7 @@ elseif(order == 6) % Sixth-order CD method, O(dx^6)
     Fpert(:,1,5) = Fplus3;
     Fpert(:,1,6) = Fminus3;
 else
-    error('order = %d is not supported', order);
+    error('AutoDX:getGradient_Order:InvalidOrder', 'order = %d is not supported', order);
 end
 
 end % function getGradient_Order
@@ -445,7 +445,7 @@ elseif(order == 6) % O(dx^6) CD
                  + 45.0*max([abs(Fplus), abs(Fminus)]))/60.0;
 
 else
-    error('order = %d is not supported', order);
+    error('AutoDX:getErrorCoeff:InvalidOrder', 'order = %d is not supported', order);
 end
 
 end % function getErrorCoeff

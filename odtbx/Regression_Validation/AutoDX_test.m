@@ -24,19 +24,37 @@
 %% Start regression test for AutoDX
 function [failed] = AutoDX_test
 
-% Test function
+% Test function and analytical derivative
 F = @(t, X) (exp(X)/sqrt(sin(X^3) + cos(X^3)));
-
+dFdX = @(t, X) (exp(X)*((3*X^2+2)*sin(X^3) + (2-3*X^2)*cos(X^3))) /...
+               (2*(sin(X^3)+cos(X^3))^(3/2));
+           
 % AutoDX inputs
 t0 = 0;             % Reference t
 X0 = 1.33;          % Reference X
 dX_max = abs(X0)+1; % Max step size for X
-order = 2;          % Order of finite-difference derivative method
+order = 1;          % Order of finite-difference derivative method
 
-[dFdX_opt, dX_opt, dXmax, dFdX_err, fcnerr] = ...
-    AutoDX(F, t0, X0, dX_max, order, [])
+F0 = F(t0, X0);
+dFdX_true = dFdX(t0, X0); % True derivative
+fprintf('True dFdX             = %d\n\n', dFdX_true);
+
+% Use AutoDX to compute optimal step size and associated derivative
+adx = AutoDX;
+[dFdX_adx, dX_adx, dXmax_adx, err_adx, fcnerr] = ...
+    adx.GetOptimalDX(F, t0, X0, dX_max, order, []);
+err_adx_true = abs((dFdX_adx - dFdX_true)/dFdX_true);
+fprintf('AutoDX dFdX           = %d\n', dFdX_adx);
+fprintf('AutoDX estimated err  = %d\n', err_adx);
+fprintf('AutoDX true err       = %d\n\n', err_adx_true);
+
+% Use numjac to compute derivative
+[dFdX_nj, fac] = numjac(F, t0, X0, F0, 10, [], false);
+err_nj_true = abs((dFdX_nj - dFdX_true)/dFdX_true);
+fprintf('numjac dFdX           = %d\n', dFdX_nj);
+fprintf('numjac true err       = %d\n', err_nj_true);
 
 tol = 1.0e-10;
-failed = (dFdX_err > tol);
+failed = (err_adx_true > tol);
 
 end

@@ -117,7 +117,7 @@ classdef AutoDX < handle
         % explicitely through a 'obj.order = value' assignment.
         function obj = set.order(obj, value)
             if(~any(value == obj.valid_orders))
-                warning('AutoDX:InvalidOrder', 'order=%d is not supported', value);
+                warning('AutoDX:InvalidOrder', 'order=%d is not supported, using %d instead', value, obj.order);
             else
                 obj.order = value;
             end
@@ -126,9 +126,10 @@ classdef AutoDX < handle
         %% GetOptimalGradient
         function [dFdX_out, dX_out, dXmax_out, err_out, fcnerr_out, numFCalls] = ...
                 GetOptimalGradient(obj, F, t0, X0, F0, dX_max, dFdX_known, varargin)
-            % Get the optimal step size for each element of X
+            %GetOptimalGradient Compute the optimal step size for each
+            %element of X
             % See also: AutoDX
-        
+                    
             numX = length(X0);
             if(isempty(dX_max))
                 dX_max = abs(X0) + 1.0;
@@ -142,6 +143,23 @@ classdef AutoDX < handle
                 numFCalls = numFCalls + nFc;
             end
             
+        end
+        
+        %% GetGradient
+        function dFdX_out = GetGradient(obj, F, t0, X0, F0, dX, varargin)
+            %GetGradient Compute the gradient dF/dX of a function F(t,X)
+            % DFDX = GETGRADIENT(F, T0, X0, F0, DX)
+            % dFdX: Matrix of dF/dX elements
+            % F:  Function handle for F(t, X)
+            % t0: Scalar independent variable, passed to F
+            % X0: Vector of dependent variables for differentiation
+            % F0: F(t0, X0)
+            % dX: Vector of perturbations for each element of X0
+
+            for iX = 1:length(X0)
+                dFdX_out(:,iX) = ...
+                    obj.getGradient_iX(F, t0, X0, iX, dX(iX), F0, varargin{:});
+            end
         end
         
     end
@@ -421,13 +439,16 @@ classdef AutoDX < handle
             % Compute the gradient dF/dX with a given order finite-difference method
             
             Xcurr = X0; % Initialize perturbed parameter vector
-            
+                        
             if(obj.order == 1) % First-order forward difference method, O(dx)
                 Xcurr(iX) = X0(iX) + dX;
                 Fplus = F(t0, Xcurr, varargin{:}); % Forward perturbed
                 
                 dFdX = (Fplus - F0)/dX;
-                Fpert(:,1,1) = Fplus;
+                
+                if(nargout == 2)
+                    Fpert(:,1,1) = Fplus;
+                end
                 
             elseif(obj.order == 2) % Second-order central difference method, O(dx^2)
                 Xcurr(iX) = X0(iX) + dX;
@@ -437,8 +458,11 @@ classdef AutoDX < handle
                 Fminus = F(t0, Xcurr, varargin{:}); % Backward perturbed
                 
                 dFdX = (Fplus - Fminus)/(2.0*dX);
-                Fpert(:,1,1) = Fplus;
-                Fpert(:,1,2) = Fminus;
+                
+                if(nargout == 2)
+                    Fpert(:,1,1) = Fplus;
+                    Fpert(:,1,2) = Fminus;
+                end
                 
             elseif(obj.order == 4) % Fourth-order CD method, O(dx^4)
                 Xcurr(iX) = X0(iX) + dX;
@@ -454,10 +478,13 @@ classdef AutoDX < handle
                 Fminus2 = F(t0, Xcurr, varargin{:}); % Backward perturbed
                 
                 dFdX = (Fminus2 - Fplus2 + 8.0*(Fplus - Fminus))/(12.0*dX);
-                Fpert(:,1,1) = Fplus;
-                Fpert(:,1,2) = Fminus;
-                Fpert(:,1,3) = Fplus2;
-                Fpert(:,1,4) = Fminus2;
+                
+                if(nargout == 2)
+                    Fpert(:,1,1) = Fplus;
+                    Fpert(:,1,2) = Fminus;
+                    Fpert(:,1,3) = Fplus2;
+                    Fpert(:,1,4) = Fminus2;
+                end
                 
             elseif(obj.order == 6) % Sixth-order CD method, O(dx^6)
                 Xcurr(iX) = X0(iX) + dX;
@@ -481,12 +508,15 @@ classdef AutoDX < handle
                 dFdX = (Fplus3 - Fminus3 ...
                     + 9.0*(Fminus2 - Fplus2) ...
                     + 45.0*(Fplus - Fminus)) / (60.0*dX);
-                Fpert(:,1,1) = Fplus;
-                Fpert(:,1,2) = Fminus;
-                Fpert(:,1,3) = Fplus2;
-                Fpert(:,1,4) = Fminus2;
-                Fpert(:,1,5) = Fplus3;
-                Fpert(:,1,6) = Fminus3;
+                
+                if(nargout == 2)
+                    Fpert(:,1,1) = Fplus;
+                    Fpert(:,1,2) = Fminus;
+                    Fpert(:,1,3) = Fplus2;
+                    Fpert(:,1,4) = Fminus2;
+                    Fpert(:,1,5) = Fplus3;
+                    Fpert(:,1,6) = Fminus3;
+                end
             end
             
         end % function getGradient_iX

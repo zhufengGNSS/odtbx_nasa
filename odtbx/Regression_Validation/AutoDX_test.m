@@ -19,7 +19,7 @@
 
 %  REVISION HISTORY
 %   Author      		Date         	Comment
-%   Ravi Mathur        11/20/2013      Original
+%   Ravi Mathur        11/24/2013      Original
 
 %% Start regression test for AutoDX
 function [failed] = AutoDX_test
@@ -33,7 +33,7 @@ dFdX = @(t, X) (exp(X)*((3*X^2+2)*sin(X^3) + (2-3*X^2)*cos(X^3))) /...
 t0 = 0;             % Reference t
 X0 = 1.33;          % Reference X (near a singularity)
 dX_max = [];        % Auto-compute initial large step size for X
-order = 2;          % 2nd-order central difference method
+order = 1;          % 1st-order forward difference method
 
 F0 = F(t0, X0);
 dFdX_true = dFdX(t0, X0); % True derivative
@@ -42,23 +42,25 @@ fprintf('True dFdX             = %d\n\n', dFdX_true);
 % Use AutoDX to compute optimal step size and associated derivative
 adx = AutoDX;
 adx.order = order;
-[dFdX_adx, dX_adx, dXmax_adx, err_adx, fcnerr] = ...
-    adx.GetOptimalDX(F, t0, X0, F0, dX_max, []);
+[dFdX_adx, dX_adx, dXmax_adx, err_adx, fcnerr, nfcalls_adx] = ...
+    adx.GetOptimalGradient(F, t0, X0, F0, dX_max, []);
 err_adx_true = abs((dFdX_adx - dFdX_true)/dFdX_true);
 fprintf('AutoDX dFdX           = %d\n', dFdX_adx);
-fprintf('AutoDX Optimal dX     = %d\n', dX_adx);
-fprintf('AutoDX Max Safe dX    = %d\n', dXmax_adx);
-fprintf('AutoDX Function Error = %d\n', fcnerr);
-fprintf('AutoDX estimated err  = %d\n', err_adx);
-fprintf('AutoDX true err       = %d\n\n', err_adx_true);
+fprintf('AutoDX optimal dX     = %d\n', dX_adx);
+fprintf('AutoDX max safe dX    = %d\n', dXmax_adx);
+fprintf('AutoDX rel cond err   = %d\n', fcnerr);
+fprintf('AutoDX rel est err    = %d\n', err_adx);
+fprintf('AutoDX true err       = %d\n', err_adx_true);
+fprintf('AutoDX # fcn calls    = %i\n\n', nfcalls_adx);
 
 % Use numjac to compute derivative
-[dFdX_nj, fac] = numjac(F, t0, X0, F0, 10, [], false);
+[dFdX_nj, ~, ~, ~, nfcalls_nj] = numjac(F, t0, X0, F0, 0);
 err_nj_true = abs((dFdX_nj - dFdX_true)/dFdX_true);
 fprintf('numjac dFdX           = %d\n', dFdX_nj);
 fprintf('numjac true err       = %d\n', err_nj_true);
+fprintf('numjac # fcn calls    = %i\n', nfcalls_nj);
 
-tol = 1.0e-10;
+tol = 1.0e-6;
 failed = (err_adx_true > tol);
 
 end

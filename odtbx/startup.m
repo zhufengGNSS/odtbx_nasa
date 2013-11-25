@@ -105,7 +105,7 @@
 
 % First, check if we've got regression test going on or not.
 startuptype = 0; % unknown
-if exist('basePath','var') && ~isempty('basePath')
+if exist('basePath','var') && ~isempty(basePath)
     startuptype = 1; % regression (trumps all others)
 elseif exist('odtbxPath','var') && ~isempty(odtbxPath)
     startuptype = 2; % dev setup, above
@@ -264,7 +264,7 @@ if exist('jatBytecodePath','var') && ~isempty(jatBytecodePath)
 end
 
 % Set Matlab paths for GMAT
-if exist(gmatPath)
+if exist('gmatPath', 'var')
     addpath(fullfile(gmatPath,'bin'));
     addpath(fullfile(gmatPath,'matlab','libCInterface'));
 end

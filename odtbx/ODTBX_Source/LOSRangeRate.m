@@ -12,9 +12,9 @@ function rangeRate = LOSRangeRate(t, r1, v1, r2, v2, options)
 %
 %   PARAMETER           VALID VALUES           NOTES
 %   useGPSIono          {true, false(default)} only for GPS sats as x2
-%   useIono             {true, false(default)} only for groundstats as x2
-%   useTropo            {true, false(default)} only for groundstats as x2
-%   useChargedParticle  {true, false(default)} only for groundstats as x2
+%   useIono             {true, false(default), @function_handle} true only for groundstats as x2
+%   useTropo            {true, false(default), @function_handle} true only for groundstats as x2
+%   useChargedParticle  {true, false(default), @function_handle} true only for groundstats as x2
 %   frequencyTransmit   {scalar>0, 1.57542e9}  Hz, Only for Doppler and
 %                                              measurement errors
 %   epoch                datenum               UTC time associated with   
@@ -70,51 +70,60 @@ function rangeRate = LOSRangeRate(t, r1, v1, r2, v2, options)
 %   Kevin Berry         06/25/2009      Fixed time scale discrepancy in 
 %                                       GPSIono
 %   Ravi Mathur         08/28/2012      Extracted regression test
+%   Jason Schmidt       11/7/2013       Encapsulated basic Tropo, Iono and
+%                                       ChPart models in their own
+%                                       functions.  Added support for user
+%                                       defined models.
 
 useGPSIono = getOdtbxOptions(options, 'useGPSIonosphere', false );
 useIono    = getOdtbxOptions(options, 'useIonosphere', false );
 useTropo   = getOdtbxOptions(options, 'useTroposphere', false );
 useChPart  = getOdtbxOptions(options, 'useChargedParticle', false );
 
+%% Define Models
+% If use* is set to true, use basic model, if false, leave model undefined,
+% if a function handle, use that function handle
+if isa(useIono,'function_handle')
+    IonoModel = useIono;
+    useIono = true;
+elseif useIono==true
+    IonoModel = @IonoModel_basic; %Ionospheric range rate errors (only valid for ground-based tracking) 
+end
+    
+if isa(useTropo,'function_handle')
+    TropoModel = useTropo;
+    useTropo = true;
+elseif useTropo==true
+    TropoModel = @TropoModel_basic; % Tropospheric range rate errors (only valid for ground-based tracking)
+end
+
+if isa(useChPart,'function_handle')
+    ChPartModel = useChPart;
+    useChPart = true;
+elseif useChPart==true
+    ChPartModel = @ChPartModel_basic; % Charged Particle range rate errors (only used for ground-based
+                                      % tracking where the satellite is outside the magnetosphere)
+end
+
+%% Calculate Geometric rangerate and other constants
 c           = JATConstant('c')/1000; %Speed of light in km
 r           = r1 - r2 ;
 losVector   = unit( r );
 rangeRate   = dot( losVector, (v1-v2) ) ./ (1 - dot(losVector,v2)/c );
+drdotTropo  = 0;
+drdotIono   = 0;
+drdotChPart = 0;
 
-if useTropo % Tropospheric range rate errors (only valid for ground-based tracking)
-    %Approximated based on a finite difference of the range error.
-    %r1 and r2 states must be in ECI.
-    range             = sqrt(sum(r.^2));
-    f                 = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
-    epoch             = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
-    Ephem.SatCoords   = 'ECI';
-    Ephem.StationInfo = 'ECEF';
-    init2fixed        = jatDCM('eci2ecef', epoch+t/86400);
-    drTropo           = zeros(1,length(range)); %initialize before loop    
-    for n = 1:length(range)
-        Ephem.Epoch          = epoch+t(n)/86400; %UTC
-        Ephem.satPos         = r1(:,n)*1000;
-        Ephem.staPos         = init2fixed(:,:,n)*r2(:,n)*1000;    
-        [azAngle,elAngle]    = jatStaAzEl(Ephem);
-        elAngle( elAngle<0 ) = NaN; % can't have a negative elevation
-        drTropo(n)           = jatTropoModel(range(n)*1000, elAngle, c/f)/1000;
-    end        
-    
-    init2fixed = jatDCM('eci2ecef', epoch+t/86400+1);
-    drTropo2   = zeros(1,length(range)); %initialize before loop    
-    for n = 1:length(range)
-        Ephem.Epoch          = epoch+t(n)/86400; %UTC
-        Ephem.satPos         = r1(:,n)*1000;
-        Ephem.staPos         = init2fixed(:,:,n)*r2(:,n)*1000;    
-        [azAngle,elAngle]    = jatStaAzEl(Ephem);
-        elAngle( elAngle<0 ) = NaN; % can't have a negative elevation
-        drTropo2(n)          = jatTropoModel(range(n)*1000, elAngle, c/f)/1000;
-    end  
-
+%% Calculate Measurement Errors Due to Troposphere
+if useTropo 
+    %Approximated based on a finite difference of the range error.      
+    drTropo = TropoModel(t,r1,r2,options); 
+    drTropo2 = TropoModel(t+1,r1+v1,r2+v2,options);
     drdotTropo = drTropo2 - drTropo; % change in Tropospheric effect
     rangeRate  = rangeRate + drdotTropo;
 end
 
+%% Calculate Measurement Errors Due to Ionosphere
 if useGPSIono % GPS Ionospheric range rate errors (only valid for GPS)
     %Approximated based on a finite difference of the range error.
     %r1 and r2 states must be in an ECI.
@@ -133,56 +142,22 @@ if useGPSIono % GPS Ionospheric range rate errors (only valid for GPS)
     end
     
     drdotIono = drIono2 - drIono; % change in Ionospheric effect
-    rangeRate = rangeRate + drdotIono;
-end
-
-if useIono %Ionospheric range rate errors (only valid for ground-based tracking)    
+elseif useIono    
     %Approximated based on a finite difference of the range error.
     %r1 and r2 states must be in an ECI.
-
-    epoch = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
-    Ephem.SignalFreq = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
-    Ephem.SatCoords = 'ECI';
-    Ephem.StationInfo = 'ECEF';
-    init2fixed  = jatDCM('eci2ecef', epoch+t/86400);
-    drIono = zeros(1,length(t)); %initialize before loop    
-    for n=1:length(t)
-        Ephem.Epoch = epoch+t(n)/86400; %UTC
-        Ephem.SatPos = r1(:,n)*1000;
-        Ephem.StaPos = init2fixed(:,:,n)*r2(:,n)*1000;
-        drIono(n) = jatIonoDelayModel(Ephem)/1000;
-    end
-    
-    init2fixed  = jatDCM('eci2ecef', epoch+t/86400+1);
-    drIono2 = zeros(1,length(t)); %initialize before loop    
-    for n=1:length(t)
-        Ephem.Epoch = epoch+(t(n)+1)/86400; %UTC
-        Ephem.satPos = (r1(:,n)+v1(:,n))*1000;
-        Ephem.staPos = init2fixed(:,:,n)*(r2(:,n)+v2(:,n))*1000;
-        drIono2(n) = jatIonoDelayModel(Ephem)/1000;
-    end    
-    
+    drIono = IonoModel(t,r1,r2,options); 
+    drIono2 = IonoModel(t+1,r1+v1,r2+v2,options);
     drdotIono = drIono2 - drIono; % change in Ionospheric effect
-    rangeRate = rangeRate + drdotIono;
 end
 
-if useChPart % Charged Particle range rate errors (only used for ground-based
-             % tracking where the satellite is outside the magnetosphere)
+%% Calculate Measurement Errors Due to Charged Particles above the Ionosphere
+if useChPart 
+    %Approximated based on a finite difference of the range error.
     %r1 states must be in an ECI.
-    epoch = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
-    Ephem.SignalFreq = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
-    Ephem.Epoch = epoch+t/86400; %UTC
-    Ephem.satPos = r1*1000;
-    drChPart = jatChargedParticleModel(Ephem)/1000;
-    drChPart(isnan(drChPart)) = 0;
-    
-    Ephem.Epoch = epoch+(t+1)/86400; %UTC
-    Ephem.satPos = (r1+v1)*1000;
-    drChPart2 = jatChargedParticleModel(Ephem)/1000;
-    drChPart2(isnan(drChPart2)) = 0;
-    
-    drdotChPart = drChPart2 - drChPart; % change in Charged Particle effect
-    rangeRate = rangeRate + drdotChPart';
+    drdotChPart = ChPartModel(t,r1,r2,options);
+    drdotChPart2 = ChPartModel(t+1,r1+v1,r2+v2,options); 
+    drdotChPart = drdotChPart2 - drdotChPart; % change in Charged Particle effect
 end
 
+rangeRate = rangeRate + drdotTropo + drdotIono + drdotChPart;
 end

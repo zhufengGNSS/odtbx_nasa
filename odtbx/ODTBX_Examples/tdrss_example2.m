@@ -60,6 +60,10 @@ measOptions = setOdtbxOptions(measOptions,'useLightTime', false);
 measOptions = setOdtbxOptions(measOptions,'EarthAtmMaskRadius',6478.12); %km
 measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
 
+%% Set Ground Station (Optional, internal default is {'WSGT','GTSS'})
+gsID = {'WSGT','GTSS'};
+measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
+
 %% Run tdrssmeas
 [y,H,R] = tdrssmeas(t,x,measOptions);
 R

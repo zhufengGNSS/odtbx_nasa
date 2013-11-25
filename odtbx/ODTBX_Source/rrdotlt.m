@@ -114,6 +114,10 @@ function [y,H,R,t2_lt,x2_lt] = rrdotlt(t1,x1,t2,x2,options)
 %   Ravi Mathur         08/28/2012      Extracted regression test
 
 type      = getOdtbxOptions(options,'rangeType','1way');
+useRange     = getOdtbxOptions(options, 'useRange', true );
+useRangeRate = getOdtbxOptions(options, 'useRangeRate', false ); %mutually exclusive with useDoppler
+useDoppler   = getOdtbxOptions(options, 'useDoppler', true ); %mutually explusive with useRangeRate
+numtypes     = useRange + useRangeRate+useDoppler;
 
 if any( strcmpi( type, {'2way','1wayFWD','1way'} ) )
     direction      = -1; %x2 sends the signal before x1 receives it
@@ -128,8 +132,21 @@ end
 if strcmpi( type, '2way' ) 
     direction      = 1; %x2 receives the signal after x1 sends it
     [t2_lt{2}, x2_lt{2}] = lightTimeCorrection(t1, x1, t2, x2, options, direction);
-    y2             = rrdotang(t1,x1,x2_lt{2},options); 
-    y              = (y+y2)/2;
+    [y2,H2]            = rrdotang(t1,x1,x2_lt{2},options); 
+    % average the pseudorange and rangerate measurements, 
+    % Sum Doppler y and H, average others
+    if numtypes == 2 && useDoppler
+        y = [(y(1,:) + y2(1,:))/2;
+               y(2,:) + y2(2,:)      ];
+        H = [(H(1,:) + H2(1,:))/2;
+               H(2,:)+H2(2,:)        ]; %Sum H for two way Doppler
+    elseif numtypes == 1 && useDoppler
+        y       = (y+y2);
+        H       = H+H2; %Sum H for two way Doppler
+    else
+        y       = (y+y2)/2;
+        H       = (H+H2)/2;
+    end
     %rrdotang knows that it is 2way from the options structure, so H was
     %already calculated for a 2way measurement.
 end

@@ -158,7 +158,6 @@ TX_link.beta = link_budget.TXAntennaMask;  % User input from options
 RX_link.beta = link_budget.RXAntennaMask;   % User input from options
 
 % Measurement physical parameter results:
-TX_az = out.TX_az*d2r;   % The transmitter azimuth angle (rad) [nn x GPS_SIZE]
 TX_link.alpha = out.TX_el*d2r; % The transmitter elevation angle (rad) [nn x GPS_SIZE]
 RX_link.alpha = out.RX_el*d2r; % The receiver elevation angle (rad)
 
@@ -218,7 +217,7 @@ for ANT=1:loop
         % Encapsulate RX and TX data
         % Originally set to be 1D receive, 1D transmit patterns
         RX_antenna = struct('pattern', RX_link.pattern{ANT}, ...
-            'el', RX_link.alpha(:,j));
+            'el', RX_link.alpha(:,j,ANT));
         TX_antenna = struct('pattern', TX_link.pattern, ...
             'el', TX_link.alpha(:,j));
         
@@ -229,7 +228,7 @@ for ANT=1:loop
         end
         if size(TX_link.pattern,2) > 2
             % 2D transmit antenna
-            TX_antenna.az = TX_az(:,j);
+            TX_antenna.az = out.TX_az(:,j)*d2r;
         end
          
          % Compute gain/attenuation of receiving antenna pattern
@@ -239,7 +238,7 @@ for ANT=1:loop
     end
 
     % Apply the receiver gain penalty for the user-defined mask angle
-    AntLB_raw = gainpenalty_mask(RX_antenna, AntLB_raw, RX_link.alpha, RX_link.beta);
+    AntLB_raw = gainpenalty_mask(RX_antenna, AntLB_raw, RX_link.alpha(:,:,ANT), RX_link.beta);
     
     % Apply the transmit gain penalty for the user-defined mask angle
     AntLB_raw = gainpenalty_mask(TX_antenna, AntLB_raw, TX_link.alpha, TX_link.beta);
@@ -250,13 +249,13 @@ for ANT=1:loop
     %  Set prns visible if los within antenna mask angles
     %  So far, alpha_t was computed assuming GPS antenna is nadir pointing
     vis_beta_t = (TX_link.alpha <= TX_link.beta);
-    vis_beta = vis_beta_t & (RX_link.alpha <= RX_link.beta);    % (nn,GPS_SIZE)
+    vis_beta = vis_beta_t & (RX_link.alpha(:,:,ANT) <= RX_link.beta);    % (nn,GPS_SIZE)
 
     %  Set prns visible if CN0 is above acquisition/tracking threshold
     vis_CN0 = AntLB_raw.CN0 >= link_budget.RecTrackThresh;                               % [nn,GPS_SIZE]
 
     %  OUTPUT PARAMETERS
-    AntLB{ANT}.Halpha_r = RX_link.alpha';             % [GPS_SIZE,nn]
+    AntLB{ANT}.Halpha_r = RX_link.alpha(:,:,ANT)';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_beta = vis_beta';             % [GPS_SIZE,nn]
     AntLB{ANT}.Hvis_CN0 = vis_CN0';             % [GPS_SIZE,nn]
     AntLB{ANT}.HCN0 = AntLB_raw.CN0';             % [GPS_SIZE,nn]

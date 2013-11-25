@@ -116,6 +116,9 @@ function [y,H,R] = tdrssmeas(t,x,options)
 %   Ravi Mathur         08/28/2012      Extracted regression test
 
 %% Get values from options
+gsID         = getOdtbxOptions(options, 'gsID', [] );
+gsList       = getOdtbxOptions(options, 'gsList', []);
+gsECEF       = getOdtbxOptions(options, 'gsECEF', []);
 epoch = getOdtbxOptions(options, 'epoch', NaN); %UTC
 uselt = getOdtbxOptions(options, 'useLightTime', false);
 tdrss = getOdtbxOptions(options, 'tdrss', []);
@@ -186,22 +189,27 @@ else
     error([tdrss.type ' is not a supported state type'])
 end
 
+%% Get Ground Station States
+if isempty(gsECEF)
+    if isempty(gsList)
+        gsList = createGroundStationList(); 
+    end
+    if isempty(gsID)
+        gsID = {'WSGT','GTSS'};
+    end
+    gsECEF = zeros(3,length(gsID));
+    for n=1:length(gsID)
+            gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
+    end
+
+end
+
 %% Loop over all TDRS Satellites
 %initialize Y and H and R
 y    = nan(length(tdrss.sat)*numtypes,length(t));
 H    = zeros(length(tdrss.sat)*numtypes,6,length(t));
 R = [];
 
-% gsIDs    = {'WSGT','GTSS'};
-% gsList   = getOdtbxOptions(options, 'gsList', []);
-% if isempty(gsList); gsList = createGroundStationList(); end;
-% gsECEF = zeros(3,length(gsIDs));
-% for n=1:length(gsIDs)
-%     gsECEF(:,n) = getGroundStationInfo(gsList,gsIDs{n},'ecefPosition',epoch);
-% end
-gsECEF = [-1539.37859986625         -5070.00944053254
-         -5160.93110611279          3569.07519673414
-          3408.22918525621          1491.68888437059];
 options  = setOdtbxOptions(options,'gsElevationConstraint', 0);
 for n=1:length(tdrss.x)
     %% Set the ground station

@@ -300,19 +300,23 @@ function options = odtbxOptions(type)
 %
 % useGPSIonosphere - Ionospheric effects in GPS measurements. [ true | {false} ]
 %   Set this property to 'true' to include ionospheric effects in GPS
-%   measurement calculations. 
+%   measurement calculations. THIS WILL BE DEPRICATED and merged into
+%   useIonophere and IonoModel in future releases.
 %
-% useIonosphere - Ionospheric effects in measurements. [ true | {false} ]
-%   Set this property to 'true' to include ionospheric effects in ground
-%   based measurement calculations. 
+% useIonosphere - Ionospheric effects in measurements. [ true | {false}  | @function_handle  ]
+%   Set this property to 'true' to use basic ionospheric model for ground
+%   based measurement calculations. Set to @function_handle to use your own
+%   model.
 %
-% useTroposphere - Tropospheric effects in measurements. [ true | {false} ]
-%   Set this property to 'true' to include tropospheric effects in ground
-%   based measurement calculations. 
+% useTroposphere - Tropospheric effects in measurements. [ true | {false} | @function_handle  ]
+%   Set this property to 'true' to use basic tropospheric model for ground
+%   based measurement calculations. Set to @function_handle to use your own
+%   model.
 % 
-% useChargedParticle - Charged particle effects in measurements. [ true | {false} ]
-%   Set this property to 'true' to include charged particle effects in
-%   ground based interplanetary measurement calculations.
+% useChargedParticle - Charged particle effects in measurements. [ true | {false} | @function_handle  ]
+%   Set this property to 'true' to use basic charged particle model for
+%   ground based interplanetary measurement calculations. Set to @function_handle 
+%   to use your own model.
 %
 % frequencyTransmit - Transmitter frequency in Hz. [ scalar >0 {1.57542e9}]
 %   Set this property to specify the transmitter frequency used for Doppler
@@ -550,7 +554,7 @@ measurementOptions = {
     'useUnit'
     'useAngles'
     'useLightTime'
-    'useGPSIonosphere'
+    'useGPSIonosphere'          %THIS WILL BE DEPRICATED in future releases.
     'useIonosphere'
     'useTroposphere'
     'useChargedParticle'
@@ -692,9 +696,9 @@ fprintf('               useDoppler: [      ''true'' | {''false''} ]\n');
 fprintf('                  useUnit: [      ''true'' | {''false''} ]\n');
 fprintf('             useLightTime: [      ''true'' | {''false''} ]\n');
 fprintf('         useGPSIonosphere: [      ''true'' | {''false''} ]\n');
-fprintf('            useIonosphere: [      ''true'' | {''false''} ]\n');
-fprintf('           useTroposphere: [      ''true'' | {''false''} ]\n');
-fprintf('       useChargedParticle: [      ''true'' | {''false''} ]\n');
+fprintf('            useIonosphere: [      ''true'' | {''false''} | @function_handle ]\n');
+fprintf('           useTroposphere: [      ''true'' | {''false''} | @function_handle ]\n');
+fprintf('       useChargedParticle: [      ''true'' | {''false''} | @function_handle ]\n');
 fprintf('        frequencyTransmit: [ scalar>0 {1.57542e9} ]\n');
 fprintf('                   gsList: [ JAT groundStationList java object ]\n');
 fprintf('                     gsID: [ cell array of strings ]\n');

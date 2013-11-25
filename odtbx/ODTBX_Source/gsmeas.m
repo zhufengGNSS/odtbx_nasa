@@ -146,13 +146,16 @@ useAngles    = getOdtbxOptions(options, 'useAngles', false );
 Sched        = getOdtbxOptions(options, 'Schedule',[]); %Tracking Schedule
 numtypes     = useRange + useRangeRate + useDoppler+3*useUnit+2*useAngles;
 
-numGS = length(gsID);
+
 if isempty(gsECEF)
     if( isempty(gsList) && ~isempty(gsID) ); gsList = createGroundStationList(); end
-    gsECEF = zeros(3,length(gsID));
+    numGS = length(gsID);
+    gsECEF = zeros(3,numGS);
     for n=1:numGS
             gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
     end
+else
+    numGS = size(gsECEF,2);
 end
 M            = numGS * numtypes;
 N            = length(t);
@@ -315,8 +318,8 @@ else
                 out.TX_az = zeros(N,numGS);
                 out.TX_el = zeros(N,numGS);
             end
-            out.TX_az(:,n) = az*180/pi;
-            out.TX_el(:,n) = -(el*180/pi-90);
+            out.TX_az(:,n) = az*180/pi;  %Assume az is from north going clockwise (N,E,S,W)
+            out.TX_el(:,n) = -(el*180/pi-90); %deg from boresite (which points up)
         end
         % combine with results from previous stations
         indstart                     = 1 + numtypes*(n-1);
@@ -378,7 +381,7 @@ if dolinkbudget
     out.rgps_mag = reshape(sqrt(sum(gsECEF_overTime.^2)),N,numGS);
     out.health = reshape(max(gsECEF_overTime),N,numGS) ~= 0;
     
-    %add RX_az, RX_el to out
+    %add range, RX_az, RX_el to out
     
         % Calculate x position in ECEF
         [xECEF,init2fixed] = getECEFstates(x,epoch,t); 
@@ -422,7 +425,7 @@ if dolinkbudget
         end
         los_unit_3d = los_3d./los_mag_3d;                  % [3,N,numGS]
 
-    % Define range, az and el
+    % Set range, RX_az, RX_el in out
     out.range = los_mag';
     out.RX_az    = NaN(N,numGS,num_ant);
     out.RX_el    = NaN(N,numGS,num_ant);

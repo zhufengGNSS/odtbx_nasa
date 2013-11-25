@@ -1,5 +1,4 @@
-function range = LOSRange(t, r1, r2, options)
-
+function [ range ] = LOSRange( t, r1, r2, options )
 % LOSRANGE  Line of sight range measurement between two objects
 %
 %   range = LOSRange(r1, r2, options) returns the range measurement between
@@ -14,9 +13,9 @@ function range = LOSRange(t, r1, r2, options)
 %
 %   PARAMETER           VALID VALUES           NOTES
 %   useGPSIono          {true, false(default)} only for GPS sats as x2
-%   useIono             {true, false(default)} only for groundstats as x2
-%   useTropo            {true, false(default)} only for groundstats as x2
-%   useChargedParticle  {true, false(default)} only for groundstats as x2
+%   useIono             {true, false(default), @function_handle} true only for groundstats as x2
+%   useTropo            {true, false(default), @function_handle} true only for groundstats as x2
+%   useChargedParticle  {true, false(default), @function_handle} true only for groundstats as x2
 %   frequencyTransmit   {scalar>0, 1.57542e9}  Hz, Only for Doppler and
 %                                              measurement errors
 %   epoch                datenum               UTC time associated with  
@@ -74,39 +73,57 @@ function range = LOSRange(t, r1, r2, options)
 %   Kevin Berry         06/25/2009      Fixed time scale discrepancy in 
 %                                       GPSIono
 %   Ravi Mathur         08/28/2012      Extracted regression test
+%   Jason Schmidt       11/6/2013       Encapsulated basic Tropo, Iono and
+%                                       ChPart models in their own
+%                                       functions.  Added support for user
+%                                       defined models.
+
 
 useGPSIono = getOdtbxOptions(options, 'useGPSIonosphere', false );
 useIono    = getOdtbxOptions(options, 'useIonosphere', false );
 useTropo   = getOdtbxOptions(options, 'useTroposphere', false );
 useChPart  = getOdtbxOptions(options, 'useChargedParticle', false );
 
+%% Define Models
+% If use* is set to true, use basic model, if false, leave model undefined,
+% if a function handle, use that function handle
+if isa(useIono,'function_handle')
+    IonoModel = useIono;
+    useIono = true;
+elseif useIono==true
+    IonoModel = @IonoModel_basic;
+end
+    
+if isa(useTropo,'function_handle')
+    TropoModel = useTropo;
+    useTropo = true;
+elseif useTropo==true
+    TropoModel = @TropoModel_basic;
+end
+
+if isa(useChPart,'function_handle')
+    ChPartModel = useChPart;
+    useChPart = true;
+elseif useChPart==true
+    ChPartModel = @ChPartModel_basic;
+end
+
+
+%% Calculate Geometric Range and Initialize Values
 r      = r1 - r2 ;
 range  = sqrt(sum(r.^2));
 
-if useTropo % Tropospheric range errors (only valid for ground-based tracking)
-    %r1 and r2 states must be in ECI.
-    f                 = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
-    c                 = JATConstant('c'); %speed of light in meters
-    epoch             = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
-    Ephem.SatCoords   = 'ECI';
-    Ephem.StationInfo = 'ECEF';
-    init2fixed        = jatDCM('eci2ecef', epoch+t/86400);
-    drTropo           = zeros(1,length(range)); %initialize before loop    
-    for n = 1:length(range)
-        Ephem.Epoch          = epoch+t(n)/86400; %UTC
-        Ephem.satPos         = r1(:,n)*1000;
-        Ephem.staPos         = init2fixed(:,:,n)*r2(:,n)*1000;    
-        [azAngle,elAngle]    = jatStaAzEl(Ephem);
-        % Check if the elevation is too negative.  Currently, this is -15
-        % deg.  Consider making this a user option.
-        min_elAngle = -15*pi/180;
-        elAngle( elAngle < min_elAngle ) = min_elAngle; 
-        drTropo(n)           = jatTropoModel(range(n)*1000, elAngle, c/f)/1000;
-    end    
-    range   = range + drTropo;
+drTropo = 0;
+drIono = 0;
+drChPart = 0;
+
+%% Calculate Measurement Errors Due to Troposphere
+if useTropo
+    drTropo = TropoModel(t,r1,r2,options);
 end
 
-if useGPSIono % GPS Ionospheric range errors (only valid for GPS tracking)
+%% Calculate Measurement Errors Due to Ionosphere
+if useGPSIono
     %r1 and r2 states must be in an ECI.
     epoch     = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
     epoch_GPS = convertTime('GPS','UTC',epoch); %GPS Time
@@ -114,36 +131,16 @@ if useGPSIono % GPS Ionospheric range errors (only valid for GPS tracking)
     for n = 1:length(range)
         drIono(n) = jatGPSIonoModel(r1(:,n)*1000, r2(:,n)*1000, epoch_GPS+t(n)/86400)/1000;
     end
-    range  = range + drIono;
+elseif useIono
+    drIono = IonoModel(t,r1,r2,options);
 end
 
-if useIono % Ionospheric range errors (only valid for ground-based tracking)
-    %r1 and r2 states must be in ECI.
-    epoch             = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
-    Ephem.SignalFreq  = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
-    Ephem.SatCoords   = 'ECI';
-    Ephem.StationInfo = 'ECEF';
-    init2fixed        = jatDCM('eci2ecef', epoch+t/86400);
-    drIono            = zeros(1,length(range)); %initialize before loop    
-    for n=1:length(range)
-        Ephem.Epoch  = epoch+t(n)/86400; %UTC
-        Ephem.SatPos = r1(:,n)*1000;
-        Ephem.StaPos = init2fixed(:,:,n)*r2(:,n)*1000;
-        drIono(n)    = jatIonoDelayModel(Ephem)/1000;
-    end
-    range = range + drIono;
+%% Calculate Measurement Errors Due to Charged Particles above the Ionosphere
+if useChPart
+    drChPart = ChPartModel(t,r1,r2,options);
 end
 
-if useChPart % Charged Particle range errors (only used for ground-based
-             % tracking where the satellite is outside the magnetosphere)
-    %r1 states must be in an ECI.
-    epoch                     = getOdtbxOptions(options, 'epoch', datenum('Jan 1 2006') ); %UTC
-    Ephem.SignalFreq          = getOdtbxOptions(options,'frequencyTransmit',JATConstant('L1Frequency'));
-    Ephem.Epoch               = epoch+t/86400; %UTC
-    Ephem.satPos              = r1*1000;
-    drChPart                  = jatChargedParticleModel(Ephem)/1000;
-    drChPart(isnan(drChPart)) = 0;
-    range                     = range + drChPart';
-end
+range = range + drTropo + drIono + drChPart;
 
 end
+

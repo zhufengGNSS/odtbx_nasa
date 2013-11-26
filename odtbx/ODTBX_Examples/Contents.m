@@ -33,6 +33,7 @@
 %   dualIADyn                    - Get dynamics & estimation values for the chaser_target tutorial.
 %   editratio_test               - Specify the initial reference state.
 %   gps_antenna_tools_support    - Support script to gps_antenna_tools_demo.m
+%   gsmeas_linkbudget_example    - GSMEAS_EXAMPLE This demonstrates the use of the gsmeas measurement model.
 %   pancake_dat                  - Get measurement data for the pancake tutorial.
 %   pancake_dyn                  - Get dynamics & estimation values for the pancake tutorial.
 %   plot_results                 - Plots estimator error, measurment residuals, variance sandpiles 
@@ -45,4 +46,7 @@
 %   rrdot3D                      - Range and range-rate measurement model for 3-D inertial state
 %   testeom                      - Example EOM file for use with the MATLAB Adaptor.
 %   testMeasPartials_example     - This example tests the H matrix derivations of gsmeas, tdrssmeas, ddormeas, lnrmeas, and gpsmeas.
+%   tdrss_basic_example3         - Input TDRS States as SPEphem type ephemeris files
+%   tdrss_example3               - Input TDRS States as SPEphem type ephemeris files
 %   upvec_test                   - estseq example.
+

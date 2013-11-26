@@ -3,7 +3,7 @@
   xsi:noNamespaceSchemaLocation="optional">
 <?xml-stylesheet type="text/xsl" href="optional"?>
 
-<matlabrelease>14</matlabrelease>
+<matlabrelease>26</matlabrelease>
 <name>Orbit Determination</name>
 <type>toolbox</type>
 <icon>specsimicon.gif</icon>
@@ -20,7 +20,7 @@
 
 <listitem>
 <label>ODTBX Web Site</label>
-<callback>web https://fftbwall.gsfc.nasa.gov/fftb/trac-svn/matlab/trac.cgi -browser;</callback>
+<callback>web http://sourceforge.net/projects/odtbx/ -browser;</callback>
 <icon>$toolbox/matlab/icons/webicon.gif</icon>
 </listitem>
 

@@ -33,7 +33,4 @@
 %   mJD2JD                  - Converts Modified Julian Date to Julian Date.
 %   mJD2MatlabTime          - Returns the datenum of the input Modified Julian Date
 %   setJatRK8Options        - setJatRK8Options Set adaptor options for jatRK8.
-
-
-
-
+%   jatForcesCon            - Returns derivatives of JAT Force models (state in meters).

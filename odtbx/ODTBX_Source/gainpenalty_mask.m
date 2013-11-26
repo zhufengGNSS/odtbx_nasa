@@ -1,6 +1,6 @@
 function [link_budget] = gainpenalty_mask(antenna, link_budget, alpha, beta) 
-% Check and apply additional mask angle penalty to:
-% Ar, RP, CN0
+% Check and apply additional mask angle penalty.
+% Currently applies to: Ar, RP, CN0
 % Note, the linkbudget already applies a penalty for those 
 % angles outside the pattern so don't doubly-apply a penalty.
 

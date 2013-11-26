@@ -9,6 +9,7 @@
 %     Keith Speckman    03/15/2008      Original
 %     Ravi Mathur       11/07/2012      New HTML folder location
 %     Ravi Mathur       05/22/2013      Add meas_sched_gui
+%     Ravi Mathur       11/25/2013      Add Integrators
 
 f = filesep;
 
@@ -30,4 +31,9 @@ fclose(fid_j);
 % Generate Measurement Scheduling GUI Adapters listing from meas_sched_gui folder
 fid_j = fopen(['..',f,'HTML',f,'meassched_functionlist.html'],'w');
 fwrite(fid_f,help2html('meas_sched_gui','meas_sched_gui'),'char');
+fclose(fid_j);
+
+% Generate integrators listing from Integrators folder
+fid_j = fopen(['..',f,'HTML',f,'integrators_functionlist.html'],'w');
+fwrite(fid_f,help2html('Integrators','Integrators'),'char');
 fclose(fid_j);

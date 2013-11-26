@@ -56,7 +56,7 @@
 %   FilterPpEl               - A FilterPpData class for filtering GPS physical parameter data on antenna
 %   FilterPpExplicitTimes    - A FilterPpData class for filtering GPS physical parameter by time.
 %   gasdyn                   - Simulates comet outgassing forces
-%   getgpsmeas               - Computes physical parameters required for GPS based measurements 
+%   getgpsmeas               - Computes physical parameters required for GPS based measurements
 %   getBodyShadow            - Determine whether any of the specified celestial bodies is shadowing the spacecraft.
 %   getOdtbxOptions          - Get Adaptor OPTIONS parameters.
 %   getPulsarData            - Retrieves pulsar data for use by XNAVMEAS
@@ -134,3 +134,27 @@
 %   varpiles                 - Variance Sandpiles.
 %   xmat                     - Cross-product matrix for arrays of vectors.
 %   xnavmeas                 - Calculates spacecraft to distant RSO range difference & range difference rate measurements. 
+%   AutoDX                   - AutoDX Compute the step size dX that minimizes the error in dF/dX
+%   LOSRangeCon              - LOSRANGE  Line of sight range measurement between two objects
+%   LOSRangeRateCon          - LOSRANGERATE  Line of sight range rate measurement between two objects 
+%   antennaCalc              - 
+%   antennaVis               - 
+%   calc_linkbudgets         - Calculates link budget and visibility between satellite targets
+%   estbatCon                - ESTBAT Batch Estimator.
+%   gpsmeasAbs               - function [y,H,R,AntLB] = gpsmeasAbs(varargin)
+%   gsmeasCon                - GSMEAS  Makes ground station based measurements.
+%   linkbudget               - Calculates the transmitter-receiver link budget.
+%   ominuscCon               - OMINUSC  Innovations, meas. partials, and possibly innovation covariance.
+%   tdrssmeas_basic          - Makes TDRSS based measurements.
+%   visibility_constraints   - 
+%   tdrssmeasCon             - TDRSSMEAS  Makes TDRSS based measurements.
+%   solve_consider           - solve_consider Summary of this class goes here
+%   rrdotangCon              - RRDOTANG  Calculate range, range rate, doppler, angles between two objects.
+%   rnxnEval                 - Evaluates ICD-200 GPS Ephemeris at user specified time.  Uses ephemerides
+%   read_rnxn                - - read rinex formated GPS broadcast ephemeris data
+%   linkbudget_default       - Sets a required linkbudget value to a default if
+%   get_linkbudget           - Calculate a link budget between the receiver x1 with num_ant antennas and
+%   gainpenalty_mask         - Check and apply additional mask angle penalty.
+%   ChPartModel_basic        - Calculate the signal delay (in km) caused by a signal traveling 
+%   IonoModel_basic          - Calculate the signal delay (in km) caused by a signal traveling 
+%   TropoModel_basic         - Calculate the signal delay (in km) caused by a signal traveling 

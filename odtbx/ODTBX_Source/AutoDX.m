@@ -1,6 +1,6 @@
 classdef AutoDX < handle
-    %AutoDX Numerically compute the optimal step size dX to minimize the error
-    %in the finite-difference derivative dF/dX of the function F(t,X).
+    % AutoDX Compute the step size dX that minimizes the error in dF/dX
+    % the finite-difference derivative of the function F(t,X).
     %   [DFDX,DX] = AutoDX.GetOptimalGradient(F, T0, X0, F0, DX_MAX, DFDX_KNOWN)
     %   dFdX: Jacobian matrix (length(F)-by-length(X)) 
     %   dX: Matrix of optimal dX values. Element (i,j) corresponds to the

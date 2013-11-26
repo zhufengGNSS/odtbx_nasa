@@ -131,6 +131,7 @@ link_budget = linkbudget_default(link_budget, 'SystemLoss', 0 ); % dB, System lo
 link_budget = linkbudget_default(link_budget, 'AtmAttenuation', 0.0); % dB
 link_budget = linkbudget_default(link_budget, 'TXAntennaMask', pi); % rad
 link_budget = linkbudget_default(link_budget, 'RXAntennaMask', pi); % rad
+link_budget = linkbudget_default(link_budget, 'TX_AntennaPointing', -1); % nadir-pointing by default
 link_budget = linkbudget_default(link_budget, 'AntennaPattern', {'sensysmeas_ant.txt','sensysmeas_ant.txt'});
     %  Specify antenna pattern for each antenna, existing antennas are:
     %     sensysmeas_ant.txt        - hemi antenna, 4 dB peak gain, 157 degree half beamwidth

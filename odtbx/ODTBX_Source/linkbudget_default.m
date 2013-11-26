@@ -17,6 +17,11 @@ function [linkbudget] = linkbudget_default(linkbudget, fieldname, default_val)
     
     if ~isfield(linkbudget, fieldname) || isempty(linkbudget.(fieldname))
         linkbudget.(fieldname) = default_val;
-        warning('%s not set, setting default value of %s.', fieldname, num2str(default_val));
+        if iscell(default_val)
+            defaultname = mat2str(cell2mat(default_val));
+        else
+            defaultname = num2str(default_val);
+        end
+        warning('%s not set, setting default value of %s.', fieldname, defaultname);
     end
 end

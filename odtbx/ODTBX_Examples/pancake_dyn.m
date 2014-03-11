@@ -46,5 +46,6 @@ A(1:2,3:4) = I;
 
 % Set process noise spectral density
 Q = zeros(7,7);
+%Q(5,5) = 1e-2; % add some noise on mu
 
 end

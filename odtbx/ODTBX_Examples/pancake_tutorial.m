@@ -11,6 +11,8 @@
 % # Compute the observability of any element(s) of the state vector.
 % # Estimate all components of the state vector.
 
+echo on
+
 %% Introduction
 % Pancake is a circular planet that exists in a 2D universe with no other gravitational influences.
 % Its rotation rate $\omega_p$, radius $r_p$, and gravitational parameter $\mu$ are all known. In
@@ -19,6 +21,10 @@
 %
 % In this tutorial, your goal is to estimate the satellite's position and
 % velocity, Pancake's gravitational parameter, and the ground station's position.
+
+clc
+clear
+close all
 
 %% Initialize Variables
 % Suppose that at some time $t_0$, the ground station lies on the
@@ -50,6 +56,7 @@ x0 = [R0; V0; mu; Rs0];
 % seconds.
 
 tspan = 0:60:86400; % Integration time span and step size
+
 
 %%
 % ODTBX provides a numerical integrator called "integ", which automatically 
@@ -171,6 +178,116 @@ xlabel('X [km]');
 ylabel('Y [km]');
 axis equal;
 
+%%
+% We can specify which states should be estimated using the "Solve-For"
+% matrix. In addition, for states that are not estimated, we can specify
+% whether they shoule be considered during estimation using the "Consider"
+% matrix. 
+
+S = eye(4,7); % Solve-for map - solve for s/c pos & vel
+C = [zeros(3,4), eye(3,3)]; % Consider map - consider mu and Rs
+
+%%
+% Above, we specified a single initial state and covariance
+% matrix, each of which were used as the "truth" and "estimated" initial
+% states. Alternatively, ODTBX lets us specify a separate truth and
+% estimated initial state and covariance, which we need since the solve-for
+% model and truth model have different dimensions.
+
+Xnot.Xo = x0;         % True initial state
+Xnot.Xbaro = S*x0;    % Estimator initial state (note that S is the identity matrix)
+
+P0 = unscrunch(P{1}(:,1)) % Use post-fit epoch covariance from above as a priori now
+Pnot.Po = P0;         % Truth initial covariance
+Pnot.Pbaro = S*P0*S'; % Estimator initial covariance
+  
+%% 
+% Above, we specified a single dynamics and measurement
+% model for the truth and estimator. Alternatively, ODTBX lets us specify
+% separate truth and estimator models in a method similar to the initial
+% state and covariance above.
+
+dynfun = struct;
+dynfun.tru = @pancake_dyn; % True dynamics model
+dynfun.est = @pancake_dynsf; % Solve-for dynamics model
+
+dynopts = struct;
+dynopts.tru = w_p;
+dynopts.est = mu; % Since mu is no longer in state vector
+
+datfun = struct;
+datfun.tru = @pancake_dat; % True measurement model
+datfun.est = @pancake_datsf; % Solve-for measurement model
+
+datopts = struct;
+datopts.tru = []; % No extra options for dynamics model
+datopts.est = [r_p; w_p]; % since station location is no longer in state
+
+%%
+% Set some options for the batch filter.  We will run 10 Monte Carlo cases 
+% and for each case, iterate on the batch solution 3 times.
+%
+estopts = setOdtbxOptions('MonteCarloCases',10,'UpdateIterations',3);
+[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
+    estbat(dynfun,datfun,tspan,Xnot,Pnot,estopts,dynopts,datopts,S,C);
+
+%%
+% Plot the estimator errors and estimator covariance information
+estval(t,e,P,scrunch(Pa+Pv+Pw),gcf);
+
+% Plot the measurement residuals or innovations
+plot_ominusc(t,dy,Pdy,Pdyt,gcf);
+%
+% Compute the covariance differences for plotting variance sandpiles:
+% Compute the true covariance mapped to the solve-for space
+for k = length(t{1}):-1:1,
+    SPaSt(:,:,k) = S*Pa(:,:,k)*S'; 
+    SPvSt(:,:,k) = S*Pv(:,:,k)*S'; 
+    SPwSt(:,:,k) = S*Pw(:,:,k)*S'; 
+end
+SPSt = SPaSt + SPvSt + SPwSt;
+dPa = SPaSt - Phata;
+dPv = SPvSt - Phatv;
+dPw = SPwSt - Phatw;
+Phatlin = Phata + Phatv + Phatw; % Total Phat corresponding to lin cov
+for k = 1:size(S,1),
+    figure(gcf+1)
+    varpiles(t{1},dPa(k,k,:),dPv(k,k,:),dPw(k,k,:),...
+        SPaSt(k,k,:),SPvSt(k,k,:),SPwSt(k,k,:),...
+        Phata(k,k,:),Phatv(k,k,:),Phatw(k,k,:),SPSt(k,k,:),Phatlin(k,k,:));
+end
+
+% Sensitivity Mosaic
+figure(gcf+1)
+sensmos(t{1}, SigSA);
+
+%% Now add process noise
+% Use shorter tspan!
+tspan = 0:60:8640; % Integration time span and step size
+dynfun.tru = @pancake_dynoi; % adds noise to mudot
+[t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
+    estbat(dynfun,datfun,tspan,Xnot,Pnot,estopts,dynopts,datopts,S,C);
+
+%% Varpiles
+clear SPaSt SPvSt SPwSt
+for k = length(t{1}):-1:1,
+    SPaSt(:,:,k) = S*Pa(:,:,k)*S'; 
+    SPvSt(:,:,k) = S*Pv(:,:,k)*S'; 
+    SPwSt(:,:,k) = S*Pw(:,:,k)*S'; 
+end
+SPSt = SPaSt + SPvSt + SPwSt;
+dPa = SPaSt - Phata;
+dPv = SPvSt - Phatv;
+dPw = SPwSt - Phatw;
+Phatlin = Phata + Phatv + Phatw; % Total Phat corresponding to lin cov
+for k = 1:size(S,1),
+    figure(gcf+1)
+    varpiles(t{1},dPa(k,k,:),dPv(k,k,:),dPw(k,k,:),...
+        SPaSt(k,k,:),SPvSt(k,k,:),SPwSt(k,k,:),...
+        Phata(k,k,:),Phatv(k,k,:),Phatw(k,k,:),SPSt(k,k,:),Phatlin(k,k,:));
+end
+
+echo off
 %% License 
 % ODTBX: Orbit Determination Toolbox
 % 

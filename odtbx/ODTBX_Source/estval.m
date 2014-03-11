@@ -164,19 +164,19 @@ for i = 1:n, % Cycle through each state
         les  = reshape([iusemn*[1;1]*em(i,:)+[1;3]*es(i,:); NaN(1,N)],3*N,1);
         lesm = reshape([iusemn*[1;1]*em(i,:)-[1;3]*es(i,:); NaN(1,N)],3*N,1);
         h = plot(...
-            t,squeeze(e(i,:,1)),'y.',...     % Actual errors
+            t,squeeze(e(i,:,1)),'y-',...     % Actual errors
             t(1),em(i,1),'b-',...            % Ensemble mean of e
             tr(1),les(1),'c-',...            % Ensemble 1,3sig of e
-            t(1),2*fsem(i,1),'g+',...        % Ensemble 2sig from P
-            t(1),2*ts(i,1),'k+',...          % 2sig from P true
+            t(1),2*fsem(i,1),'g+-',...        % Ensemble 2sig from P
+            t(1),2*ts(i,1),'k+-',...          % 2sig from P true
             tr(:),les,'c-',...               % Ensemble 1,3sig of e
             tr(:),lesm,'c-',...              % Ensemble -(1,3sig) of e
-            t,squeeze(e(i,:,2:K)),'y.',...   % Rest of actual errors
+            t,squeeze(e(i,:,2:K)),'y.-',...   % Rest of actual errors
             t,em(i,:),'b-',...               % Ensemble mean of e
-            t,2*fsem(i,:),'g+',...           % Ensemble 2sig from P
-            t,2*ts(i,:),'k+',...             % 2sig from P true
-            t,-2*fsem(i,:),'g+',...          % Ensemble -2sig from P
-            t,-2*ts(i,:),'k+'...            % -2sig from P true
+            t,2*fsem(i,:),'g+-',...           % Ensemble 2sig from P
+            t,2*ts(i,:),'k+-',...             % 2sig from P true
+            t,-2*fsem(i,:),'g+-',...          % Ensemble -2sig from P
+            t,-2*ts(i,:),'k+-'...            % -2sig from P true
             );
         
         set(h(strcmp(get(h,'marker'),'.')),'color',[.8 .8 .2])
@@ -193,9 +193,9 @@ for i = 1:n, % Cycle through each state
             [~,~,ci(i,j,:)] = vartest(squeeze(e(i,j,:)),ts(i,j)^2);
         end
         hold on
-        v = plot(t,[diag([2;2]);diag([-2;-2])]*squeeze(sqrt(ci(i,:,:)))','r+');
-        line(repmat(t,2,[]),diag([2;2])*squeeze(sqrt(ci(i,:,:)))','color',[1 .5 .5])
-        line(repmat(t,2,[]),diag(-[2;2])*squeeze(sqrt(ci(i,:,:)))','color',[1 .5 .5])
+        v = plot(t,[diag([2;2]);diag([-2;-2])]*squeeze(sqrt(ci(i,:,:)))','r+-');
+        line(repmat(t,2,1),diag([2;2])*squeeze(sqrt(ci(i,:,:)))','color',[1 .5 .5])
+        line(repmat(t,2,1),diag(-[2;2])*squeeze(sqrt(ci(i,:,:)))','color',[1 .5 .5])
         set(gca,'children',circshift(get(gca,'children'),length(h)))
         hold off
         leghan(end+1)=v(1);

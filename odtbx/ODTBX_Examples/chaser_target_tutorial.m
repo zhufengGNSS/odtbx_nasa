@@ -99,11 +99,13 @@ Pnot.Pbaro = S*P0*S'; % Estimator initial covariance
 % estimated functions, but here is how we would specify different ones if
 % needed:
 
+dynfun = struct;
 dynfun.tru = @dualIADyn; % True dynamics model
 dynfun.est = @dualIADyn; % Estimator dynamics model
 
 dynopts = []; % No extra options for dynamics model
 
+datfun = struct;
 datfun.tru = @dualIADat; % True measurement model
 datfun.est = @dualIADat; % Estimator measurement model
 

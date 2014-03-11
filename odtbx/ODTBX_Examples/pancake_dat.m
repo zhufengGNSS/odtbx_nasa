@@ -41,7 +41,8 @@ for i=length(t):-1:1
         y(1,i) = norm(Rs-Rg);
         
         % Calculate partials
-        H(:,:,i) = [unit(Rs-Rg)' zeros(1,5)];
+        %H(:,:,i) = [unit(Rs-Rg)' zeros(1,5)];
+        H(:,:,i) = [unit(Rs-Rg)' zeros(1,3) -unit(Rs-Rg)'];
     end
 
 end

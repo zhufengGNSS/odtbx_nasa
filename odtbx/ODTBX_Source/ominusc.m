@@ -94,11 +94,11 @@ if nargout == 4,
     
     % Find the indices of each column of dy that contains at least one
     % number (i.e. not all NaNs)
-%     ig = [];
-%     for k = 1:m
-%         ig=union(ig,find(~isnan(dy(k,:))),'legacy');
-%     end
-    ig = find(any(~isnan(dy)));
+    ig = [];
+    for k = 1:m
+        ig=union(ig,find(~isnan(dy(k,:))),'legacy');
+    end
+    ig = ig(:)';
     
     for k = ig
         if nargin == 8

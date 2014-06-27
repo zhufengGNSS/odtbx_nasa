@@ -1,10 +1,14 @@
-function [valid] = validateOdtbxOptions(options)
+function [valid, options] = validateOdtbxOptions(options)
 
 % VALIDATEODTBXOPTIONS  Checks to see if the given structure is valid.
 %
 %   VALID = VALIDATEODTBXOPTIONS(OPTIONS) returns TRUE if the input options
 %   structure is a valid ODTBX options structure. Extra field names in the
 %   input options structure are ignored.
+%
+%   [VALID, OPTIONS] = VALIDATEODTBXOPTIONS(OPTIONS) returns an updated
+%   options structure containing fields missing from the input structure.
+%   New fields have default values as given by ODTBXOPTIONS.
 %
 %   keyword: options
 %   See also ODTBXOPTIONS, GETODTBXOPTIONS, SETODTBXOPTIONS
@@ -35,16 +39,35 @@ function [valid] = validateOdtbxOptions(options)
 %   Allen Brown    02/26/2009      Removed undocumented usage in favor
 %                                  of getOdtbxOptions.
 
+% First do a quick sanity check on the input
 if ~isa(options,'struct') || ~isfield(options,'optionsType')
     valid = false;
-else
-    validStruct = odtbxOptions(options.optionsType);
-    fields = fieldnames(validStruct);
 
+% Now do a full check on input compared to a valid OdtbxOptions structure
+else
+    validOptions = odtbxOptions(options.optionsType); % Valid OdtbxOptions struct of same type
+    fields = fieldnames(validOptions);
+
+    % All fields from valid OdtbxOptions struct must be in input struct
     validFields = isfield(options,fields);
-    if ~all(validFields)
-        valid=false;
-    else
-        valid=true;
+    valid = all(validFields);
+    
+    % Return immediately if input is valid or shouldn't be fixed
+    if(valid || (nargout < 2))
+        return;
     end
+    
+    % Add default value for any missing field in input struct
+    numInvalidFields = 0;
+    for i = 1:length(fields)
+        if(~validFields(i))
+            currField = fields{i};
+            options.(currField) = validOptions.(currField);
+            numInvalidFields = numInvalidFields + 1;
+        end
+    end
+    
+    % Display number of added fields and indicate that input is now valid
+    warning('ODTBX:validateOdtbxOptions:AddedOptions', 'added %d fields to input struct', numInvalidFields);
+    valid = true;
 end

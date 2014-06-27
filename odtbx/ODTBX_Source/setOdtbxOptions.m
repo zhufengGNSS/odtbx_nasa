@@ -16,7 +16,7 @@ function options = setOdtbxOptions(varargin)
 %   overwrite corresponding old properties.  If the two options structures
 %   are different types, e.g. 'measurement' and 'estimator', then the 
 %   resulting structure will be promoted to include all fields.  
-%   Unspecified fields will be defaulted.
+%   Unspecified properties of NEWOPTS are left unchanged in OLDOPTS.
 %
 %   setOdtbxOptions with no input arguments displays all property names and their
 %   possible values.
@@ -55,6 +55,7 @@ function options = setOdtbxOptions(varargin)
 %   Derek Surka                         09/07/2007      Renamed and revised
 % (for additional changes, see the svn repository)
 %   Allen Brown                         02/26/2009      Updated documentation.
+%   Ravi Mathur                         06/26/2014      Fixes input ODTBXOptions structures that don't contain all appropriate fields
 
 % can use last input argument for fast matching and ignore all validation
 
@@ -65,10 +66,10 @@ end
 
 % check the first argument type
 if isstruct(varargin{1})
-    if ~validateOdtbxOptions(varargin{1})
-        error('MATLAB:setOdtbxOptions: The first struct argument must be a valid JAT options structure.');
+    [optsValid, oldOpts] = validateOdtbxOptions(varargin{1});
+    if ~optsValid
+        error('ODTBX:setOdtbxOptions:InvalidOptions', 'The first struct argument is not a valid ODTBX options structure.');
     else
-        oldOpts = varargin{1};
         i = 2;
     end
 elseif ischar(varargin{1})
@@ -77,18 +78,19 @@ elseif ischar(varargin{1})
     oldOpts = odtbxOptions;
     i = 1;
 else 
-    error('MATLAB:setOdtbxOptions: The first argument must be a valid JAT options structure or the name part of a name-value pair.');    
+    error('ODTBX:setOdtbxOptions:InvalidOptions', 'The first argument is not a valid ODTBX options structure or the name part of a name-value pair.');    
 end
 options = oldOpts;
 
 % Assignments between structs:
 while i <= nargin
     arg = varargin{i};
-    if ischar(arg)                         % arg is an option name
+    if ischar(arg) % args should be series of (name, value) pairs, so skip this while loop
         break;
     end
-    if ~validateOdtbxOptions(arg)
-        error(['MATLAB:setOdtbxOptions: Expected argument ' i ' to be a string property name or a valid JAT options structure']);
+    [optsValid, arg] = validateOdtbxOptions(arg);
+    if ~optsValid
+        error('ODTBX:setOdtbxOptions:InvalidOptions', 'Expected argument %d to be a valid ODTBX options structure', i);
     end
     
     % Struct content "promotion":
@@ -109,9 +111,8 @@ while i <= nargin
     end
 
     names   = fieldnames(arg);
-    lNames  = size(names,1);
 
-    for j = 1:lNames
+    for j = 1:length(names)
         val = arg.(names{j});
         if ~isempty(val)
             options.(names{j}) = val;
@@ -127,7 +128,7 @@ end
 names = fieldnames(options);
 
 if rem(nargin-i+1,2) ~= 0
-    error('MATLAB:setOdtbxOptions:ArgNameValueMismatch',...
+    error('ODTBX:setOdtbxOptions:ArgNameValueMismatch',...
         'Arguments must occur in name-value pairs.');
 end
 expectval = 0;                          % start expecting a name, not a value
@@ -136,7 +137,7 @@ while i <= nargin
 
     if ~expectval
         if ~ischar(arg)
-            error('MATLAB:setOdtbxOptions:NoPropName',...
+            error('ODTBX:setOdtbxOptions:NoPropName',...
                 'Expected argument %d to be a string property name.', i);
         end
 
@@ -152,6 +153,6 @@ while i <= nargin
 end
 
 if expectval
-    error('MATLAB:setOdtbxOptions:NoValueForProp',...
+    error('ODTBX:setOdtbxOptions:NoValueForProp',...
         'Expected value for property ''%s''.', arg);
 end

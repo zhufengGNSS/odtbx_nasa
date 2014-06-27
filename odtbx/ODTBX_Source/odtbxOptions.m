@@ -4,7 +4,7 @@ function options = odtbxOptions(type)
 %   with empty [] default values for all fields. With no output specified, 
 %   the list of valid options for the specified type is displayed.
 %
-%   OPTIONS = odtbxOptions(TYPE) returns a valid JAT options structure
+%   OPTIONS = odtbxOptions(TYPE) returns a valid ODTBX options structure
 %   for the input type. Valid types are listed below. If no type is
 %   entered, a structure is returned that has all valid options. If no
 %   return value is requested, a list of all valid options for that input

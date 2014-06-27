@@ -180,16 +180,39 @@ measOptions = setOdtbxOptions(measOptions,'relay', relay);
 Hpd6 = testMeasPartials(@lnrmeas,measOptions);
 
 %% Test gpsmeas H matrix
-measOptions.('epoch')           = datenum('Jan 1 2006');
-measOptions.('useRange')        = true;
-measOptions.('useDoppler')      = true;
-measOptions.('RecAcqThresh')    = -Inf; % no threshold
-measOptions.('RecTrackThresh')  = -Inf; % no threshold
-measOptions.('AtmosphereMask')  = - JATConstant('rEarth','WGS84') / 1000; %removes the Earth
-measOptions.('AntennaPattern')  = {'omni.txt'};
-measOptions.('AntennaPointing') = -1;
-measOptions.('PrecnNutnExpire') = 0; % always update precession and nutation
+measOptions = setOdtbxOptions(measOptions, ...
+                              'epoch', datenum('Jan 1 2006'), ...
+                              'useRange', true, ...
+                              'useDoppler', true, ...
+                              'PrecnNutnExpire', 0); % Always update precession and nutation
+
+% Parameters specific to link budget
+link_budget.AntennaPattern    = {'omni.txt'};
+link_budget.AtmosphereMask    = - JATConstant('rEarth','WGS84') / 1000; %removes the Earth
+link_budget.RecAcqThresh      = -Inf;            % no threshold
+link_budget.RecTrackThresh    = -Inf;            % no threshold
+link_budget.TX_AntennaPointing= -1; % 1 for zenith pointing, -1 for nadir pointing
+measOptions = setOdtbxOptions(measOptions, 'linkbudget', link_budget);
+
+% Link budget parameters not explicitly set (will be defaulted)
+% link_budget.GPSBand           = 'L1';
+% link_budget.RXAntennaMask     = truth.rcv_ant_mask;
+% link_budget.NoiseTemp         = truth.Ts;                         % K
+% link_budget.AtmAttenuation    = truth.Ae;                         % dB
+% link_budget.TransPowerLevel   = truth.sv_power;                   % enum
+% link_budget.TransPowerOffset  = truth.xmit_power_offset;          % truth units? gpsmeas: dB
+% link_budget.GPSBlock          = 6;                                % use a GPS 2D antenna with L1, see gpsmeas
+% link_budget.TXAntennaMask     = truth.xmit_ant_mask;              % rad
+% link_budget.ReceiverNoise     = truth.Nf;                         % dB
+% link_budget.RecConversionLoss = truth.L;                          % dB
+% link_budget.SystemLoss        = truth.As;                         % dB
+% link_budget.LNAGain           = truth.Ga;                         % dB
+% link_budget.CableLoss         = truth.Ac;                         % dB
+% link_budget.DynamicTrackRange = truth.dyn_range;                  % dB
+
+% Don't display tons of repeated warning messages
 warning('off', 'ODTBX:GPSMEAS:noBodyQuat')
+warning('off', 'ODTBX:linkbudget_default:UsingDefault');
 Hpd7 = testMeasPartials(@gpsmeas,measOptions);
 
 %% Uncomment this section to reset regression test data

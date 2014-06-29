@@ -31,6 +31,9 @@ function failed = estseq_test
 totaltests = 4;
 disp('estseq_test: regression testing estseq...')
 
+% Turn off repetitious warnings
+warning('off', 'ODTBX:COVSMPL:seedReset');
+
 % Run all the test cases
 for k = 1:totaltests,
     disp(['Case ',num2str(k),'...'])
@@ -115,6 +118,9 @@ function fail = run_test(testnum)
             datfun.tru = @rwdat;
             datfun.est = @rwdat;
             load estseq_test1;
+            
+            % Make sure loaded options are valid for latest ODTBX version
+            [isValid, options] = validateOdtbxOptions(options);
 
         case 2 % Consider covariance
             %% Case 2
@@ -244,7 +250,10 @@ function fail = run_test(testnum)
             datfun.tru = @irwbdat;
             datfun.est = @irwdat;
             load estseq_test2;
-
+            
+            % Make sure loaded options are valid for latest ODTBX version
+            [isValid, options] = validateOdtbxOptions(options);
+            
         case 3 % Schmidt Kalman filter version of case 2
             %% Case 3
             % Case 3 is a Schmidt-Kalman filter implementation of Case 2.  Both the true
@@ -256,6 +265,9 @@ function fail = run_test(testnum)
             datfun.tru = @irwbdat;
             datfun.est = @irwbdat;% Modified from test2
             load estseq_test3;
+            
+            % Make sure loaded options are valid for latest ODTBX version
+            [isValid, options] = validateOdtbxOptions(options);
 
         case 4 % Estimation using JAT forces
             %% Case 4
@@ -267,6 +279,7 @@ function fail = run_test(testnum)
             load estseq_test4;
             
             % Create JAT structures and initialize integrator
+            % This automatically validates the loaded options structure
             gsList  = createGroundStationList('DBS_NDOSL_WGS84_Mod_Example.txt');
             options = setOdtbxOptions(options,'gsList',gsList);
             options = setOdtbxOptions(options,'OdeSolver',@ode113,'OdeSolvOpts',...

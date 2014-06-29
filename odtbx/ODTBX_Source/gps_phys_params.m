@@ -324,11 +324,13 @@ for prnind = 1:prnlen
     params.GPS_SIZE = 1; % the number of GPS satellites
     params.PRN = fil_gps_meas.GPS_PRN(prnind);
     params.doH = 0; % measurement partial not required
-    measOptions.('epoch') = epoch; % Time associated with start of simulation, UTC datenum format
-    measOptions.('PrecnNutnExpire') = 0.1; % one day period until recomputing precession/nutation
-    measOptions.('Rotation2ECI') = Rotation2ECI;
-    measOptions.('YumaFile') = gps_alm_file;
-    measOptions.('AntennaOrientation') = ant_bod;
+    measOptions = odtbxOptions('measurement');
+    measOptions = setOdtbxOptions(measOptions, ...
+        'epoch', epoch, ... % Time associated with start of simulation, UTC datenum format
+        'PrecnNutnExpire', 0.1, ... % one day period until recomputing precession/nutation
+        'Rotation2ECI', Rotation2ECI, ...
+        'YumaFile', gps_alm_file, ...
+        'AntennaOrientation', ant_bod);
     
     %% Interpolate the given receiver box states to the measurement times
     tmeas_gps = fil_gps_meas.PRN_data{prnind}.epoch; % GPS times in convertTime's datenum

@@ -53,22 +53,19 @@ function y = getOdtbxOptions(options, name, default)
 %   Derek Surka          07/20/2007     Original getJATOptions
 %   Derek Surka          09/07/2007     Renamed and revised
 %   Allen Brown          02/26/2009     Updated documentation
+%   Ravi Mathur          06/29/2014     Validates input options struct
 
 if nargin < 2
-  error('MATLAB:getOdtbxOptions:NotEnoughInputs','Not enough input arguments.');
+  error('ODTBX:getOdtbxOptions:NotEnoughInputs','Not enough input arguments.');
 end
 if nargin < 3
   default = [];
 end
 
-if ~isempty(options) && ~isa(options,'struct')
-  error('MATLAB:getOdtbxOptions:Arg1NotODESETstruct',...
-        'First argument must be an options structure.');
-end
-
-if isempty(options)
-  y = default;
-  return;
+% Make sure input is a valid options structure
+[optsValid, options] = validateOdtbxOptions(options);
+if ~optsValid
+    error('ODTBX:getOdtbxOptions:InvalidOptions', 'Input is not a valid ODTBX options structure');
 end
 
 [j, fullname] = getIndex(name,fieldnames(options),false); 

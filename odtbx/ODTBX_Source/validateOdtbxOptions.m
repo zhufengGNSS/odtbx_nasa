@@ -38,6 +38,7 @@ function [valid, options] = validateOdtbxOptions(options)
 %   Derek Surka    09/07/2007      Renamed and revised
 %   Allen Brown    02/26/2009      Removed undocumented usage in favor
 %                                  of getOdtbxOptions.
+%   Ravi Mathur    06/29/2014      Add missing fields if desired
 
 % First do a quick sanity check on the input
 if ~isa(options,'struct') || ~isfield(options,'optionsType')
@@ -46,11 +47,11 @@ if ~isa(options,'struct') || ~isfield(options,'optionsType')
 % Now do a full check on input compared to a valid OdtbxOptions structure
 else
     validOptions = odtbxOptions(options.optionsType); % Valid OdtbxOptions struct of same type
-    fields = fieldnames(validOptions);
+    validFields = fieldnames(validOptions);
 
     % All fields from valid OdtbxOptions struct must be in input struct
-    validFields = isfield(options,fields);
-    valid = all(validFields);
+    hasFields = isfield(options,validFields);
+    valid = all(hasFields);
     
     % Return immediately if input is valid or shouldn't be fixed
     if(valid || (nargout < 2))
@@ -58,16 +59,13 @@ else
     end
     
     % Add default value for any missing field in input struct
-    numInvalidFields = 0;
-    for i = 1:length(fields)
-        if(~validFields(i))
-            currField = fields{i};
-            options.(currField) = validOptions.(currField);
-            numInvalidFields = numInvalidFields + 1;
-        end
+    missingInd = find(~hasFields);
+    for i = 1:length(missingInd)
+        currField = validFields{missingInd(i)};
+        options.(currField) = validOptions.(currField);
     end
     
-    % Display number of added fields and indicate that input is now valid
-    warning('ODTBX:validateOdtbxOptions:AddedOptions', 'added %d fields to input struct', numInvalidFields);
-    valid = true;
+    % Display number of fields added to the input struct
+    warning('ODTBX:validateOdtbxOptions:AddedOptions', 'added %d fields to input struct', length(missingInd));
+    valid = true; % Input is now valid
 end

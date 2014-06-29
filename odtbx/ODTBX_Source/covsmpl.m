@@ -52,7 +52,7 @@ function x = covsmpl(P,varargin)
 rndsmp = true; % Default is to return random samples.
 if nargin > 2,
     if(~isnan(varargin{2}))
-        warning('COVSMPL:seedReset', 'Resetting random number seed')
+        warning('ODTBX:COVSMPL:seedReset', 'Resetting random number seed')
         try % new syntax for ML 7.7+
 %             RandStream('mcg16807', 'Seed', varargin{2})
             RandStream.setGlobalStream(RandStream('shr3cong','Seed',varargin{2}));
@@ -65,7 +65,7 @@ if nargin > 1,
     if ischar(varargin{1}),
         rndsmp = false;
         if strcmpi(varargin{1}, 'principalaxis')
-            warning('COVSMPL:princAx', ...
+            warning('ODTBX:COVSMPL:princAx', ...
                 'Returning principal axis perturbations');
             k = 1;
         end
@@ -76,7 +76,7 @@ else
     k = 1;
 end
 if nargin > 3 || nargin == 0,
-    error('COVSMPL:numInputs', 'Unsupported number of inputs')
+    error('ODTBX:COVSMPL:numInputs', 'Unsupported number of inputs')
 end
 % Compute samples.
 [nr,nc,ns] = size(P);

@@ -19,8 +19,9 @@ function y = createJATWorld(jOptions)
 %
 %   INPUTS
 %   VARIABLE        DESCRIPTION (Optional/Default)
-%   jOptions        ODTBXOPTIONS structure that contains option name/value 
-%                   pairs for use with JAT Force models.  
+%   jOptions        (Optional) ODTBXOPTIONS structure that contains option name/value 
+%                   name/value pairs for use with JAT Force models. Set to
+%                   [] (or omit) to use the default ODTBXOPTIONS structure.
 %
 %   OUTPUTS 
 %      y            Java JATModel object
@@ -53,6 +54,13 @@ function y = createJATWorld(jOptions)
 %   Derek Surka          06/27/2007     Original
 %   Derek Surka          09/04/2007     Modified to use OdtbxOptions
 %   Kevin Berry          06/22/2009     Added unit comments to the code
+%   Ravi Mathur          06/29/2014     Empty input defaults to bare
+%                                       ODTBXOptions struct 
+                   
+% Use default ODTBXOptions structure if needed
+if((nargin == 0) || isempty(jOptions))
+    jOptions = odtbxOptions();
+end
 
 % Get options and Set Defaults
 % m            = JATConstant('mjdj2000');
@@ -69,7 +77,7 @@ order        = getOdtbxOptions(jOptions, 'gravOrder', 20);
 
 % Check values
 if(order>degree)
-    disp('Error you cannot have an order greater than your degree. Order will be set to equal your degree.')
+    warning('ODTBX:createJATWorld', 'Order cannot be greater than degree. Setting order = degree.')
     order = degree;
 end
 

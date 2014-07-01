@@ -197,7 +197,7 @@ if nargout > 1,
 end
 if nargout > 2,
     %get sigma out of the options
-    nMTypes      = sum([useRange useRangeRate useDoppler]); %# of types
+    nMTypes      = sum([useRange useRangeRate useDoppler]); % number of types
     sigmaDefault = ones(1,nMTypes)*1e-3; %default sigma
     sigma        = getOdtbxOptions(options, 'rSigma', sigmaDefault );
     sigma        = diag(sigma);

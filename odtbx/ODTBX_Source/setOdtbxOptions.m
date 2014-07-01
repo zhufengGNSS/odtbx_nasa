@@ -55,42 +55,38 @@ function options = setOdtbxOptions(varargin)
 %   Derek Surka                         09/07/2007      Renamed and revised
 % (for additional changes, see the svn repository)
 %   Allen Brown                         02/26/2009      Updated documentation.
-%   Ravi Mathur                         06/26/2014      Fixes input ODTBXOptions structures that don't contain all appropriate fields
-
-% can use last input argument for fast matching and ignore all validation
+%   Ravi Mathur                         06/26/2014      Fixes input options structs that don't contain all appropriate fields
+%                                                       Correctly interprets inputs
 
 if( nargin==0 )
     odtbxOptions(); % call odtbxOptions with no output args to display help
-    return
+    return;
+elseif( nargin == 1 )
+    error('ODTBX:setOdtbxOptions:InvalidArgs', 'Invalid number of arguments.');
 end
 
 % check the first argument type
 if isstruct(varargin{1})
-    [optsValid, oldOpts] = validateOdtbxOptions(varargin{1});
-    if ~optsValid
-        error('ODTBX:setOdtbxOptions:InvalidOptions', 'The first struct argument is not a valid ODTBX options structure.');
-    else
-        i = 2;
-    end
+    options = validateOdtbxOptions(varargin{1});
+    i = 2;
 elseif ischar(varargin{1})
     % 1st arg is not a struct, but a char, assume a name-value pairing
     % start with the default odtbxOptions struct
-    oldOpts = odtbxOptions;
+    options = odtbxOptions;
     i = 1;
 else 
-    error('ODTBX:setOdtbxOptions:InvalidOptions', 'The first argument is not a valid ODTBX options structure or the name part of a name-value pair.');    
+    error('ODTBX:setOdtbxOptions:InvalidArgs', 'The first argument is not a valid ODTBX options structure or the name part of a name-value pair.');    
 end
-options = oldOpts;
+arg = varargin{i};
 
-% Assignments between structs:
-while i <= nargin
-    arg = varargin{i};
-    if ischar(arg) % args should be series of (name, value) pairs, so skip this while loop
-        break;
-    end
-    [optsValid, arg] = validateOdtbxOptions(arg);
-    if ~optsValid
-        error('ODTBX:setOdtbxOptions:InvalidOptions', 'Expected argument %d to be a valid ODTBX options structure', i);
+% Assignments between structs
+if(isstruct(arg))
+    % Make sure second input is a valid options struct
+    arg = validateOdtbxOptions(arg);
+    
+    % Can't have more than one struct from which to get values
+    if(nargin > 2)
+        error('ODTBX:setOdtbxOptions:InvalidArgs', 'Cannot assign values from more than one ODTBX options structure.');
     end
     
     % Struct content "promotion":
@@ -109,9 +105,9 @@ while i <= nargin
             options = newoptions; clear alloptions newoptions;
         end
     end
-
-    names   = fieldnames(arg);
-
+    
+    % Copy fields from new options struct
+    names = fieldnames(arg);
     for j = 1:length(names)
         val = arg.(names{j});
         if ~isempty(val)
@@ -119,7 +115,7 @@ while i <= nargin
         end
     end
 
-    i = i + 1;
+    return;
 end
 
 % Assigning name-value pairs:
@@ -131,7 +127,8 @@ if rem(nargin-i+1,2) ~= 0
     error('ODTBX:setOdtbxOptions:ArgNameValueMismatch',...
         'Arguments must occur in name-value pairs.');
 end
-expectval = 0;                          % start expecting a name, not a value
+
+expectval = false;                          % start expecting a name, not a value
 while i <= nargin
     arg = varargin{i}; 
 
@@ -142,17 +139,12 @@ while i <= nargin
         end
 
         [j,fullname] = getIndex(arg,names);
-        expectval = 1;                      % we expect a value next
+        expectval = true;                      % we expect a value next
 
     else
         options.(fullname) = arg;
-        expectval = 0;
+        expectval = false;
 
     end
     i = i + 1;
-end
-
-if expectval
-    error('ODTBX:setOdtbxOptions:NoValueForProp',...
-        'Expected value for property ''%s''.', arg);
 end

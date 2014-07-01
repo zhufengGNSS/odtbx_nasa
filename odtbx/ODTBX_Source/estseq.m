@@ -325,8 +325,10 @@ end
 if nargin >= 6,
     if all(isfield(varargin{6}, {'tru','est'})),
         options = varargin{6};
+        options.est = validateOdtbxOptions(options.est);
+        options.tru = validateOdtbxOptions(options.tru);        
     else
-        options.tru = varargin{6};
+        options.tru = validateOdtbxOptions(varargin{6});
         options.est = options.tru;
     end
 elseif nargin ~= 2,

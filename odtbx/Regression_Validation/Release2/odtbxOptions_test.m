@@ -42,9 +42,7 @@ try
     end
     
     % check validation
-    if ~validateOdtbxOptions(measOptions)
-        failed = 1;
-    end
+    measOptions = validateOdtbxOptions(measOptions);
 catch
     failed = 1;
 end
@@ -119,12 +117,22 @@ catch
 end
 
 % test 4: incorrectly validates a valid structure
-if( ~validateOdtbxOptions(measOptions) || ~validateOdtbxOptions(forceOptions) || ~validateOdtbxOptions(estOptions))
+try
+    validateOdtbxOptions(measOptions);
+    validateOdtbxOptions(forceOptions);
+    validateOdtbxOptions(estOptions);
+catch
     failed = 1;
 end
 
 % test 5: passes an invalid structure
-if( validateOdtbxOptions([]) )
+caughtError = false;
+try
+    validateOdtbxOptions([]);
+catch
+    caughtError = true;
+end
+if(~caughtError)
     failed = 1;
 end
 

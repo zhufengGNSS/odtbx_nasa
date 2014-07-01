@@ -283,11 +283,14 @@ elseif nargin >= 4,
 end
 if nargin >= 6,
     if all(isfield(varargin{6}, {'tru','est'})),
-        options = varargin{6};
+        options = varargin{6};    
+        options.est = validateOdtbxOptions(options.est);
+        options.tru = validateOdtbxOptions(options.tru);
     else
-        options.tru = varargin{6};
+        options.tru = validateOdtbxOptions(varargin{6});
         options.est = options.tru;
     end
+
 else
     options.tru = setOdtbxOptions('OdeSolvOpts',odeset);
     options.est = options.tru;
@@ -748,10 +751,13 @@ Xhato = cell(ncases,1);
 % Run the batch estimator on the measurements generated above.
 Xsref0 = Xsref(:,1); 
 tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
-disp('sqrt(diag(Phatao+Phatvo)) = ')
-disp(sqrt(diag(Phatao+Phatvo))')
-disp('sqrt(diag(Pao+Pvo+Pwo)) = ')
-disp(sqrt(diag(Pao+Pvo+Pwo))')
+
+% From Ravi: Find a better way to show this! It litters the output.
+% disp('sqrt(diag(Phatao+Phatvo)) = ')
+% disp(sqrt(diag(Phatao+Phatvo))')
+% disp('sqrt(diag(Pao+Pvo+Pwo)) = ')
+% disp(sqrt(diag(Pao+Pvo+Pwo))')
+
 parfor j = 1:ncases,
     Dxo = Inf;
     iter = 0;
@@ -791,11 +797,13 @@ parfor j = 1:ncases,
             dxo = dxo + Kj*dY(k,i);
         end
         Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
-        disp(['Iteration number: ',num2str(iter)])
-        disp('dxo = ')
-        disp(dxo')
-        disp('sqrt(diag(Phato{j})) = ')
-        disp(sqrt(diag(Phato{j}))')
+        
+        % From Ravi: Find a better way to show this! It litters the output.
+%         disp(['Iteration number: ',num2str(iter)])
+%         disp('dxo = ')
+%         disp(dxo')
+%         disp('sqrt(diag(Phato{j})) = ')
+%         disp(sqrt(diag(Phato{j}))')
         Xhato{j} = Xhato{j} + dxo;
         if iter < niter
             iter = iter + 1;

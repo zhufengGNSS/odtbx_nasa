@@ -77,6 +77,8 @@ nx2 = nx^2;
 
 if nargin < 4 || isempty(options)
     options = odtbxOptions;
+else
+    options = validateOdtbxOptions(options);
 end
 
 if nargin == 6

@@ -60,6 +60,9 @@ function y = createJATWorld(jOptions)
 % Use default ODTBXOptions structure if needed
 if((nargin == 0) || isempty(jOptions))
     jOptions = odtbxOptions();
+else
+    % Make sure input options structure is valid for current ODTBX version
+    jOptions = validateOdtbxOptions(jOptions);
 end
 
 % Get options and Set Defaults

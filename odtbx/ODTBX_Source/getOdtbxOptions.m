@@ -1,13 +1,13 @@
 function y = getOdtbxOptions(options, name, default)
 
-% GETODTBXOPTIONS Get Adaptor OPTIONS parameters.
+% GETODTBXOPTIONS Get ODTBX Options structure parameter.
 %
 %   y = getOdtbxOptions(OPTIONS, NAME, DEFAULT) 
 %
 %   Extracts the value of the NAME property from the structure 
 %   OPTIONS, returning the DEFAULT value if the property value is not 
 %   specified in OPTIONS. Case is ignored for property names.  If DEFAULT
-%   is not provided [] is assumed.
+%   is not provided [] is assumed. Returns DEFAULT if OPTIONS is [].
 %
 %   It is sufficient to type only the leading characters that uniquely 
 %   identify the property.  However this use is discouraged because it
@@ -15,7 +15,8 @@ function y = getOdtbxOptions(options, name, default)
 %
 %   INPUTS
 %   VARIABLE    SIZE    		DESCRIPTION (Optional/Default)
-%      options     structure    Options structure from ODTBXOPTIONS
+%      options     structure    Options structure from ODTBXOPTIONS. If []
+%                               then DEFAULT argument is returned.
 %      name        string       name of field in structure
 %      default     (1x1)     	(optional) default value for the field that
 %                               has not been set, [] is an allowable
@@ -59,6 +60,12 @@ if ((nargin < 2) || (nargin > 3))
   error('ODTBX:getOdtbxOptions:IncorrectInputs','Incorrect number of input arguments.');
 elseif (nargin == 2)
   default = [];
+end
+
+% Return default if input options is empty
+if(isempty(options))
+    y = default;
+    return;
 end
 
 % Fast validity check of input options

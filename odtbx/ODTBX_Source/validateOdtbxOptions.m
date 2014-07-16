@@ -76,5 +76,5 @@ elseif (nargout == 1)
     end
     
     % Display number of fields added to the input struct
-    warning('ODTBX:validateOdtbxOptions:AddedOptions', 'Added %d fields to input struct', length(missingInd));
+    warning('ODTBX:validateOdtbxOptions:AddedOptions', 'Added %d fields to input ODTBXOptions struct. Options may be improperly created or loaded from an outdated file.', length(missingInd));
 end

@@ -222,13 +222,14 @@ disp(['Station Height = ',num2str(Ephem.Height(1)),'km'])
 disp(' ')
 disp('******************************************** Satellite ECEF ************************************************')
 disp('                X                         Y                         Z                      Delay')
-disp([x',y',z',ionoDelay_ECEF])
+%disp([x',y',z',ionoDelay_ECEF])
+disp('...hidden for brevity...');
 
 disp(' ')
 disp('********************************************* Satellite  LLH ************************************************')
 disp('               Lat                       Lon                      Height                   Delay')
-disp([x',y',z',ionoDelay_LLH])
-
+%disp([x',y',z',ionoDelay_LLH])
+disp('...hidden for brevity...');
 
 if exist('IonoDelayModelJatOutputs5_09.txt','file') == 2
 	disp(' ')

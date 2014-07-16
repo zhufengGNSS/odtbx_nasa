@@ -30,6 +30,7 @@ function failed = estbat_test
 
 totaltests = 3;
 disp('estbat_test: regression testing estbat...')
+warning('off', 'ODTBX:COVSMPL:seedReset');
 
 % Run all the test cases
 for k = 1:totaltests,

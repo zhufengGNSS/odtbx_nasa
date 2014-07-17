@@ -30,6 +30,8 @@ function failed = estseq_test
 
 totaltests = 4;
 disp('estseq_test: regression testing estseq...')
+warning('off', 'ODTBX:COVSMPL:seedReset');
+
 
 % Run all the test cases
 for k = 1:totaltests,

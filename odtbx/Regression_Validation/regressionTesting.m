@@ -395,6 +395,10 @@ numTests = length(testCases);
 for i=1:numTests
     
     try        
+        % Tests may disable warnings, so turn them back on so the next test
+        % can start with a clean warning state
+        warning('on', 'all');
+        
         % Run regression test (with arguments if necessary)
         if isempty(testCases{i,2})
             fprintf('\nRunning test %i of %i: %s_test() %s...\n',i,numTests,testCases{i,1},localrunName);

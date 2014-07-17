@@ -20,6 +20,7 @@ function [failed] = estbat_tspan_test
 
     % Default to passed.
     failed = 0;
+    warning('off', 'ESTBAT:maxit');
 
     %
     % This code is taken from estbat_example.m.

@@ -34,6 +34,7 @@ function failed = estsrif_test
 
 totaltests = 3;
 disp('estsrif_test: regression testing estsrif...')
+warning('off', 'ODTBX:COVSMPL:seedReset');
 
 % Run all the test cases
 for k = 1:totaltests,

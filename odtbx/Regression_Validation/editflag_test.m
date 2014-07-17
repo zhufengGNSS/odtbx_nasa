@@ -24,6 +24,7 @@ function [failed] = editflag_test
 
 % Default to pass.
 failed = 0;
+warning('off', 'ODTBX:COVSMPL:seedReset');
 
 % Specify the initial reference state.
 %

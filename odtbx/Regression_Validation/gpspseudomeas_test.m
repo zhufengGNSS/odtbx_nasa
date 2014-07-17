@@ -21,7 +21,8 @@ measOptions = setOdtbxOptions(measOptions,'useRange', true);
 measOptions = setOdtbxOptions(measOptions,'useRangeRate', false);
 measOptions = setOdtbxOptions(measOptions,'useDoppler', false);
 measOptions.clockStateIndices = [7;8];
-warning('off','ODTBX:GPSMEAS:noBodyQuat')
+warning('off','ODTBX:GPSMEAS:noBodyQuat');
+warning('off', 'ODTBX:linkbudget_default:UsingDefault');
 
 % Test cases
 [y1,H1,R1] = gpspseudomeas(t,x,measOptions);

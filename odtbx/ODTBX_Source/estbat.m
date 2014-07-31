@@ -93,6 +93,48 @@ function varargout = estbat(varargin)
 %   error covariance corresponding to DY; and PDYT the true measurement 
 %   error covariance.
 %
+%   [T,X,P,E,DY,PA,PV,PW,PHATA,PHATV,PHATW,SIGSA,EFLAG,PDY,PDYT] = ESTBAT(...) also
+%   returns EFLAG, the array of edit flag values for all 
+%   cases for all measurement types for all times. The edit flags may have 
+%   the following values:
+%
+%       0   = Measurement was rejected (based on the edit ratio settings)
+%       1   = Measurement was checked and passed the editing test
+%       2   = Measurement was forced to be accepted (based on edit flag
+%             settings)
+%       3   = Measurement was NaN
+%
+%   Options governing measurement editing can be modified via the
+%   SETODTBXOPTIONS function. The relevant parameters
+%   can be passed to 'EditFlag,' 'EditRatio,' and 'UpdateIterations.'
+%
+%   For 'EditFlag', a scalar can be passed in where 2 means to disable editing
+%   and 1 means to enable editing. If 'Eflag' is empty, editing will be
+%   disabled. If 'EditFlag' is 1, then a vector of the same length as tspan
+%   will be created and populated with 1s so that all measurements undergo
+%   the editing test. If a vector of values is passed in to 'EditFlag' then 
+%   that vector will be used to determine whether the measurement will be
+%   forced to be accepted or will undergo the editing process.
+%
+%   For 'EditRatio', the following parameters should should be passed
+%   in this order:
+%       threshold for first iteration of outer loop (iter==0)
+%       scale factor for outer loop (iter>0)
+%       constant offset for outer loop (iter>0)
+%       scale factor for inner loop
+%       absolute convergence tolerance
+%       relative convergence tolerance
+%   If no values are supplied then the default values from the GTDS 
+%   Mathematical Theory will be used.
+%   
+%   For 'UpdateIterations', the user may pass a single value in the case
+%   where editing is not enabled. When editing is enabled, the following
+%   parameters should be passed in this order:
+%       maximum number of iterations
+%       maximum number of outer loop iterations
+%       maximum number of inner loop iterations
+%       maximum number of successive divergences allowed
+%
 %   Note that P0 = [] or P0 = Inf will generate a least-squares correction
 %   without a priori information. In simulating truth data, no initial
 %   condition error is applied.  In such cases, the system must be fully
@@ -200,6 +242,23 @@ function varargout = estbat(varargin)
 % 2013-05-01 R. Mathur       Fully extracted regression test to estbat_test
 %                            Added ability to specify separate truth & estimated
 %                            options structures for the options input.
+% 2014-07-31 S. Chang        Added GTDS measurement editing algorithm to
+%                            Monte Carlo analysis. When the eflag option is 
+%                            set to the scalar 1 or a vector of values
+%                            is passed in, then measurement editing
+%                            is performed for the number of Monte Carlo cases
+%                            specified in the estimator options. Input parsing
+%                            has been modified to initialize relevant parameters
+%                            for measurement editing. Output arguments now 
+%                            include 'eflag,' which, in accordance with
+%                            ordering conventions used in estseq, follows
+%                            SIGSA and precedes PDY. It contains the values
+%                            that indicate whether a measurement was forced
+%                            to be processed or whether it underwent the
+%                            editing test and passed or failed. Possible
+%                            values of eflag have been expanded to also indicate
+%                            whether a measurement was NaN.
+                            
 
 %% ESTBAT: Batch Estimator
 %
@@ -296,7 +355,48 @@ else
     options.est = options.tru;
 end
 ncases = getOdtbxOptions(options.est,'MonteCarloCases',1);
-niter = getOdtbxOptions(options.est,'UpdateIterations',10);
+eflag = getOdtbxOptions(options.est,'EditFlag');
+iters = getOdtbxOptions(options.est,'UpdateIterations');
+if (~isempty(eflag) && (length(eflag) == 1 && eflag ~= 2)) || (length(eflag) > 1)
+    edit=true;
+    if ~isempty(iters)
+        niter = iters{1};
+        maxouter = iters{2};
+        maxinner = iters{3};
+        maxdiv = iters{4};
+    else
+        maxouter = 10;
+        maxinner = 10;
+        maxdiv = 2;
+        niter = 10;
+    end
+    editthresh = getOdtbxOptions(options.est,'EditRatio');
+    if ~isempty(editthresh)
+        outerfirstthresh = editthresh{1};
+        outerthresh = editthresh{2};
+        outerconst = editthresh{3};
+        innerthresh = editthresh{4};
+        abstol = editthresh{5};
+        reltol = editthresh{6};
+    else
+        outerfirstthresh = 10;
+        outerthresh = 3;
+        outerconst = 0;
+        innerthresh = 1;
+        abstol = 1e-3;
+        reltol = 1e-2;
+    end
+    if (length(eflag) == 1) && (eflag == 1)
+        eflag = ones(1,length(tspan));
+    end
+else
+    edit = false;
+    if ~isempty(iters)
+        niter = iters;
+    else
+        niter = getOdtbxOptions(options.est,'UpdateIterations',10);
+    end
+end
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
         dynarg = varargin{7};
@@ -710,11 +810,13 @@ end
 % linearization problems.  Generate random deviations from the reference as
 % initial conditions for each monte carlo case.  Integrate each deviated
 % case, and use this as truth for measurement simulation and estimation
-% error generation.  Iterate the batch estimator, re-linearizing each time,
-% until a convergence tolerance or an iteration limit is reached.  Do this
-% after plotting the covariance results, so the user can terminate the run
-% if obvious problems occur, since the simulation may be slow, especially
-% if a lot of monte carlo cases are running.
+% error generation.  If editing is not enabled, iterate the batch estimator
+% , re-linearizing each time until a convergence tolerance or an iteration
+% limit is reached.  Do this after plotting the covariance results, so the 
+% user can terminate the run if obvious problems occur, since the simulation
+% may be slow, especially if a lot of monte carlo cases are running.
+% If editing is enabled, run the batch estimator using the GTDS measurement
+% editing algorithm.
 
 % Generate random deviations from the reference trajectory and simulate
 % measurements from the deviated trajectories.  Remember that Phi(:,:,i) =
@@ -742,15 +844,8 @@ for j = ncases:-1:1,
         %x = Phi(:,:,i)*xo + wd{j}(:,i);
         X{j}(:,i) = xdum(:,i) + wd{j}(:,i); 
     end
-    Y{j} = feval(datfun.tru,tspan,X{j},datarg.tru) + covsmpl(R); 
+    Y{j} = feval(datfun.tru,tspan,X{j},datarg.tru) + covsmpl(R);
 end
-
-Phato = cell(ncases,1);
-Xhato = cell(ncases,1);
-
-% Run the batch estimator on the measurements generated above.
-Xsref0 = Xsref(:,1); 
-tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
 
 % From Ravi: Find a better way to show this! It litters the output.
 % disp('sqrt(diag(Phatao+Phatvo)) = ')
@@ -758,63 +853,262 @@ tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
 % disp('sqrt(diag(Pao+Pvo+Pwo)) = ')
 % disp(sqrt(diag(Pao+Pvo+Pwo))')
 
-parfor j = 1:ncases,
-    Dxo = Inf;
-    iter = 0;
-    Xhato{j} = Xsref0;
-    while Dxo > tol
-        [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options.est,dynarg.est); %#ok<PFBNS>
-        lentj = length(tj);
-        J = inv(Pbaro);
-        dY = NaN(size(Y{j}));
-        [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options.est,[],datarg.est); %#ok<PFBNS>
-        for i = 1:lentj
-            k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
-            if ~isempty(k)
-                dY(k,i) = dy(k,i);
-                J = J + Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)) ...
-                    *Hs(k,:,i)*Phiss(:,:,i);
+% Run the batch estimator on the measurements generated above.
+Phato = cell(ncases,1);
+Xhato = cell(ncases,1);
+Xsref0 = Xsref(:,1);
+Wo = inv(Pbaro);
+nx=length(Xsref0);
+tol = 0.1*det(Pao+Pvo+Pwo)^(1/2/n);%ns*sqrt(max(Rhat(Rhat>0)));
+wrms = @(yz,xz,Rz) sqrt(1/(length(yz)+nx)*(sum(sum(1/sqrt(Rz)*yz.*yz)) + xz'*Wo*xz));
+
+% Measurement Editing
+if edit == true
+eflagout = cell(ncases,1);
+outeredit = cell(ncases,1);
+inneredit = cell(ncases,1);
+    for j = 1:ncases,
+        Xhato{j} = Xsref0;
+        eflagout{j} = eflag;
+        temp = zeros(1,length(tspan));
+        bestRMS=Inf;
+        for iter = 0:(maxouter-1)
+            [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options.est,dynarg.est);
+            [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options.est,[],datarg.est);
+            nan = find(isnan(dy(1,:))); % indices of innovations that are NaN
+            notnan = find(~isnan(dy(1,:))); % indices of innovations that are not NaN
+            eflagout{j}(nan) = 3; % exclude NaN from processing
+            ny = length(dy);
+            % Outer loop editing
+            if iter == 0
+                for z = 1:ny
+                    if eflagout{j}(z) ~= 2 && eflagout{j}(z) ~= 3 %not performing editing test on measurements that are being forced to be processed or are NaN
+                        if (sqrt(sum(dy(:,z)'/sqrt(Rhat(1))*dy(:,z))) <= outerfirstthresh)
+                            eflagout{j}(z) = 1;
+                        else
+                            eflagout{j}(z) = 0;
+                        end
+                    end
+                end
+            else
+                for z = 1:ny
+                    if eflagout{j}(z) ~= 2 && eflagout{j}(z) ~= 3
+                        if (sqrt(sum(dy(:,z)'/sqrt(Rhat(1))*dy(:,z))) <= (predRMS*outerthresh + outerconst))
+                            eflagout{j}(z) = 1;
+                        else
+                            eflagout{j}(z) = 0;
+                        end
+                    end
+                end
             end
-        end
-        fullrank = (prod(svd(J))>0);
-        if ~fullrank
-            error('ESTBAT:notobserv',['System is not observable.  ',...
-                'Rank of Normal Matrix = ', num2str(rank(J))])
-        end 
-        dxo = 0;
-        for i = 1:lentj,
-            if i == 1,
-                ImKHsj = eye(ns);
-                Pbarfoj = Pbaro;
-                Pbarfoj(isinf(Pbaro))=0; %infinite values are set to zero.
-                Phato{j} = 0;
+            keep = find(eflagout{j} ~= 0 & eflagout{j} ~= 3);
+            keep = keep(:)';
+            outeredit{j}(iter+1)=ny-length(keep);
+            if isempty(keep)
+                warning(['All data edited in outer loop on iteration ', num2str(iter)])
+                break
+            else
+                disp([num2str(ny-length(keep)), ' of ', num2str(ny), ...
+                    ' edited on outer loop iteration ', num2str(iter)])
             end
-            k = find(~isnan(Y{j}(:,i)));
-            %Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
-            Kj = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
-            ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
-            Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
-            dxo = dxo + Kj*dY(k,i);
-        end
-        Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
+    
+            % Absolute convergence check (using all data)
+            if iter == 0
+                Xhato_0 = Xhato{j};
+                dxo_total = zeros(nx,1);
+            else
+                lastRMS = currentRMS;
+                dxo_total = Xhato_0 - Xhato{j};
+            end
+            currentRMS = wrms(dy(:,notnan),dxo_total, Rhat(1));
+            if currentRMS < abstol
+                disp('Absolute convergence')
+                break
+            else
+                disp(['Weighted RMS on outer loop iteration ', num2str(iter),' ='])
+                disp(currentRMS)
+            end
+    
+            % Persistent divergence check
+            % Stop iterating if diverging for too many iterations.
+            if iter > 0 && (currentRMS > lastRMS)
+                diverge = diverge + 1;
+            else
+                diverge = 0;
+            end
+            if diverge >= maxdiv
+                warning(['Persistent divergence on outer iteration ', num2str(iter)])
+                break
+            end
+    
+            % Update bestRMS if currentRMS is the smallest value so far
+            if currentRMS < bestRMS
+                bestRMS = currentRMS;
+            end
         
-        % From Ravi: Find a better way to show this! It litters the output.
-%         disp(['Iteration number: ',num2str(iter)])
-%         disp('dxo = ')
-%         disp(dxo')
-%         disp('sqrt(diag(Phato{j})) = ')
-%         disp(sqrt(diag(Phato{j}))')
-        Xhato{j} = Xhato{j} + dxo;
-        if iter < niter
-            iter = iter + 1;
-            Dxo = norm(dxo);
-        else
-            warning('ESTBAT:maxit','Max iterations reached in estbat');
-            break
+            % Solve normal equations
+            %dxo = incremental update for next iteration
+            %dxo_total = total of all the incremental updates so far
+            J = inv(Pbaro);
+            if iter == 0
+                N = 0;
+            else
+                N = Wo*dxo_total;
+            end
+            for i = keep
+                k = find(~isnan(Y{j}(:,i)));% Find measurements that are not NaN
+                if ~isempty(k)
+                    dY(k,i) = dy(k,i);
+                    J = J + Phiss(:,:,i)'*Hs(k,:,i)'/sqrt(Rhat(1)) ...
+                        *Hs(k,:,i)*Phiss(:,:,i);
+                    N = N + Phiss(:,:,i)'*Hs(k,:,i)'/sqrt(Rhat(1))*dY(k,i);
+                end
+            end
+            fullrank = (prod(svd(J))>0);
+            if ~fullrank
+                error('ESTBAT:notobserv',['System is not observable.  ',...
+                    'Rank of Normal Matrix = ', num2str(rank(J))])
+            end
+            J = (J+J')/2; % Ensure symmetry
+            dxo = lscov(J,N);
+
+            % Update predicted RMS using all data
+            for f = 1:ny
+                    dypred(:,f) = dy(:,f) - Hs(:,:,f)*Phiss(:,:,f)*dxo;
+            end
+            predRMS = wrms(dypred(:,notnan),dxo - dxo_total,Rhat(1));
+            disp(['Predicted WRMS for outer iteration ',num2str(iter+1),' ='])
+            disp(predRMS)
+        
+            % Inner loop
+            for n = 1:maxinner
+                for z = 1:ny
+                    if eflagout{j}(z) ~= 2 && eflagout{j}(z) ~= 3
+                        if sqrt(sum(dypred(:,z)'/sqrt(Rhat(1))*dypred(:,z))) > predRMS*innerthresh
+                            eflagout{j}(z) = 0;
+                        else
+                            eflagout{j}(z) = 1;
+                        end
+                    end
+                end
+                throw = find(eflagout{j} == 0);
+                nedit = length(throw);
+                inneredit{j}(iter+1,n) = nedit;
+                if nedit == 0
+                    disp(['No refinement in inner loop iteration ', num2str(n)])
+                    break
+                elseif nedit == ny
+                    warning(['All data edited in inner iteration ', num2str(n)])
+                    break
+                else
+                    disp([num2str(nedit), ' of ', num2str(ny), ...
+                        ' edited on inner loop iteration ', num2str(n)])
+                    
+                    % Recalculate normal matrix without re-linearizing
+                    for i = throw(:)' % Ensure indexing over row vector
+                            J = J - Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1)) ...
+                                *Hs(:,:,i)*Phiss(:,:,i);
+                            N = N - Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1))*dY(:,i);
+                    %    end
+                    end
+                    fullrank = (prod(svd(J))>0);
+                    if ~fullrank
+                        error('ESTBAT:notobserv',['System is not observable.  ',...
+                            'Rank of Normal Matrix = ', num2str(rank(J))])
+                    end
+                    J = (J+J')/2; % Ensure symmetry
+                    dxo = lscov(J,N);
+
+                    % Approximate predicted RMS using all data
+                    for q = 1:ny
+                            dypred(:,q) = dy(:,q) - Hs(:,:,q)*Phiss(:,:,q)*dxo;
+                    end
+                    predRMSlast = predRMS;
+                    predRMS = wrms(dypred(:,notnan),dxo - dxo_total,Rhat(1));
+                    disp(['Predicted WRMS for inner iteration ',num2str(n+1),' ='])
+                    disp(predRMS)
+            
+                    % Relative convergence check
+                    if abs((predRMSlast - predRMS)/predRMS) < reltol
+                        disp(['Inner loop converged in ', num2str(n),' iterations.'])
+                        break
+                    elseif n == maxinner
+                        warning('Inner loop failed to converge')
+                    end
+                end
+            end
+            % Relative convergence check
+            if abs((bestRMS - predRMS)/bestRMS) < reltol
+                disp(['Outer loop converged in ', num2str(iter), ' iterations.'])
+                break
+            elseif iter == maxouter - 1
+                warning('ESTBAT:maxit','Max iterations reached in estbat');
+                break
+            end
+            % Update reference state
+            Xhato{j} = Xhato{j} + dxo; 
+        end
+        Phato{j} = inv(J);
+    end
+% Normal Monte Carlo without Measurement Editing    
+else
+    parfor j = 1:ncases,
+        Dxo = Inf;
+        iter = 0;
+        Xhato{j} = Xsref0;
+        while Dxo > tol
+            [tj,Xbar,Phiss] = integ(dynfun.est,tspan,Xhato{j},options.est,dynarg.est); %#ok<PFBNS>
+            lentj = length(tj);
+            J = inv(Pbaro);
+            dY = NaN(size(Y{j}));
+            [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options.est,[],datarg.est); %#ok<PFBNS>
+            for i = 1:lentj
+                k = find(~isnan(Y{j}(:,i)));  % Find measurements that are not NaN
+                if ~isempty(k)
+                    dY(k,i) = dy(k,i);
+                    J = J + Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)) ...
+                        *Hs(k,:,i)*Phiss(:,:,i);
+                end
+            end
+            fullrank = (prod(svd(J))>0);
+            if ~fullrank
+                error('ESTBAT:notobserv',['System is not observable.  ',...
+                    'Rank of Normal Matrix = ', num2str(rank(J))])
+            end 
+            dxo = 0;
+            for i = 1:lentj,
+                if i == 1,
+                    ImKHsj = eye(ns);
+                    Pbarfoj = Pbaro;
+                    Pbarfoj(isinf(Pbaro))=0; %infinite values are set to zero.
+                    Phato{j} = 0;
+                end
+                k = find(~isnan(Y{j}(:,i)));
+                %Kj = robustls(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                Kj = lscov(J,Phiss(:,:,i)'*Hs(k,:,i)'/(Rhat(k,k,i)));
+                ImKHsj = ImKHsj - Kj*Hs(k,:,i)*Phiss(:,:,i);
+                Phato{j} = Phato{j} + Kj*Rhat(k,k,i)*Kj';
+                dxo = dxo + Kj*dY(k,i);
+            end
+            Phato{j} = Phato{j} + ImKHsj*Pbarfoj*ImKHsj';
+        
+            % From Ravi: Find a better way to show this! It litters the output.
+%           disp(['Iteration number: ',num2str(iter)])
+%           disp('dxo = ')
+%           disp(dxo')
+%           disp('sqrt(diag(Phato{j})) = ')
+%           disp(sqrt(diag(Phato{j}))')
+            Xhato{j} = Xhato{j} + dxo;
+            if iter < niter
+                iter = iter + 1;
+                Dxo = norm(dxo);
+            else
+                warning('ESTBAT:maxit','Max iterations reached in estbat');
+                break
+            end
         end
     end
 end
-
 %% Estimation Error Ensemble
 % Generate the time series of estimation errors and residuals for each
 % case.  Due to nonlinearities, the formal variance could be different for
@@ -860,11 +1154,18 @@ if nargout >= 12,
     varargout{12} = Sigma_a;
 end
 if nargout >= 13
-    varargout{13} = Pdy;
+    varargout{13} = eflagout;
 end 
 if nargout >= 14
-    varargout{14} = Pdyt;
-end 
+    varargout{14} = Pdy;
+end
+if nargout >= 15
+    varargout{15} = Pdyt;
+end
+if nargout >= 16
+    varargout{16} = outeredit;
+    varargout{17} = inneredit;
+end
 end % function
 
 % function x = robustls(A,b)

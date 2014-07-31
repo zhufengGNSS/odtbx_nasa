@@ -105,9 +105,8 @@ function options = odtbxOptions(type)
 %   supplied where the length of the vector is equal to the number of 
 %   measurement types. In this case separate EditRatio values can be 
 %   specified for each measurement type. If only one value is provided, it
-%   will be used for all measurement types. To disable measurement editing, 
-%   set EditFlag = 2.  The default value is 9 corresponding to a 
-%   "3-sigma edit."
+%   will be used for all measurement types. The default value is 9 corresponding to a 
+%   "3-sigma edit." See estbat documentation for usage specific to estbat editing.
 %
 % EditFlag - Flag to set measurement editing. [ scalar {1} | vector ]
 %   Setting EditFlag equal to 2 will force a measurement to be processed
@@ -117,7 +116,9 @@ function options = odtbxOptions(type)
 %   as 0 to indicate that the measurement was rejected. EditFlags can be 
 %   specified on a per-measurement-type basis in a vector, just like the 
 %   EditRatio, or a single value can be provided that will then be used 
-%   for all measurement types.
+%   for all measurement types. To disable measurement editing, 
+%   set EditFlag = 2. See estbat documentation for usage specific to estbat
+%   editing.
 % 
 % EditVector - Flag to vectorize measurement editing [ {0} | 1 ]
 %   Indicates whether the measurement editing will be performed as (1) a 

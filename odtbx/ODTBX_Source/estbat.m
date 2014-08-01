@@ -356,46 +356,26 @@ else
 end
 ncases = getOdtbxOptions(options.est,'MonteCarloCases',1);
 eflag = getOdtbxOptions(options.est,'EditFlag');
-iters = getOdtbxOptions(options.est,'UpdateIterations');
 if (~isempty(eflag) && (length(eflag) == 1 && eflag ~= 2)) || (length(eflag) > 1)
     edit=true;
-    if ~isempty(iters)
-        niter = iters{1};
-        maxouter = iters{2};
-        maxinner = iters{3};
-        maxdiv = iters{4};
-    else
-        maxouter = 10;
-        maxinner = 10;
-        maxdiv = 2;
-        niter = 10;
-    end
-    editthresh = getOdtbxOptions(options.est,'EditRatio');
-    if ~isempty(editthresh)
-        outerfirstthresh = editthresh{1};
-        outerthresh = editthresh{2};
-        outerconst = editthresh{3};
-        innerthresh = editthresh{4};
-        abstol = editthresh{5};
-        reltol = editthresh{6};
-    else
-        outerfirstthresh = 10;
-        outerthresh = 3;
-        outerconst = 0;
-        innerthresh = 1;
-        abstol = 1e-3;
-        reltol = 1e-2;
-    end
+    iters = getOdtbxOptions(options.est,'UpdateIterations',{10,10,10,2});
+    niter = iters{1};
+    maxouter = iters{2};
+    maxinner = iters{3};
+    maxdiv = iters{4};
+    editthresh = getOdtbxOptions(options.est,'EditRatio',{10,3,0,1,1e-3,1e-2});
+    outerfirstthresh = editthresh{1};
+    outerthresh = editthresh{2};
+    outerconst = editthresh{3};
+    innerthresh = editthresh{4};
+    abstol = editthresh{5};
+    reltol = editthresh{6};
     if (length(eflag) == 1) && (eflag == 1)
         eflag = ones(1,length(tspan));
     end
 else
     edit = false;
-    if ~isempty(iters)
-        niter = iters;
-    else
-        niter = getOdtbxOptions(options.est,'UpdateIterations',10);
-    end
+    niter = getOdtbxOptions(options.est,'UpdateIterations',10);
 end
 if nargin >= 7,
     if all(isfield(varargin{7}, {'tru','est'}))
@@ -864,9 +844,9 @@ wrms = @(yz,xz,Rz) sqrt(1/(length(yz)+nx)*(sum(sum(1/sqrt(Rz)*yz.*yz)) + xz'*Wo*
 
 % Measurement Editing
 if edit == true
-eflagout = cell(ncases,1);
-outeredit = cell(ncases,1);
-inneredit = cell(ncases,1);
+eflagout = cell(ncases,1); %eflag vector for each Monte Carlo case
+outeredit = cell(ncases,1); %track how many measurements were edited in outer loop
+inneredit = cell(ncases,1); %track how many measurements were edited in inner loop
     for j = 1:ncases,
         Xhato{j} = Xsref0;
         eflagout{j} = eflag;
@@ -877,7 +857,7 @@ inneredit = cell(ncases,1);
             [dy,Hs,Rhat] = ominusc(datfun.est,tspan,Xbar,Y{j},options.est,[],datarg.est);
             nan = find(isnan(dy(1,:))); % indices of innovations that are NaN
             notnan = find(~isnan(dy(1,:))); % indices of innovations that are not NaN
-            eflagout{j}(nan) = 3; % exclude NaN from processing
+            eflagout{j}(nan) = 3; % mark NaN to exclude from processing
             ny = length(dy);
             % Outer loop editing
             if iter == 0
@@ -956,13 +936,10 @@ inneredit = cell(ncases,1);
                 N = Wo*dxo_total;
             end
             for i = keep
-                k = find(~isnan(Y{j}(:,i)));% Find measurements that are not NaN
-                if ~isempty(k)
-                    dY(k,i) = dy(k,i);
-                    J = J + Phiss(:,:,i)'*Hs(k,:,i)'/sqrt(Rhat(1)) ...
-                        *Hs(k,:,i)*Phiss(:,:,i);
-                    N = N + Phiss(:,:,i)'*Hs(k,:,i)'/sqrt(Rhat(1))*dY(k,i);
-                end
+                dY(:,i) = dy(:,i);
+                J = J + Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1)) ...
+                    *Hs(:,:,i)*Phiss(:,:,i);
+                N = N + Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1))*dY(:,i);
             end
             fullrank = (prod(svd(J))>0);
             if ~fullrank
@@ -1006,10 +983,10 @@ inneredit = cell(ncases,1);
                     
                     % Recalculate normal matrix without re-linearizing
                     for i = throw(:)' % Ensure indexing over row vector
-                            J = J - Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1)) ...
-                                *Hs(:,:,i)*Phiss(:,:,i);
-                            N = N - Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1))*dY(:,i);
-                    %    end
+                        dY(:,i) = dy(:,i);
+                        J = J - Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1)) ...
+                            *Hs(:,:,i)*Phiss(:,:,i);
+                        N = N - Phiss(:,:,i)'*Hs(:,:,i)'/sqrt(Rhat(1))*dY(:,i);
                     end
                     fullrank = (prod(svd(J))>0);
                     if ~fullrank
@@ -1161,10 +1138,6 @@ if nargout >= 14
 end
 if nargout >= 15
     varargout{15} = Pdyt;
-end
-if nargout >= 16
-    varargout{16} = outeredit;
-    varargout{17} = inneredit;
 end
 end % function
 

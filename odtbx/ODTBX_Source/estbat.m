@@ -414,12 +414,9 @@ if any(any(any(Qd))),
     sizeQtilde = sizeQtilde/(2^20); % Convert to MBytes
     if sizeQtilde > 10 % 10 MB
         warning('ESTBAT:bigQtilde',[num2str(sizeQtilde), ...
-            ' MBytes required for Qtilde.' ])
-        disp('ESTBAT might run really slow unless you have lots of memory.')
-        disp('Consider using fewer time samples.')
-        disp('You are in the workspace of ESTBAT; type ''return'' to continue,')
-        disp('or ''dbquit'' to exit.')
-        keyboard
+            ' MBytes required for Qtilde.' ]);
+        disp('ESTBAT might run really slow unless you have lots of memory.');
+        disp('Consider using fewer time samples.');
     end
 else
     nonzeroq = false;

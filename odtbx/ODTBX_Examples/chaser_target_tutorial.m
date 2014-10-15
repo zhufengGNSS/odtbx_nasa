@@ -20,6 +20,8 @@
 % your goal is to estimate the target satellite's state using pose
 % measurements from the chaser satellite.
 
+% Disable a very repetitive link budget warning
+warning('off', 'ODTBX:linkbudget_default:UsingDefault');
 
 %% Initialize Variables
 % Suppose that the epoch time and target vehicle states are known, and we

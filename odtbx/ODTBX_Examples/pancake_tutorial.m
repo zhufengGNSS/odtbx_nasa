@@ -141,9 +141,9 @@ end
 % Assuming that all states are observable, let's estimate the states at
 % all times using a batch least squares estimation method. To do this,
 % ODTBX provides the function "estbat".
-
+opts = odtbxOptions();
 [t,xhat,P,e,dy,Pa,Pv,Pw,Phata,Phatv,Phatw,SigSA,Pdy,Pdyt] = ...
-    estbat(@pancake_dyn,@pancake_dat,tspan,x0,P0,[],w_p,[]);
+    estbat(@pancake_dyn,@pancake_dat,tspan,x0,P0,opts,w_p,[]);
 
 %% Output Results
 % It is important to know the errors incurred by an estimation process. In
@@ -244,7 +244,9 @@ for k = length(t{1}):-1:1,
     SPaSt(:,:,k) = S*Pa(:,:,k)*S'; 
     SPvSt(:,:,k) = S*Pv(:,:,k)*S'; 
     SPwSt(:,:,k) = S*Pw(:,:,k)*S'; 
+    echo off;
 end
+echo on;
 SPSt = SPaSt + SPvSt + SPwSt;
 dPa = SPaSt - Phata;
 dPv = SPvSt - Phatv;
@@ -273,8 +275,10 @@ clear SPaSt SPvSt SPwSt
 for k = length(t{1}):-1:1,
     SPaSt(:,:,k) = S*Pa(:,:,k)*S'; 
     SPvSt(:,:,k) = S*Pv(:,:,k)*S'; 
-    SPwSt(:,:,k) = S*Pw(:,:,k)*S'; 
+    SPwSt(:,:,k) = S*Pw(:,:,k)*S';
+    echo off;
 end
+echo on;
 SPSt = SPaSt + SPvSt + SPwSt;
 dPa = SPaSt - Phata;
 dPv = SPvSt - Phatv;

@@ -1,5 +1,5 @@
 classdef AutoDX < handle
-    % AutoDX Compute the step size dX that minimizes the error in dF/dX
+    % AutoDX Compute the step size dX that minimizes the error in dF/dX,
     % the finite-difference derivative of the function F(t,X).
     %   [DFDX,DX] = AutoDX.GetOptimalGradient(F, T0, X0, F0, DX_MAX, DFDX_KNOWN)
     %   dFdX: Jacobian matrix (length(F)-by-length(X)) 
@@ -13,7 +13,9 @@ classdef AutoDX < handle
     %   F0: Vector F(t0, X0)
     %   dX_max: Vector of maximum perturbations for each element of X
     %           Set to [] to use dX_max = 1 + abs(X) (a safe default)
-    %   dFdX_known: Boolean matrix (length(F)-by-length(X)). Can be []
+    %   dFdX_known: Boolean matrix (length(F)-by-length(X)) of known values
+    %               within dFdX that should not be computed. Set to [] to
+    %               indicate that all elements should be computed.
     %   ORDER: Desired finite-difference truncation order. Valid values:
     %      ORDER = 1: 1st-order Forward Difference
     %      ORDER = 2: 2nd-order Central Difference
@@ -39,12 +41,17 @@ classdef AutoDX < handle
     %           digits of accuracy wrt a small change in variable X3, and
     %           has lost the remaining ~6 digits of accuracy due to errors
     %           building up within its implementation.
+    %           Note that a value less than machine precision (including
+    %           negative values) means that the subfunction has full
+    %           precision wrt that variable. This is the ideal situation.
     %   nfcalls: Total number calls made to F(t,X).
     %
     %   Example:
     %      adx = AutoDX;  % Initialize AutoDX object
     %      adx.order = 2; % Specify 2nd-order Central Differences
     %      [...] = adx.GetOptimalGradient(...); % Optimize
+    %
+    %   See also AutoDX_example
     %
     % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
     %  distributed under the NASA Open Source Agreement.  See file source for
@@ -135,9 +142,9 @@ classdef AutoDX < handle
                 dX_max = abs(X0) + 1.0;
             end
             
-            numFCalls = 0;
+            numFCalls = 0; % Reset counter for number of calls to F(t,X)
             
-            for iX = numX:1
+            for iX = numX:-1:1
                 [dFdX_out(:,iX), dX_out(:,iX), dXmax_out(:,iX), err_out(:,iX), fcnerr_out(:,iX), nFc] = ...
                     obj.AutoDX_iX(F, t0, X0, F0, dX_max, iX, dFdX_known, varargin{:});
                 numFCalls = numFCalls + nFc;
@@ -155,8 +162,10 @@ classdef AutoDX < handle
             % X0: Vector of dependent variables for differentiation
             % F0: F(t0, X0)
             % dX: Vector of perturbations for each element of X0
+            
+            numX = length(X0);
 
-            for iX = 1:length(X0)
+            for iX = numX:-1:1
                 dFdX_out(:,iX) = ...
                     obj.getGradient_iX(F, t0, X0, iX, dX(iX), F0, varargin{:});
             end
@@ -191,7 +200,7 @@ classdef AutoDX < handle
             % does not exceed dx_max/order.
             X_size = floor(log2(dX_max(iX)/obj.order));
                         
-            for j = 1:obj.numdX_exp
+            for j = 0:obj.numdX_exp
                 
                 % Exit search if all subfunctions of F have been optimized
                 if(all(obj.dFdX_computed))
@@ -218,6 +227,7 @@ classdef AutoDX < handle
                     obj.getGradient_iX(F, t0, X0, iX, dX_test, F0, varargin{:});
                 numFCalls = numFCalls + obj.order;
                 
+                % Skip current dX value if it produces a non-numeric gradient
                 if(any(~isfinite(obj.dFdX(:,i_dX))))
                     warning('AutoDX:NotFinite', 'Skipping dX=%d because dFdX is not finite', dX_test);
                     i_dX = obj.advance(i_dX, -1); % Reset index
@@ -398,14 +408,14 @@ classdef AutoDX < handle
                         dFdX_out(currF) = obj.dFdX(currF,i_dX_opt); % Uncorrected gradient
                         
                         % Store the max dX value
-                        dXmax_out(currF) = obj.max_valid_dx(currF);
+                        dXmax_out(currF) = obj.max_valid_dx(currF)*obj.order;
                         
                         % Store the estimated roundoff + truncation error
                         err_out(currF) = (err_c + err_sub)/obj.dX_vec(i_dX_opt) ...
                             + abs(obj.Cn_true(currF))*obj.dX_vec(i_dX_opt)^obj.order;
                         
                         if(obj.dFdX(currF,i_dX) ~= 0.0) % Relative error if possible
-                            err_out(currF) = err_out(currF)/(obj.dFdX(currF,i_dX_opt) + err_out(currF));
+                            err_out(currF) = err_out(currF)/(abs(obj.dFdX(currF,i_dX_opt)) + err_out(currF));
                         end
                         
                         obj.dFdX_computed(currF) = true; % Done analyzing this element of dFdX

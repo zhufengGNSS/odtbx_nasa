@@ -24,7 +24,7 @@
 %% Start regression test for AutoDX
 function [failed] = AutoDX_test(order)
 
-% Test function and analytical derivative
+% Test function and analytical derivative (for comparison)
 F = @(t, X) (exp(X)/sqrt(sin(X^3) + cos(X^3)));
 dFdX = @(t, X) (exp(X)*((3*X^2+2)*sin(X^3) + (2-3*X^2)*cos(X^3))) /...
                (2*(sin(X^3)+cos(X^3))^(3/2));
@@ -36,12 +36,13 @@ dX_max = [];        % Auto-compute initial large step size for X
 dFdX_known = [];    % Assume all gradient elements are unknown
 
 if(nargin == 0)
-    order = 1; % Default to 1st-order forward difference method
+    % numjac uses 1st-order forward differences, so default to that
+    order = 1;
 end
 
 F0 = F(t0, X0);
 dFdX_true = dFdX(t0, X0); % True derivative
-fprintf('True dFdX             = %d\n\n', dFdX_true);
+fprintf('True dFdX                   = %d\n\n', dFdX_true);
 
 % Use AutoDX to compute optimal step size and associated derivative
 adx = AutoDX;
@@ -49,20 +50,22 @@ adx.order = order;
 [dFdX_adx, dX_adx, dXmax_adx, err_adx, fcnerr, nfcalls_adx] = ...
     adx.GetOptimalGradient(F, t0, X0, F0, dX_max, dFdX_known);
 err_adx_true = abs((dFdX_adx - dFdX_true)/dFdX_true);
-fprintf('AutoDX dFdX           = %d\n', dFdX_adx);
-fprintf('AutoDX optimal dX     = %d\n', dX_adx);
-fprintf('AutoDX max safe dX    = %d\n', dXmax_adx);
-fprintf('AutoDX rel cond err   = %d\n', fcnerr);
-fprintf('AutoDX rel est err    = %d\n', err_adx);
-fprintf('AutoDX true err       = %d\n', err_adx_true);
-fprintf('AutoDX # fcn calls    = %i\n\n', nfcalls_adx);
+disp('AutoDX Results:')
+fprintf('dFdX                       = %d\n', dFdX_adx);
+fprintf('optimal dX                 = %d\n', dX_adx);
+fprintf('max safe dX                = %d\n', dXmax_adx);
+fprintf('estimated relative error   = %d\n', err_adx);
+fprintf('true relative error        = %d\n', err_adx_true);
+fprintf('relative condition error   = %d\n', fcnerr);
+fprintf('# fcn calls                = %i\n\n', nfcalls_adx);
 
 % Use numjac to compute derivative
 [dFdX_nj, ~, ~, ~, nfcalls_nj] = numjac(F, t0, X0, F0, 0);
 err_nj_true = abs((dFdX_nj - dFdX_true)/dFdX_true);
-fprintf('numjac dFdX           = %d\n', dFdX_nj);
-fprintf('numjac true err       = %d\n', err_nj_true);
-fprintf('numjac # fcn calls    = %i\n', nfcalls_nj);
+disp('numjac Results:')
+fprintf('dFdX                       = %d\n', dFdX_nj);
+fprintf('true relative error        = %d\n', err_nj_true);
+fprintf('# fcn calls                = %i\n', nfcalls_nj);
 
 tol = 1.0e-6;
 failed = (err_adx_true > tol);

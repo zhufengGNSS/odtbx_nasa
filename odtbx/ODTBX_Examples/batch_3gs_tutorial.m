@@ -10,8 +10,13 @@
 % estimators and measurement models
 % # Use ODTBX plotting routines
 %
-% This tutorial expands on the following tutorials: <matlab:doc('pancake_tutorial') Tutorial 1>
+% This tutorial expands on the following tutorials: <matlab:doc('pancake_tutorial') Pancake>
+%
 % See also: pancake_tutorial
+%
+% You can either run this example after setting "echo on" to see output in
+% the command line, or do "publish chaser_target_tutorial" to create formatted
+% html output in the ODTBX_Examples/html directory.
 
 %% Introduction
 % There are 3 ground stations on the Earth, each of which are tracking a 

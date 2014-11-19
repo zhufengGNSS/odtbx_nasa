@@ -12,6 +12,16 @@
 % # Use a wrapper function to combine the dynamics and measurement
 % functions of multiple spacecraft.
 % # Use ODTBX plotting routines.
+%
+% This tutorial expands on the following tutorials: 
+%   <matlab:doc('pancake_tutorial') Pancake>
+%   <matlab:doc('batch_3gs_tutorial') Batch 3GS>
+% 
+% See also: pancake_tutorial batch_3gs_tutorial
+%
+% You can either run this example after setting "echo on" to see output in
+% the command line, or do "publish chaser_target_tutorial" to create formatted
+% html output in the ODTBX_Examples/html directory.
 
 %% Introduction
 % Two spacecraft, a target and a chaser, are in prescribed two-body

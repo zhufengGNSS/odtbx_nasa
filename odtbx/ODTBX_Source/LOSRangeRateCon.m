@@ -1,6 +1,6 @@
 function varargout = LOSRangeRateCon(obj,t, r1, v1, r2, v2, options)
 
-% LOSRANGERATE  Line of sight range rate measurement between two objects 
+% LOSRANGERATECON Line of sight range rate measurement between two objects 
 %
 %   rangeRate = LOSRangeRate(r1, v1, r2, v2) returns the 
 % range rate measurement between two vehicles and is based on the 

@@ -1,5 +1,5 @@
 function AutoDX_example()
-% AutoDX_example An example of using AutoDX to compute the optimal step
+%AUTODX_EXAMPLE An example of using AutoDX to compute optimal step sizes for finite-difference derivatives.
 % sizes to minimize error in a finite-difference approximation. This
 % example uses a vector function F(t, X) of a vector input X.
 %

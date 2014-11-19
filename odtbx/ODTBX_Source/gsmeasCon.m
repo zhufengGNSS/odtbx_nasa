@@ -1,5 +1,5 @@
 function [y,H,R] = gsmeasCon(obj,t,x,options)
-% GSMEAS  Makes ground station based measurements.
+% GSMEASCON Makes ground station based measurements.
 %
 % [y,H,R] = gsmeasCon(obj,tspan,x,options) creates ground station measurements
 % based on the information in OPTIONS. The measurement types that can be 

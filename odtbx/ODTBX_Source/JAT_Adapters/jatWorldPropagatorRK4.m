@@ -1,6 +1,6 @@
 function [tOut,yOut] = jatWorldPropagatorRK4(ode,tspan,y0,odeSolverOptions,varargin)
 
-% jatWorldPropagatorRK4 JAT 4th order Runge-Kutta integrator (Earth orbits)
+% JATWORLDPROPAGATORRK4 JAT 4th order Runge-Kutta integrator (Earth orbits)
 %
 % [tOut,yOut] = jatWorldPropagatorRK4(ode,tspan,y0,odeSolverOptions,varargin)
 %   integrates the ode over the tspan.  The fixed step integrator uses the

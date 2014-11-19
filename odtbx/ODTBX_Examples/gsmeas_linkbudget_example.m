@@ -1,4 +1,4 @@
-%GSMEAS_EXAMPLE This demonstrates the use of the gsmeas measurement model.
+% GSMEAS_LINKBUDGET_EXAMPLE This demonstrates the use of the gsmeas measurement model.
 %
 % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
 %  distributed under the NASA Open Source Agreement.  See file source for

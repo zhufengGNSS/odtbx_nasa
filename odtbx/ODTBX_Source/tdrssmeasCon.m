@@ -1,5 +1,5 @@
 function [y,H,R] = tdrssmeasCon(obj,t,X,options)
-% TDRSSMEAS  Makes TDRSS based measurements.
+% TDRSSMEASCON Makes TDRSS based measurements.
 %
 %   [y,H,R] = TDRSSMEAS(t,x,options) creates TDRSS measurements
 % based on the information in OPTIONS. The measurement types that can be

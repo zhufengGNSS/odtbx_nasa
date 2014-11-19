@@ -1,5 +1,5 @@
 function [dy,H,R,Pdy] = ominuscCon(datfun,t,x,y,options,P,datarg,isel)
-% OMINUSC  Innovations, meas. partials, and possibly innovation covariance.
+% OMINUSCCON  Innovations, meas. partials, and possibly innovation covariance.
 %   [DY,H,R] = OMINUSC(DATFUN,T,X,Y,OPTIONS) uses the supplied measurement
 %   data function DATFUN to compute the difference between observed and
 %   computed measurements, dy = y - h(t,x), known as the "innovation" if

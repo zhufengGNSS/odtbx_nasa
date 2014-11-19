@@ -3,9 +3,13 @@
 % Functions
 %   alm2xyz                  - Compute R and V from GPS alamanc data
 %   alm_pos_az_el            - Calculates GPS SV antenna azimuth and elevation for a given receiver state.
+%   antennaCalc              - 
+%   antennaVis               - 
 %   Attitude                 - Class to store spacecraft attitude information
+%   AutoDX                   - Compute the step size dX that minimizes the error in dF/dX,
 %   Body                     - Class representing a simple solar system body (i.e. planet, asteroid, comet, etc.)
 %   bplane                   - Function to calculate B-Plane parameters for a hyperbolic orbit
+%   calc_linkbudgets         - Calculates link budget and visibility between satellite targets
 %   calc_obliquity           - Compute Earth obliquity of the ecliptic
 %   calc_JulianCenturies2000 - Compute the time in Julian Centuries since the ephemeris epoch of 2000
 %   cameradyn                - Models dynamics for camera calibration parameters
@@ -15,6 +19,7 @@
 %   chi2inv_odtbx            - ODTBX version of chi2inv
 %   chi2pdf_odtbx            - ODTBX version of chi2pdf
 %   chkestopts               - Check some of the estimator options for consistency
+%   ChPartModel_basic        - Calculate the signal delay (in km) caused by a signal traveling 
 %   clkdyn2                  - A 2-state clock error dynamics model.
 %   clkdyn3                  - A 3-state clock error dynamics model.
 %   clkprop2                 - A 2-state clock error propagator.
@@ -35,6 +40,7 @@
 %   editmeas                 - Measurement editing - scalar or vector
 %   errellip                 - 2-D and 3-D Error Ellipse plotter.
 %   estbat                   - Batch Estimator.
+%   estbatCon                - Batch Estimator.
 %   estpar                   - Particle Filter Estimator.
 %   estseq                   - Sequential Estimator.
 %   estspf                   - Sigma-Point Filter. 
@@ -55,25 +61,30 @@
 %   FilterPpData             - An abstract class for filtering GPS physical parameter data from gps_phys_params.
 %   FilterPpEl               - A FilterPpData class for filtering GPS physical parameter data on antenna
 %   FilterPpExplicitTimes    - A FilterPpData class for filtering GPS physical parameter by time.
+%   gainpenalty_mask         - Check and apply additional mask angle penalty.
 %   gasdyn                   - Simulates comet outgassing forces
+%   get_linkbudget           - Calculate a link budget between the receiver x1 with num_ant antennas and
 %   getgpsmeas               - Computes physical parameters required for GPS based measurements
 %   getBodyShadow            - Determine whether any of the specified celestial bodies is shadowing the spacecraft.
-%   getOdtbxOptions          - Get Adaptor OPTIONS parameters.
+%   getOdtbxOptions          - Get ODTBX Options structure parameter.
 %   getPulsarData            - Retrieves pulsar data for use by XNAVMEAS
 %   gpslinkbudget            - Calculates the GPS transmitter-receiver link budget.
 %   gpsmeas                  - Makes GPS based measurements using dynamic C/No tracking threshold
+%   gpsmeasAbs               - function [y,H,R,AntLB] = gpsmeasAbs(varargin)
 %   gpspseudomeas            - Creates GPS pseudo-measurements (one-way measurements) biased by onboard clock errors.
 %   gps_est_cno              - Calculates the estimated carrier to noise ratio from physical parameters and link budget data.
 %   gps_gain                 - Calculates antenna gains from GPS physical parameters, CN0, and link budget data.
 %   gps_phys_params          - Creates GPS physical parameter data sets from GPS measurements.
 %   gsCoverage               - Checks gsmeas for measurement availability and creates a possible tracking schedule.
 %   gsmeas                   - Makes ground station based measurements.
+%   gsmeasCon                - Makes ground station based measurements.
 %   HermiteInterpolator      - Interpolates based on modified divided difference.
 %   impulsiveBurn            - Impulsive Maneuver (for RESTARTRECORD).
 %   initialize_cov           - Calculates an initial covariance matrix.
 %   initialize_nbody         - Initializes and validates inputs for NBODYPM
 %   integ                    - Integration of state, and possibly STM and process noise.
 %   integev                  - Integration of state, and possibly STM, etc. w/event handling.
+%   IonoModel_basic          - Calculate the signal delay (in km) caused by a signal traveling 
 %   kalmup                   - Kalman update with sigma-edit.
 %   kep2cart                 - Convert Keplerian orbital elements to cartesian states.
 %   kepanom                  - Solves for one angle of anomaly given another using Kepler's Equation
@@ -81,10 +92,14 @@
 %   kepprop2b                - Propagates Keplerian elements using 2-body dymanics
 %   lightTimeCorrection      - Calculates light time corrections including optional environmental delays
 %   lincov_kf                - Linear covariance analysis for Kalman Filter.
+%   linkbudget               - Calculates the transmitter-receiver link budget.
+%   linkbudget_default       - Sets a required linkbudget value to a default if
 %   lnrmeas                  - Makes Lunar Relay based measurements.
 %   LOSDoppler               - Line of sight instantaneous doppler between two objects
 %   LOSRange                 - Line of sight range measurement between two objects
+%   LOSRangeCon              - Line of sight range measurement between two objects
 %   LOSRangeRate             - Line of sight range rate measurement between two objects 
+%   LOSRangeRateCon          - Line of sight range rate measurement between two objects 
 %   LOSUnit                  - Line of sight unit vector between two objects (provides angle information to the estimator)
 %   makeGpsData              - Creates a blank GPS data structure for holding raw GPS measurements.
 %   makeGpsTXID              - Creates a blank data structure for describing a GPS transmitter.
@@ -93,6 +108,7 @@
 %   observ                   - Observability grammian, and possibly mapped innovations.
 %   odtbxOptions             - Returns a valid ODTBX options structure of the input type 
 %   ominusc                  - Innovations, meas. partials, and possibly innovation covariance.
+%   ominuscCon               - Innovations, meas. partials, and possibly innovation covariance.
 %   opnavmeas                - Simulates measurements from optical landmark tracking.
 %   opt_sched                - Calculates the sensitivities of a measurement schedule.
 %   plot_est_cno             - Plots the estimated Carrier to Noise ratio from gps_est_cno vs time.
@@ -106,55 +122,39 @@
 %   plot_ominusc             - Plots the observed measurement minus the computed
 %   polydyn                  - Force model for exterior gravitation of a polyhedron.
 %   q2dcm                    - Converts from a quaternion [vector;scalar] to a direction cosine matrix
+%   read_rnxn                - Read rinex formated GPS broadcast ephemeris data
 %   read_spephem             - Read in SP Ephemeris formatted ASCII text file
 %   read_stkephem            - Read in STK Ephemeris (formatted ASCII text file)
 %   read_yuma                - Read in yuma format GPS almanac file
 %   relativityLightDelay     - Returns light time delay error from relativistic effects
 %   rinexo2gpsdata           - Read RINEX 2.x formatted GPS observation data into a makeGpsData struct.
 %   RinexOReader             - Reads a RINEX 2.x formatted GPS observation data file.
+%   rnxnEval                 - Evaluates ICD-200 GPS Ephemeris at user specified time.  Uses ephemerides
 %   rotate_results           - 3D rotation for estimator output
 %   rotransf                 - Rotational Transformation of Position, Velocity, & Acceleration.
 %   rrdotang                 - Calculate range, range rate, doppler, angles between two objects.
+%   rrdotangCon              - Calculate range, range rate, doppler, angles between two objects.
 %   rrdotlt                  - Calls rrdotang with the light time correction
 %   scrunch                  - "Vectorize" a square symmetric matrix.
 %   sensmos                  - Sensitivity Mosaic Plot: A Checkerboard plot of the sensitivity matrix.
 %   setOdtbxOptions          - Create/alter OPTIONS structure.
 %   sigextract               - Extract standard deviations from "scrunched" covariances.
 %   slerp                    - Interpolates between two quaterntions (uniform angular velocity, fixed axis).
+%   solve_consider           - solve_consider Summary of this class goes here
 %   srpAccel                 - Compute solar radiation pressure acceleration
 %   staEarthTide             - Ground station position adjustment for solid earth tides
 %   stationData              - Provides database information about selected ground stations
 %   sun_vec                  - Computes unit vector from origin of ECI frame to sun
 %   tdrssmeas                - Makes TDRSS based measurements.
+%   tdrssmeasCon             - Makes TDRSS based measurements.
+%   tdrssmeas_basic          - Makes TDRSS based measurements.
 %   testMeasPartials         - compares the numerically estimated H matrix to the H matrix provided by a measurement model.
+%   TropoModel_basic         - Calculate the signal delay (in km) caused by a signal traveling 
 %   ttdelay                  - Compute the station time tag delay error
 %   unit                     - Efficiently compute unit vectors and norms for vector arrays.
 %   unscrunch                - Recreate a matrix that has been vectorized with SCRUNCH.
 %   validateOdtbxOptions     - Checks to see if the given structure is valid.
 %   varpiles                 - Variance Sandpiles.
+%   visibility_constraints   - 
 %   xmat                     - Cross-product matrix for arrays of vectors.
 %   xnavmeas                 - Calculates spacecraft to distant RSO range difference & range difference rate measurements. 
-%   AutoDX                   - AutoDX Compute the step size dX that minimizes the error in dF/dX
-%   LOSRangeCon              - LOSRANGE  Line of sight range measurement between two objects
-%   LOSRangeRateCon          - LOSRANGERATE  Line of sight range rate measurement between two objects 
-%   antennaCalc              - 
-%   antennaVis               - 
-%   calc_linkbudgets         - Calculates link budget and visibility between satellite targets
-%   estbatCon                - ESTBAT Batch Estimator.
-%   gpsmeasAbs               - function [y,H,R,AntLB] = gpsmeasAbs(varargin)
-%   gsmeasCon                - GSMEAS  Makes ground station based measurements.
-%   linkbudget               - Calculates the transmitter-receiver link budget.
-%   ominuscCon               - OMINUSC  Innovations, meas. partials, and possibly innovation covariance.
-%   tdrssmeas_basic          - Makes TDRSS based measurements.
-%   visibility_constraints   - 
-%   tdrssmeasCon             - TDRSSMEAS  Makes TDRSS based measurements.
-%   solve_consider           - solve_consider Summary of this class goes here
-%   rrdotangCon              - RRDOTANG  Calculate range, range rate, doppler, angles between two objects.
-%   rnxnEval                 - Evaluates ICD-200 GPS Ephemeris at user specified time.  Uses ephemerides
-%   read_rnxn                - - read rinex formated GPS broadcast ephemeris data
-%   linkbudget_default       - Sets a required linkbudget value to a default if
-%   get_linkbudget           - Calculate a link budget between the receiver x1 with num_ant antennas and
-%   gainpenalty_mask         - Check and apply additional mask angle penalty.
-%   ChPartModel_basic        - Calculate the signal delay (in km) caused by a signal traveling 
-%   IonoModel_basic          - Calculate the signal delay (in km) caused by a signal traveling 
-%   TropoModel_basic         - Calculate the signal delay (in km) caused by a signal traveling 

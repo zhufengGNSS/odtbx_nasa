@@ -1,5 +1,5 @@
 function [y,H,R] = rrdot3D_1way(t,x,sig)
-%RRDOT3D_1way Range and range-rate measurement model for 3-D inertial state
+% RRDOT3D_1WAY Range and range-rate measurement model for 3-D inertial state
 %   [y,H] = rrdot3D_1way(t,x,sig) returns the measurement, y, and 
 % measurement partials, H, for 1-way range and range-rate from an 
 % artificial ground station located at [rp,0,0], where rp, the radius of 

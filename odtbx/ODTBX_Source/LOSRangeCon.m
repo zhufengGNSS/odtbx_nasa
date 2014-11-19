@@ -1,6 +1,6 @@
 function varargout = LOSRangeCon(obj, t, r1, r2, options)
 
-% LOSRANGE  Line of sight range measurement between two objects
+% LOSRANGECON  Line of sight range measurement between two objects
 %
 %   range = LOSRange(r1, r2, options) returns the range measurement between
 % two vehicles. This function can also include the troposphere and

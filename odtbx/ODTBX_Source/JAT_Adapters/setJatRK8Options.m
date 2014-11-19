@@ -1,6 +1,6 @@
 function options = setJatRK8Options(varargin)
 
-% setJatRK8Options Set adaptor options for jatRK8.
+% SETJATRK8OPTIONS Set adaptor options for jatRK8.
 %
 %  This function operates on a different structure compared to 
 %  SETODTBXOPTIONS and is applicable only to jatRK8.

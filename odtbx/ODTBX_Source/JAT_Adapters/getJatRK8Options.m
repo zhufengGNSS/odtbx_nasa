@@ -1,6 +1,6 @@
 function o = getJatRK8Options(options, name, default)
 
-% getJatRK8Options Get adaptor options for jatRK8.
+% GETJATRK8OPTIONS Get adaptor options for jatRK8.
 %
 %  This function operates on a different structure compared to 
 %  GETODTBXOPTIONS and is applicable only to jatRK8.

@@ -1,6 +1,6 @@
 function [tOut,yOut] = jatWorldPropagatorRKF78(ode,tspan,y0,odeSolverOptions,varargin)
 
-% jatWorldPropagatorRKF78 JAT Runge-Kutta-Fehlberg variable step integrator (Earth orbits)
+% JATWORLDPROPAGATORRKF78 JAT Runge-Kutta-Fehlberg variable step integrator (Earth orbits)
 %
 % [tOut,yOut] = jatWorldPropagatorRKF78(ode,tspan,y0,odeSolverOptions,varargin)
 %   integrates the ode over the tspan.  The variable step integrator uses the

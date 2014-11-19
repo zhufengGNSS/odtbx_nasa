@@ -10,8 +10,10 @@
 % $t_f$.
 % # Compute the observability of any element(s) of the state vector.
 % # Estimate all components of the state vector.
-
-echo on
+%
+% You can either run this example after setting "echo on" to see output in
+% the command line, or do "publish pancake_tutorial" to create formatted
+% html output in the ODTBX_Examples/html directory.
 
 %% Introduction
 % Pancake is a circular planet that exists in a 2D universe with no other gravitational influences.
@@ -22,9 +24,8 @@ echo on
 % In this tutorial, your goal is to estimate the satellite's position and
 % velocity, Pancake's gravitational parameter, and the ground station's position.
 
-clc
-clear
-close all
+% Disable a repetitive estbat warning
+warning('off', 'ESTBAT:maxit');
 
 %% Initialize Variables
 % Suppose that at some time $t_0$, the ground station lies on the
@@ -244,9 +245,7 @@ for k = length(t{1}):-1:1,
     SPaSt(:,:,k) = S*Pa(:,:,k)*S'; 
     SPvSt(:,:,k) = S*Pv(:,:,k)*S'; 
     SPwSt(:,:,k) = S*Pw(:,:,k)*S'; 
-    echo off;
 end
-echo on;
 SPSt = SPaSt + SPvSt + SPwSt;
 dPa = SPaSt - Phata;
 dPv = SPvSt - Phatv;
@@ -276,9 +275,7 @@ for k = length(t{1}):-1:1,
     SPaSt(:,:,k) = S*Pa(:,:,k)*S'; 
     SPvSt(:,:,k) = S*Pv(:,:,k)*S'; 
     SPwSt(:,:,k) = S*Pw(:,:,k)*S';
-    echo off;
 end
-echo on;
 SPSt = SPaSt + SPvSt + SPwSt;
 dPa = SPaSt - Phata;
 dPv = SPvSt - Phatv;
@@ -291,7 +288,6 @@ for k = 1:size(S,1),
         Phata(k,k,:),Phatv(k,k,:),Phatw(k,k,:),SPSt(k,k,:),Phatlin(k,k,:));
 end
 
-echo off
 %% License 
 % ODTBX: Orbit Determination Toolbox
 % 

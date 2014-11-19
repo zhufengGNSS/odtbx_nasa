@@ -2,7 +2,7 @@
 
 % ODTBX: Orbit Determination Toolbox
 % 
-% Copyright (c) 2003-2011 United States Government as represented by the
+% Copyright (c) 2003-2014 United States Government as represented by the
 % administrator of the National Aeronautics and Space Administration. All
 % Other Rights Reserved.
 % 
@@ -94,9 +94,8 @@
 %
 %% GMAT WITH ODTBX:
 %
-% The path to the top-level GMAT folder (the top-level folder of a GMAT
-% distribution, usually named "GMAT", and it contains directories like:
-% bin, data, plugins, etc.
+% The path to the top-level folder of a GMAT distribution, usually named
+% "GMAT". It contains directories like: bin, data, plugins, etc.
 %gmatPath = '/absolute/path/to/GMAT';
 
 %

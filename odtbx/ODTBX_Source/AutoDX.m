@@ -1,81 +1,81 @@
 classdef AutoDX < handle
-    % AutoDX Compute the step size dX that minimizes the error in dF/dX,
-    % the finite-difference derivative of the function F(t,X).
-    %   [DFDX,DX] = AutoDX.GetOptimalGradient(F, T0, X0, F0, DX_MAX, DFDX_KNOWN)
-    %   dFdX: Jacobian matrix (length(F)-by-length(X)) 
-    %   dX: Matrix of optimal dX values. Element (i,j) corresponds to the
-    %       optimal dX value for subfunction Fi and variable Xj. If the
-    %       values down a particular column vary significantly, then some
-    %       subfunctions of F may be ill-conditioned wrt that Xj variable.
-    %   F: The vector function whose derivative should be analyzed.
-    %   t0: Scalar independent variable, passed to F
-    %   X0: Vector of dependent variables for differentiation
-    %   F0: Vector F(t0, X0)
-    %   dX_max: Vector of maximum perturbations for each element of X
-    %           Set to [] to use dX_max = 1 + abs(X) (a safe default)
-    %   dFdX_known: Boolean matrix (length(F)-by-length(X)) of known values
-    %               within dFdX that should not be computed. Set to [] to
-    %               indicate that all elements should be computed.
-    %   ORDER: Desired finite-difference truncation order. Valid values:
-    %      ORDER = 1: 1st-order Forward Difference
-    %      ORDER = 2: 2nd-order Central Difference
-    %      ORDER = 4: 4th-order Central Difference
-    %      ORDER = 6: 6th-order Central Difference
-    %   Additional input arguments are passed through as F(t,X,varargin)
-    %
-    %   [DFDX,DX,DXMAX,ERR,FCNERR,NFCALLS] = AutoDX.GetOptimalGradient(...)
-    %   dXmax: Matrix of maximum safe step sizes. Element (i,j) corresponds
-    %          to the maximum dX value for subfunction Fi and variable Xj.
-    %          If the values down a particular column vary significantly,
-    %          then some subfunctions of F may be stiff wrt that Xj.
-    %   err: Matrix of estimated errors in corresponding dFdX elements.
-    %        Errors are upper-bound magnitudes relative to dFdX.
-    %   fcnerr: Matrix of estimated condition errors in corresponding
-    %           subfunctions. Element (i,j) corresponds to the condition
-    %           error in function Fi wrt variable Xj. Condition errors are
-    %           relative, and imply the number of digits in Fi that are
-    %           reliable given a small change in Xj. If some values down a
-    %           particular column are large, then those subfunctions of F
-    %           may be losing precision wrt that Xj.
-    %           e.g. fcnerr(2,3)=1e-9 means that subfunction F2 has ~9
-    %           digits of accuracy wrt a small change in variable X3, and
-    %           has lost the remaining ~6 digits of accuracy due to errors
-    %           building up within its implementation.
-    %           Note that a value less than machine precision (including
-    %           negative values) means that the subfunction has full
-    %           precision wrt that variable. This is the ideal situation.
-    %   nfcalls: Total number calls made to F(t,X).
-    %
-    %   Example:
-    %      adx = AutoDX;  % Initialize AutoDX object
-    %      adx.order = 2; % Specify 2nd-order Central Differences
-    %      [...] = adx.GetOptimalGradient(...); % Optimize
-    %
-    %   See also AutoDX_example
-    %
-    % (This file is part of ODTBX, The Orbit Determination Toolbox, and is
-    %  distributed under the NASA Open Source Agreement.  See file source for
-    %  more details.)
-    
-    
-    % ODTBX: Orbit Determination Toolbox
-    %
-    % Copyright (c) 2003-2011 United States Government as represented by the
-    % administrator of the National Aeronautics and Space Administration. All
-    % Other Rights Reserved.
-    %
-    % This file is distributed "as is", without any warranty, as part of the
-    % ODTBX. ODTBX is free software; you can redistribute it and/or modify it
-    % under the terms of the NASA Open Source Agreement, version 1.3 or later.
-    %
-    % You should have received a copy of the NASA Open Source Agreement along
-    % with this program (in a file named License.txt); if not, write to the
-    % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
-    
-    %  REVISION HISTORY
-    %   Author      		Date         	Comment
-    %   Ravi Mathur      Aug-Nov 2013      Original adapted from Fortran code
-    %                                      and Ravi's dissertation
+%AUTODX Compute the step size dX that minimizes the error in dF/dX,
+% the finite-difference derivative of the function F(t,X).
+%   [DFDX,DX] = AutoDX.GetOptimalGradient(F, T0, X0, F0, DX_MAX, DFDX_KNOWN)
+%   dFdX: Jacobian matrix (length(F)-by-length(X)) 
+%   dX: Matrix of optimal dX values. Element (i,j) corresponds to the
+%       optimal dX value for subfunction Fi and variable Xj. If the
+%       values down a particular column vary significantly, then some
+%       subfunctions of F may be ill-conditioned wrt that Xj variable.
+%   F: The vector function whose derivative should be analyzed.
+%   t0: Scalar independent variable, passed to F
+%   X0: Vector of dependent variables for differentiation
+%   F0: Vector F(t0, X0)
+%   dX_max: Vector of maximum perturbations for each element of X
+%           Set to [] to use dX_max = 1 + abs(X) (a safe default)
+%   dFdX_known: Boolean matrix (length(F)-by-length(X)) of known values
+%               within dFdX that should not be computed. Set to [] to
+%               indicate that all elements should be computed.
+%   ORDER: Desired finite-difference truncation order. Valid values:
+%      ORDER = 1: 1st-order Forward Difference
+%      ORDER = 2: 2nd-order Central Difference
+%      ORDER = 4: 4th-order Central Difference
+%      ORDER = 6: 6th-order Central Difference
+%   Additional input arguments are passed through as F(t,X,varargin)
+%
+%   [DFDX,DX,DXMAX,ERR,FCNERR,NFCALLS] = AutoDX.GetOptimalGradient(...)
+%   dXmax: Matrix of maximum safe step sizes. Element (i,j) corresponds
+%          to the maximum dX value for subfunction Fi and variable Xj.
+%          If the values down a particular column vary significantly,
+%          then some subfunctions of F may be stiff wrt that Xj.
+%   err: Matrix of estimated errors in corresponding dFdX elements.
+%        Errors are upper-bound magnitudes relative to dFdX.
+%   fcnerr: Matrix of estimated condition errors in corresponding
+%           subfunctions. Element (i,j) corresponds to the condition
+%           error in function Fi wrt variable Xj. Condition errors are
+%           relative, and imply the number of digits in Fi that are
+%           reliable given a small change in Xj. If some values down a
+%           particular column are large, then those subfunctions of F
+%           may be losing precision wrt that Xj.
+%           e.g. fcnerr(2,3)=1e-9 means that subfunction F2 has ~9
+%           digits of accuracy wrt a small change in variable X3, and
+%           has lost the remaining ~6 digits of accuracy due to errors
+%           building up within its implementation.
+%           Note that a value less than machine precision (including
+%           negative values) means that the subfunction has full
+%           precision wrt that variable. This is the ideal situation.
+%   nfcalls: Total number calls made to F(t,X).
+%
+%   Example:
+%      adx = AutoDX;  % Initialize AutoDX object
+%      adx.order = 2; % Specify 2nd-order Central Differences
+%      [...] = adx.GetOptimalGradient(...); % Optimize
+%
+%   See also AutoDX_example
+%
+% (This file is part of ODTBX, The Orbit Determination Toolbox, and is
+%  distributed under the NASA Open Source Agreement.  See file source for
+%  more details.)
+
+
+% ODTBX: Orbit Determination Toolbox
+%
+% Copyright (c) 2003-2011 United States Government as represented by the
+% administrator of the National Aeronautics and Space Administration. All
+% Other Rights Reserved.
+%
+% This file is distributed "as is", without any warranty, as part of the
+% ODTBX. ODTBX is free software; you can redistribute it and/or modify it
+% under the terms of the NASA Open Source Agreement, version 1.3 or later.
+%
+% You should have received a copy of the NASA Open Source Agreement along
+% with this program (in a file named License.txt); if not, write to the
+% NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
+
+%  REVISION HISTORY
+%   Author      		Date         	Comment
+%   Ravi Mathur      Aug-Nov 2013      Original adapted from Fortran code
+%                                      and Ravi's dissertation
     
     properties
         order; % Order of finite-difference method (see constant valid_orders)

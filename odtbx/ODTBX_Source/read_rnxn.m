@@ -1,4 +1,5 @@
-% READ_RNXN          - read rinex formated GPS broadcast ephemeris data
+function [eph,KlobucharCoefs] = read_rnxn(rnxname)
+% READ_RNXN Read rinex formated GPS broadcast ephemeris data
 %
 % [eph] = read_rnxn(fn)
 %
@@ -68,9 +69,6 @@
 %
 % Note: MATLAB does not recognize the exponential format used in RINEX: -0.5222959D-11
 %   This must be replaced with -0.5222959E-11 in the text file for this script to work.
-
-
-function [eph,KlobucharCoefs] = read_rnxn(rnxname)
 
 gps_constants
 format long e

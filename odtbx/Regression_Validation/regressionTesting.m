@@ -203,7 +203,6 @@ testCases = {
         'LLA2ecef', '''RegressionTest'''
         'jatStaAzEl', '''RegressionTest'''
         'jatIonoDelayModel', '''RegressionTest'''
-        'jatIonoDelayModel', '''RegressionTest''' % independent validation check
         'jatChargedParticleModel', '''RegressionTest'''
         'getIERSTimes', ''
         'jatWorldPropagatorRKF78_case2', ''

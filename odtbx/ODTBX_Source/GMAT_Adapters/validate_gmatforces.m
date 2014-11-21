@@ -21,6 +21,10 @@ function validate_gmatforces(filename)
 %            Emergent Space Technologies, Inc.
 % Created: 2011/05/17
 
+% Make sure GMAT is installed
+if(~exist('startgmat'))
+    error('ODTBX:GMATMissing', 'Please make sure that GMAT is properly installed and in the MATLAB search path');
+end
 
 if (nargin >= 1)
     if strcmp(filename, '') == 1

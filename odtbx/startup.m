@@ -95,7 +95,7 @@
 %% GMAT WITH ODTBX:
 %
 % The path to the top-level folder of a GMAT distribution, usually named
-% "GMAT". It contains directories like: bin, data, plugins, etc.
+% "GMAT". It contains directories like: bin, matlab, plugins, etc.
 %gmatPath = '/absolute/path/to/GMAT';
 
 %
@@ -158,8 +158,30 @@ if startuptype == 0
         odtbxMicePath = fullfile(baseIstPath,'mice');
         jatSrcPath = fullfile(baseIstPath,'Jat');
         jatBytecodePath = jatSrcPath;
+        
+        % If gmatPath isn't already specified, then search for GMAT either
+        % inside or next to the ODTBX installation directory. Note that
+        % this currently doesn't consider multiple GMAT installations.
         if ~exist('gmatPath', 'var')
-            gmatPath = fullfile(baseIstPath,'GMAT');
+            % Search inside ODTBX directory
+            reldir = baseIstPath; %
+            gmatdir = dir(fullfile(reldir, 'GMAT*'));
+            
+            % Search next to ODTBX directory
+            if isempty(gmatdir)
+                reldir = fullfile(baseIstPath, '..');
+                gmatdir = dir(fullfile(reldir, 'GMAT*'));
+            end
+            
+            % Additional default search paths can be added here
+            
+            % If GMAT was potentially found, then save its full path.
+            % This path will be validated below.
+            if ~isempty(gmatdir)
+                gmatPath = fullfile(reldir, gmatdir(1).name);
+            end
+            
+            clear reldir gmatdir; % Cleanup
         end
     end
     
@@ -243,13 +265,12 @@ if startuptype ~= 3 || isdir(d)
 end
 
 % Set Matlab paths for MICE:
-miceTopPath = odtbxMicePath;
-addpath(fullfile(miceTopPath,'doc'));
-addpath(fullfile(miceTopPath,'doc','html'));
-addpath(fullfile(miceTopPath,'doc','html','mice'));
-addpath(fullfile(miceTopPath,'src','mice'));
-addpath(fullfile(miceTopPath,'lib'));
-addpath(fullfile(miceTopPath,'kernels'));
+addpath(fullfile(odtbxMicePath,'doc'));
+addpath(fullfile(odtbxMicePath,'doc','html'));
+addpath(fullfile(odtbxMicePath,'doc','html','mice'));
+addpath(fullfile(odtbxMicePath,'src','mice'));
+addpath(fullfile(odtbxMicePath,'lib'));
+addpath(fullfile(odtbxMicePath,'kernels'));
 
 % Set Matlab paths for JAT
 addpath(jatSrcPath);
@@ -264,6 +285,7 @@ end
 
 % Set Matlab paths for GMAT
 if exist('gmatPath', 'var')
+    fprintf('Adding GMAT to MATLAB path: %s\n', gmatPath);
     addpath(fullfile(gmatPath,'bin'));
     addpath(fullfile(gmatPath,'matlab','libCInterface'));
 end

@@ -92,6 +92,8 @@ measOptions = setOdtbxOptions(measOptions,'rangeType','2way');
 measOptions = setOdtbxOptions(measOptions,'useLightTime', false);
 measOptions = setOdtbxOptions(measOptions,'EarthAtmMaskRadius',6478.12); %km
 measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
+gsID = {'WSGT','GTSS'}; % original defaults
+measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
 
 % Set Expected Results
 y_expected = [

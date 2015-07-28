@@ -252,11 +252,25 @@ else
     plot_results(t1,P1,e1,dy1,Pa,Pv,Pw,Phata,Phatv,Phatw,Pdy,Pdyt)
     
     % Plot target body
-    figure(gcf+1)
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+        figure(gcf+1)
+    else
+        % execute code for R2014b or later
+        current_fig = gcf;
+        figure(current_fig.Number+1)
+    end
     plotLmk(asteroid)
     
     % Plot camera frame
-    figure(gcf+1)
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+        figure(gcf+1)
+    else
+        % execute code for R2014b or later
+        current_fig = gcf;
+        figure(current_fig.Number+1)
+    end
     plotCameraFrame(ocam,0)
 end
 

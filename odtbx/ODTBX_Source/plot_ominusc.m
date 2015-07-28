@@ -195,12 +195,36 @@ end
 if(~exist('fhs', 'var') || isempty(fhs))
     % There may be figures with non-integer handles, e.g. if the
     % 'publish' command was used. We need to eliminate these.
-    allfigs = [get(0, 'children');0]; % Get all open figures
-    badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
-    allfigs(badidx) = []; % Remove non-integer handles
-    fhs = max(allfigs); % Get largest of remaining integer handles 
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+        allfigs = [get(0, 'children');0]; % Get all open figures
+        badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
+        allfigs(badidx) = []; % Remove non-integer handles
+        fhs = max(allfigs); % Get largest of remaining integer handles 
+    else
+        % execute code for R2014b or later
+        allfigs = [get(groot, 'children')];% Get all open figures
+        allfigs = allfigs.Number;%Convert object to number
+        badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
+        allfigs(badidx) = []; % Remove non-integer handles
+        fhs = max(allfigs); % Get largest of remaining integer handles 
+    end
+    
 end
-   
+
+if exist('fhs') 
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+
+    else
+        % execute code for R2014b or later
+%        isfhs = isnumeric(fhs)
+        if isnumeric(fhs) == 0;
+            fhs = fhs.Number;
+        end
+    end
+end
+
 for j=1:nfig
     ifig=j+fhs;    % Determine figure number
     figure(ifig)
@@ -229,7 +253,7 @@ for j=1:nfig
                 esp  = reshape([iusemn*[1;1]*em(ip,:)+[1;3]*es(ip,:); NaN(1,my)],3*my,1);
                 esm  = reshape([iusemn*[1;1]*em(ip,:)-[1;3]*es(ip,:); NaN(1,my)],3*my,1);
                 
-                hh1 = plot(t,squeeze(e(ip,:,:)),'y.-','color',color_data);  % meas dy
+                hh1 = plot(t,squeeze(e(ip,:,:)),'y.','color',color_data);  % meas dy
                 hold on
                
                 hh2 = plot(t,em(ip,:),'bx-','linewidth',linewidth);        % ensemble mean dy
@@ -238,11 +262,11 @@ for j=1:nfig
                 hh3b = plot(tr(:),esm,'c','linewidth',linewidth);          % - sig of ensemble dy
                 
                 hh4a = plot(...                                            % STD dy
-                    t,2*fsem(ip,:),'g+-',...                                % 2sig formal
-                    t,2*ts(ip,:),'k+-');                                    % 2sig true
+                    t,2*fsem(ip,:),'g+',...                                % 2sig formal
+                    t,2*ts(ip,:),'k+');                                    % 2sig true
                 hh4b = plot(...                                            % -STD dy
-                    t,-2*fsem(ip,:),'g+-',...                               % -2sig formal
-                    t,-2*ts(ip,:),'k+-');                                   % -2sig true
+                    t,-2*fsem(ip,:),'g+',...                               % -2sig formal
+                    t,-2*ts(ip,:),'k+');                                   % -2sig true
                 
                 hold off
                 h=[hh1;hh2;hh3a;hh3b;hh4a;hh4b];
@@ -263,13 +287,13 @@ for j=1:nfig
             end
             
         else % Only one case. Cell has one element
-            h1 = plot(t{1}(e_ind{1}(ip,:)~=0),dy{1}(ip,e_ind{1}(ip,:)~=0),'y.-',...
-                t{1},squeeze(sig*fs{1}(ip,:,1)),'g+-',...  % sig formal
-                t{1},sig*ts(ip,:),'k+-',...             % sig true
+            h1 = plot(t{1}(e_ind{1}(ip,:)~=0),dy{1}(ip,e_ind{1}(ip,:)~=0),'y.',...
+                t{1},squeeze(sig*fs{1}(ip,:,1)),'g+',...  % sig formal
+                t{1},sig*ts(ip,:),'k+',...             % sig true
                 t{1}(e_ind{:}(ip,:)==0),dy{1}(ip,e_ind{:}(ip,:)==0),'r.'); % edited measurments
             hold on
-            h2 = plot(t{1},-squeeze(sig*fs{1}(ip,:,1)),'g+-',... % -sig formal
-                t{1},-sig*ts(ip,:),'k+-');              % -sig true
+            h2 = plot(t{1},-squeeze(sig*fs{1}(ip,:,1)),'g+',... % -sig formal
+                t{1},-sig*ts(ip,:),'k+');              % -sig true
             h=[h1;h2];
             set(h(1),'color',color_data) % change to mustard color
             if i==1

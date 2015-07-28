@@ -90,7 +90,18 @@ function h = estval(t,e,P,Pt,fhs,iusemn)
 % 2013 May 3 Ravi Mathur
 % Fully extracted internal self-tests to estval_test.m to conform to the
 % new regression testing framework.
+if exist('fhs') 
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
 
+    else
+        % execute code for R2014b or later
+%        isfhs = isnumeric(fhs)
+        if isnumeric(fhs) == 0;
+            fhs = fhs.Number;
+        end
+    end
+end
 markersize = 5; % Desired size of markers
 
 if nargin < 3, % Old selftest, no longer supported

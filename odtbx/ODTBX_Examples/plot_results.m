@@ -97,7 +97,15 @@ dPv = SPvSt - Phatv;
 dPw = SPwSt - Phatw;
 Phatlin = Phata + Phatv + Phatw; % Total Phat corresponding to lin cov
 for k = 1:length(S),
-    figure(gcf+1)
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+        figure(gcf+1)
+    else
+        % execute code for R2014b or later
+        current_fig = gcf;
+        figure(current_fig.Number+1)
+    end
+
     varpiles(t{1},dPa(k,k,:),dPv(k,k,:),dPw(k,k,:),...
         SPaSt(k,k,:),SPvSt(k,k,:),SPwSt(k,k,:),...
         Phata(k,k,:),Phatv(k,k,:),Phatw(k,k,:),SPSt(k,k,:),Phatlin(k,k,:));

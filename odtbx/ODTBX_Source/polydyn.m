@@ -1,10 +1,10 @@
-function [xdot A Q] = polydyn(t,x,options)
+function [xdot,A,Q] = polydyn(t,x,options)
 % Force model for exterior gravitation of a polyhedron.
 
 % POLYDYN
-% Based on the algorithm presented in "Exterior Gravitation of a Polyhedron Derived
-% and Compared with Harmonic and Mascon Gravitation Representations of
-% Asteroid 4769 Castalia," R. Werner & D. Scheeres, 1996.
+% Based on the algorithm presented in "Exterior Gravitation of a Polyhedron 
+% Derived and Compared with Harmonic and Mascon Gravitation Representations 
+% of Asteroid 4769 Castalia," R. Werner & D. Scheeres, 1996.
 %
 % xdot = POLYDYN(t,x,options) returns the external gravitation of a
 % polyhedron at the field point defined in the state vector, x at time t.
@@ -30,8 +30,8 @@ function [xdot A Q] = polydyn(t,x,options)
 % valid for this function are:
 %
 %   PARAMETER           VALID VALUES            NOTES
-%   TR                   TriRep object          See TRIREP
-%   RHO                  Scalar>0               Constant density
+%   TR                   TriRep object          See TRIREP [km]
+%   RHO                  Scalar>0               Constant density [kg/m^3]
 %   RA                   0< RA <2pi RAD         Right Ascension
 %   DEC                  -pi/2< DEC <pi/2 RAD   Declination
 %   PRA                  0< PRA <2pi RAD        Prime Meridian Angle
@@ -58,7 +58,7 @@ function [xdot A Q] = polydyn(t,x,options)
 %  REVISION HISTORY
 %   Author      		    Date         	Comment
 %   Kenneth Getzandanner    04/28/2012      Original polydyn.m
-%
+%                           02/03/2015      Changed density to kg/m^3
 
 %% Initialize Variables
 
@@ -67,6 +67,7 @@ tr = options.tr;
 
 % Density
 rho = options.rho;
+rho = rho*1000^3; % convert from kg/m^3 -> kg/km^3
 
 r = x(1:3,1);
 v = x(4:6,1);

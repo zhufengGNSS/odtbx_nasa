@@ -105,6 +105,8 @@ measOptions = setOdtbxOptions(measOptions,'useRangeRate', true);
 measOptions = setOdtbxOptions(measOptions,'useDoppler', false);
 measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', 0); %Ignore the Earth
 measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
+gsID = {'WSGT','GTSS'}; % original defaults
+measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
 
 Hpd3 = testMeasPartials(@tdrssmeas,measOptions);
 
@@ -145,6 +147,8 @@ measOptions = setOdtbxOptions(measOptions,'useRangeRate', true);
 measOptions = setOdtbxOptions(measOptions,'useDoppler', false);
 measOptions = setOdtbxOptions(measOptions, 'EarthAtmMaskRadius', 0); %Ignore the Earth
 measOptions = setOdtbxOptions(measOptions,'tdrss', tdrss);
+gsID = {'WSGT','GTSS'}; % original defaults
+measOptions = setOdtbxOptions(measOptions,'gsID',gsID);
 
 Hpd4 = testMeasPartials(@tdrssmeas,measOptions);
 

@@ -55,8 +55,11 @@ function Hpd = testMeasPartials(datfun,datarg)
 %   Kevin Berry         08/18/2010      Original
 %   Kevin Berry         10/25/2011      Modified the code to work for
 %                                       non-linear measurement models
+%   Ravi Mathur         7/28/2015       Clear only estjac instead of all
+%                                       functions, which also removes any
+%                                       existing breakpoints
 
-clear functions %this clears the persistent variables in estjac
+clear estjac % clears the persistent variables in estjac
 
 disp(' ')
 disp('Comparing the H matrix calculated in ')

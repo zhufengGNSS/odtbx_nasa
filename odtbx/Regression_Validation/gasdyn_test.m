@@ -48,7 +48,7 @@ load gasdyn_data.mat
 % Define scenario epoch
 epoch  = datenum(start);
 tspan = linspace(0,3600,60);
-rho = 5.1977e11;
+rho = 519.77; % kg/m^3
 
 RA = 325.88*pi/180;
 DEC = 72.71*pi/180;

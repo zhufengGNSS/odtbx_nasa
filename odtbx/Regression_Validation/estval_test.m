@@ -4,17 +4,17 @@ function failed = estval_test
 % See also: estval.m
 %
 % ODTBX: Orbit Determination Toolbox
-% 
+%
 % Copyright (c) 2003-2011 United States Government as represented by the
 % administrator of the National Aeronautics and Space Administration. All
 % Other Rights Reserved.
-% 
+%
 % This file is distributed "as is", without any warranty, as part of the
 % ODTBX. ODTBX is free software; you can redistribute it and/or modify it
 % under the terms of the NASA Open Source Agreement, version 1.3 or later.
-% 
+%
 % You should have received a copy of the NASA Open Source Agreement along
-% with this program (in a file named License.txt); if not, write to the 
+% with this program (in a file named License.txt); if not, write to the
 % NASA Goddard Space Flight Center at opensource@gsfc.nasa.gov.
 
 %  REVISION HISTORY
@@ -54,10 +54,23 @@ Pt = [];
 % overwrite any existing figures. So find the largest open figure handle.
 % There may be figures with non-integer handles, e.g. if the 'publish'
 % command was recently used. We need to ignore these.
-allfigs = [get(0, 'children');0]; % Get all open figures
-badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
-allfigs(badidx) = []; % Remove non-integer handles
-fhs = max(allfigs); % Get largest of remaining integer handles
+
+    if verLessThan('matlab','8.4.0')
+        % execute code for R2014a or earlier
+        allfigs = [get(0, 'children');0]; % Get all open figures
+        badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
+        allfigs(badidx) = []; % Remove non-integer handles
+        fhs = max(allfigs); % Get largest of remaining integer handles
+    else
+        % execute code for R2014b or later
+        allfigs = [get(groot, 'children')];% Get all open figures
+        if ~isempty(allfigs)
+            allfigs = allfigs.Number;%Convert object to number
+            badidx = find(allfigs ~= floor(allfigs)); % Find non-integer handles
+            allfigs(badidx) = []; % Remove non-integer handles
+            fhs = max(allfigs); % Get largest of remaining integer handles
+        end
+    end
 
 % Set test-dependent parameters
 load estval_test;
@@ -83,6 +96,13 @@ for i = lh:-1:1
 end
 
 % Close generated figures
-close (fhs+1:gcf);
+if verLessThan('matlab','8.4.0')
+    % execute code for R2014a or earlier
+    close (fhs+1:gcf);
+else
+    % execute code for R2014b or later
+    current_fig = gcf;
+    close (fhs+1:current_fig.Number);
+end
 
 end

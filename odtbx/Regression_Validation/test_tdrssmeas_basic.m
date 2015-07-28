@@ -77,6 +77,8 @@ classdef test_tdrssmeas_basic < matlab.unittest.TestCase
             testCase.measOptions_keplerian = setOdtbxOptions(testCase.measOptions_keplerian,'useRangeRate', true); 
             testCase.measOptions_keplerian = setOdtbxOptions(testCase.measOptions_keplerian,'EarthAtmMaskRadius',6478.12); %km
             testCase.measOptions_keplerian = setOdtbxOptions(testCase.measOptions_keplerian,'tdrss', tdrss);
+            gsID = {'WSGT','GTSS'}; % original defaults
+            testCase.measOptions_keplerian = setOdtbxOptions(testCase.measOptions_keplerian,'gsID',gsID);
 
         end
         function create_SPEphem_measOptions(testCase)
@@ -102,6 +104,9 @@ classdef test_tdrssmeas_basic < matlab.unittest.TestCase
             testCase.measOptions_SPEphem = setOdtbxOptions(testCase.measOptions_SPEphem,'EarthAtmMaskRadius',6478.12); %km
             testCase.measOptions_SPEphem = setOdtbxOptions(testCase.measOptions_SPEphem,'tdrss', tdrss);
             testCase.measOptions_SPEphem = setOdtbxOptions(testCase.measOptions_SPEphem,'rSigma',[1e-3 1e-3 1e-3 1e-4 1e-4 1e-4]);
+            gsID = {'WSGT','GTSS'}; % original defaults
+            testCase.measOptions_SPEphem = setOdtbxOptions(testCase.measOptions_SPEphem,'gsID',gsID);
+
         end
         function create_linkbudget_measOptions(testCase)
             d2r = pi/180;
@@ -140,6 +145,9 @@ classdef test_tdrssmeas_basic < matlab.unittest.TestCase
             link_budget.TX_AntennaPointing= -1; % 1 for zenith pointing, -1 for nadir pointing
             testCase.measOptions_LinkBudget = testCase.measOptions_keplerian;
             testCase.measOptions_LinkBudget = setOdtbxOptions(testCase.measOptions_LinkBudget, 'linkbudget', link_budget);
+            gsID = {'WSGT','GTSS'}; % original defaults
+            testCase.measOptions_LinkBudget = setOdtbxOptions(testCase.measOptions_LinkBudget,'gsID',gsID);
+
         end
     end
     

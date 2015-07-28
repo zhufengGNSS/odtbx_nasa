@@ -51,8 +51,8 @@ dt = DelaunayTri(x,y,z);
 tr = TriRep(tri, Xb);
 
 % Define body mass, volume, and density
-volume = 1.4999;
-rho = 5.1977e+11;
+volume = 1.4999e9; % m^3
+rho = 519.77; % kg/m^3
 
 mass = rho*volume;
 GM = mass*6.67300e-20;

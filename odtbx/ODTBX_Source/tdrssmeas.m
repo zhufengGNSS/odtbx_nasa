@@ -114,6 +114,8 @@ function [y,H,R] = tdrssmeas(t,x,options)
 %   Kevin Berry         02/03/2010      Changed to faster gsmeas options
 %   Kevin Berry         04/30/2012      Added default TDRSS locations
 %   Ravi Mathur         08/28/2012      Extracted regression test
+%   Russell Carpenter   07/15/2015      Changed default ground stations
+%                                       and fixed some bugs
 
 %% Get values from options
 gsID         = getOdtbxOptions(options, 'gsID', [] );
@@ -162,6 +164,7 @@ end
 
 %% Get TDRS state
 if strcmpi(tdrss.type, 'keplerian')
+    % A TDRS ephem is created at user times
     if uselt
         c       = JATConstant('c')/1000;
         ltDT    = sqrt(sum(x(1:3,:).^2))/c; %
@@ -179,8 +182,9 @@ if strcmpi(tdrss.type, 'keplerian')
     end
 
 elseif strcmpi(tdrss.type, 'spephem')
+    % TDRS ephem times not necessarily same as user times!
     for n=1:length(tdrss.sat) % More accurate
-        [tdrss.t tdrss.x{n}] = read_spephem(tdrss.sat(n).filename);
+        [tdrss.t,tdrss.x{n}] = read_spephem(tdrss.sat(n).filename);
         tdrss.sat(n).epoch   = tdrss.t(1); %UTC
         epdiff               = (epoch-tdrss.sat(n).epoch)*86400; %secs from tdrss epoch to scenario epoch
         tdrss.sat(n).tspan   = (tdrss.t - tdrss.t(1))*86400 - epdiff;
@@ -195,11 +199,11 @@ if isempty(gsECEF)
         gsList = createGroundStationList(); 
     end
     if isempty(gsID)
-        gsID = {'WSGT','GTSS'};
+        gsID = {'WHSK','GWMK'};% Changed from {'WSGT','GTSS'} per Cheryl Gramling;
     end
     gsECEF = zeros(3,length(gsID));
     for n=1:length(gsID)
-            gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
+        gsECEF(:,n) = getGroundStationInfo(gsList,gsID{n},'ecefPosition',epoch);
     end
 
 end
@@ -212,7 +216,7 @@ R = [];
 
 options  = setOdtbxOptions(options,'gsElevationConstraint', 0);
 for n=1:length(tdrss.x)
-    %% Set the ground station
+    %% Set the ground station to the one with max elevation
     Ephem.satPos      = tdrss.x{n}(1:3,1)*1000; %ECI satellite coordinates (m)
     Ephem.SatCoords   = 'ECI';
     Ephem.Epoch       = epoch+tdrss.sat(n).tspan(1)/86400;
@@ -222,9 +226,10 @@ for n=1:length(tdrss.x)
     gsECEFn  = gsECEF(:, max(Elv) == Elv );
     options  = setOdtbxOptions(options,'gsECEF',gsECEFn);
     %% Put Tdrss states into an array
-    for j=size(tdrss.x,2):-1:1
-        xt(:,:,j)=tdrss.x{1,j}(:,:);
-    end
+    %for j=size(tdrss.x,2):-1:1
+    %    xt(:,:,j)=tdrss.x{1,j}(:,:);
+    %end
+    xt=tdrss.x{1,n}(:,:);
 
     %% set the tracking schedule
     % Check schedule for times when tracking is done
@@ -235,22 +240,28 @@ for n=1:length(tdrss.x)
         for j=1:size(tdrss.sat(n).schedule,1)
             tSch (j,:) = ((datenum(tdrss.sat(n).schedule(j,:))-epoch)*86400);
         end
-        tind = [];
+        tind1 = [];
         for m=1:size(tSch,1)
-            tind = union(tind, find( tSch(m,1)<=t & t<=tSch(m,2) ));
+            tind1 = union(tind, find( tSch(m,1)<=t & t<=tSch(m,2) ));
         end
     else
-        tind = 1:length(t);
+        tind1 = 1:length(t);
     end
+    % assume TDRS ephem starts before and ends after user ephem
+    iafter1 = find(tdrss.sat(n).tspan<=t(1),1,'last');
+    ibefend = find(tdrss.sat(n).tspan>=t(end),1,'first');
+    tind2 = iafter1:ibefend;
     % t, x, and xt are restricted only to the times when tracking is done
-    t1   = t(tind);
-    x1   = x(:,tind);
-    x2  = xt(:,tind,n);
+    t1   = t(tind1);
+    x1   = x(:,tind1);
+    t2   = tdrss.sat(n).tspan(tind2);
+    x2  = xt(:,tind2);%,n);
     if ~isempty (t1)
         %% Get the measurements for the Ground and Space leg
         if uselt
-            [ys, Hs, ~, t2_lt, x2_lt] = rrdotlt(t1, x1, tdrss.sat(n).tspan, tdrss.x{n},...
-                options); %calculate the Space leg
+            %[ys, Hs, ~, t2_lt, x2_lt] = rrdotlt(t1, x1, tdrss.sat(n).tspan, tdrss.x{n},...
+            %    options); %calculate the Space leg
+            [ys, Hs, ~, t2_lt, x2_lt] = rrdotlt(t1, x1, t2, x2, options); %calculate the Space leg
             if length(t2_lt)==2 %then it was a 2way measurement
                 options       = setOdtbxOptions(options,'rangeType','1wayFWD');
                 yg1     = gsmeas(t2_lt{1}, x2_lt{1}, options); %calculate the FWD Ground leg
@@ -261,18 +272,27 @@ for n=1:length(tdrss.x)
                 yg = gsmeas(t2_lt{1}, x2_lt{1}, options); %calculate the Ground legl
             end
         else
-            if isequal(tdrss.sat(n).tspan,t1)
-                x2 = tdrss.x{n};
-            else
-                x2 = interp1(tdrss.sat(n).tspan,tdrss.x{n}',t1,'spline')'; %interpolate the TDRS position to time t1
-            end
+            %if isequal(tdrss.sat(n).tspan,t1)
+            %    x2 = tdrss.x{n};
+            %else
+            %    x2 = interp1(tdrss.sat(n).tspan,tdrss.x{n}',t1,'spline')'; %interpolate the TDRS position to time t1
+            %end
+            if ~isequal(t1,t2)
+                x2 = interp1(t2,x2',t1,'spline')';
+            end  
             [ys, Hs] = rrdotang(t1,x1,x2,options); %calculate the Space leg
             yg = gsmeas(t1,x2,options); %calculate the Ground leg
         end
 
         %% Apply the antenna constraints
-        [u1 l1] = unit(x1(1:3,:)-x2(1:3,:)); %unit vector and distance from tdrss to user
-        [u2 l2]= unit(-x2(1:3,:)); %unit vector and distance from tdrss to center of Earth
+        if uselt
+            % Just apply for uplink (FWD ground leg) since if not satsified
+            % on uplink there can be no return, and cases for which it
+            % works on uplink and not downlink are less likely.
+            x2 = x2_lt{1}; 
+        end
+        [u1,l1] = unit(x1(1:3,:)-x2(1:3,:)); %unit vector and distance from tdrss to user
+        [u2,l2]= unit(-x2(1:3,:)); %unit vector and distance from tdrss to center of Earth
         if isfield(tdrss.sat(n),'antenna') %if there is antenna data for tdrss spacecraft n
             if isfield(tdrss.sat(n).antenna,'maxrange') %if the max range is defined
                 index = l1>tdrss.sat(n).antenna.maxrange;
@@ -299,8 +319,8 @@ for n=1:length(tdrss.x)
         %     derivatives
         indstart = 1 + numtypes*(n-1);
         indstop  = numtypes*n;
-        y(indstart:indstop, tind)    = ys+ yg;
-        H(indstart:indstop, :, tind) = Hs;%the ground leg drops out of the partial derivatives
+        y(indstart:indstop, tind1)    = ys+ yg;
+        H(indstart:indstop, :, tind1) = Hs;%the ground leg drops out of the partial derivatives
     end
 end
 
